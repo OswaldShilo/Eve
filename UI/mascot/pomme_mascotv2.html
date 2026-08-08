@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pomme — Duolingo-Tier Mascot</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-dark: #0F050C;
+      --ruby-bright: #FF2A6D;
+      --ruby-dark: #A10035;
+      --gold-crown: #FFC700;
+      --text-white: #FFFFFF;
+      --font-display: 'Fredoka', sans-serif;
+      --font-body: 'Quicksand', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 50% 30%, #320A21 0%, transparent 70%),
+        radial-gradient(circle at 80% 80%, #1A0012 0%, transparent 50%);
+      font-family: var(--font-body);
+      color: var(--text-white);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .stage {
+      position: relative;
+      width: 400px;
+      height: 580px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Duolingo Style Speech Bubble */
+    .speech-bubble {
+      position: absolute;
+      top: 24px;
+      background: #FFFFFF;
+      color: #2D0016;
+      padding: 16px 22px;
+      border-radius: 24px;
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 1.1rem;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.4), 0 0 0 4px #2D0016;
+      text-align: center;
+      max-width: 320px;
+      z-index: 20;
+      transform-origin: bottom center;
+      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .speech-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 14px 12px 0;
+      border-style: solid;
+      border-color: #2D0016 transparent;
+    }
+
+    .speech-bubble::before {
+      content: '';
+      position: absolute;
+      bottom: -9px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 11px 9px 0;
+      border-style: solid;
+      border-color: #FFFFFF transparent;
+      z-index: 1;
+    }
+
+    /* Mascot Interaction Area */
+    .mascot-container {
+      position: relative;
+      width: 280px;
+      height: 300px;
+      cursor: grab;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 40px;
+    }
+
+    .mascot-container:active {
+      cursor: grabbing;
+    }
+
+    .mascot-shadow {
+      position: absolute;
+      bottom: 12px;
+      width: 160px;
+      height: 28px;
+      background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 70%);
+      border-radius: 50%;
+      transition: transform 0.1s ease, opacity 0.1s ease;
+      z-index: 1;
+    }
+
+    .mascot-svg {
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      overflow: visible;
+      transform-origin: 50% 85%;
+    }
+
+    /* Dynamic Aura for Guilt Mode */
+    .dark-aura {
+      position: absolute;
+      width: 260px;
+      height: 260px;
+      background: radial-gradient(circle, rgba(255, 0, 60, 0.35) 0%, rgba(0, 0, 0, 0) 70%);
+      border-radius: 50%;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .dark-aura.active {
+      opacity: 1;
+      animation: pulseAura 1.2s ease-in-out infinite alternate;
+    }
+
+    @keyframes pulseAura {
+      from { transform: scale(0.95); opacity: 0.3; }
+      to { transform: scale(1.15); opacity: 0.6; }
+    }
+
+    /* Control Grid */
+    .controls-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      width: 100%;
+      max-width: 340px;
+      margin-top: 24px;
+      z-index: 10;
+    }
+
+    .btn-persona {
+      background: rgba(255, 255, 255, 0.08);
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-white);
+      padding: 12px 14px;
+      border-radius: 18px;
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-persona:hover {
+      background: rgba(255, 42, 109, 0.3);
+      border-color: var(--ruby-bright);
+      transform: translateY(-3px) scale(1.02);
+    }
+
+    .btn-persona:active {
+      transform: translateY(1px) scale(0.98);
+    }
+
+    /* Confetti Burst */
+    .confetti-layer {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 30;
+    }
+
+    .particle {
+      position: absolute;
+      animation: popUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    }
+
+    @keyframes popUp {
+      0% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(0.5); }
+      100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(360deg) scale(1.2); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="stage">
+    
+    <!-- Speech Dialogue -->
+    <div class="speech-bubble" id="speech">Pull or tap me! I'm squishy! 👑</div>
+
+    <!-- Mascot Wrapper -->
+    <div class="mascot-container" id="mascot-box">
+      <div class="dark-aura" id="aura"></div>
+      <div class="mascot-shadow" id="shadow"></div>
+      <div class="confetti-layer" id="confetti"></div>
+
+      <!-- Multi-Part Rigged SVG -->
+      <svg class="mascot-svg" id="pomme-rig" viewBox="0 0 200 220">
+        <defs>
+          <!-- 3D Shaded Ruby Body -->
+          <radialGradient id="bodyGrad" cx="30%" cy="25%" r="75%">
+            <stop offset="0%" stop-color="#FF5E8E" />
+            <stop offset="45%" stop-color="#FF2A6D" />
+            <stop offset="80%" stop-color="#B8003A" />
+            <stop offset="100%" stop-color="#5B001B" />
+          </radialGradient>
+
+          <!-- Crown Gold Gradient -->
+          <linearGradient id="goldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#FFF099" />
+            <stop offset="50%" stop-color="#FFC700" />
+            <stop offset="100%" stop-color="#C78C00" />
+          </linearGradient>
+
+          <!-- Specular Surface Shine -->
+          <linearGradient id="shineGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.8" />
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+          </linearGradient>
+
+          <!-- Eye Clip Paths for Eyelid Motion -->
+          <clipPath id="leftEyeClip">
+            <ellipse cx="68" cy="110" rx="13" ry="17" />
+          </clipPath>
+          <clipPath id="rightEyeClip">
+            <ellipse cx="132" cy="110" rx="13" ry="17" />
+          </clipPath>
+        </defs>
+
+        <!-- Base Pomegranate Seed Body -->
+        <path id="body-mesh" d="M 100,34 C 154,34 186,70 186,122 C 186,172 152,198 100,198 C 48,198 14,172 14,122 C 14,70 46,34 100,34 Z" fill="url(#bodyGrad)" stroke="#3B0012" stroke-width="3" />
+
+        <!-- High Gloss Highlights -->
+        <path d="M 62,48 C 90,40 128,44 142,56 C 124,50 82,52 56,76 C 50,66 54,54 62,48 Z" fill="url(#shineGrad)" />
+        <ellipse cx="42" cy="98" rx="7" ry="16" fill="url(#shineGrad)" transform="rotate(-28 42 98)" opacity="0.6" />
+
+        <!-- Crown / Calyx -->
+        <g id="crown-rig" transform-origin="100 30">
+          <path d="M 70,40 L 58,14 L 80,28 L 100,8 L 120,28 L 142,14 L 130,40 Z" fill="url(#goldGrad)" stroke="#2E1C00" stroke-width="2.5" stroke-linejoin="round" />
+          <circle cx="100" cy="24" r="4.5" fill="#FF2A6D" stroke="#2E1C00" stroke-width="1" />
+        </g>
+
+        <!-- Left Arm -->
+        <g id="arm-left-group" transform-origin="30 130">
+          <path id="arm-left" d="M 32,130 Q 12,140 22,158 Q 32,162 38,144 Z" fill="#D9004C" stroke="#3B0012" stroke-width="2.5" stroke-linejoin="round" />
+        </g>
+
+        <!-- Right Arm -->
+        <g id="arm-right-group" transform-origin="170 130">
+          <path id="arm-right" d="M 168,130 Q 188,140 178,158 Q 168,162 162,144 Z" fill="#D9004C" stroke="#3B0012" stroke-width="2.5" stroke-linejoin="round" />
+        </g>
+
+        <!-- Cheeks / Rosy Blush -->
+        <g id="blush-group">
+          <ellipse cx="48" cy="128" rx="11" ry="6" fill="#FF7BA4" opacity="0.6" />
+          <ellipse cx="152" cy="128" rx="11" ry="6" fill="#FF7BA4" opacity="0.6" />
+        </g>
+
+        <!-- Left Eye Rig -->
+        <g id="eye-left-container">
+          <ellipse cx="68" cy="110" rx="13" ry="17" fill="#1F000B" stroke="#3B0012" stroke-width="2" />
+          <!-- Pupil & Highlights -->
+          <g clip-path="url(#leftEyeClip)">
+            <g id="pupil-left" transform="translate(68, 110)">
+              <circle cx="0" cy="0" r="11" fill="#2E0012" />
+              <circle cx="-3" cy="-4" r="5" fill="#FFFFFF" />
+              <circle cx="4" cy="5" r="2.5" fill="#FFFFFF" />
+            </g>
+            <!-- Eyelid Overlay -->
+            <rect id="eyelid-left" x="50" y="80" width="36" height="34" fill="#FF2A6D" transform="translate(0, -34)" />
+          </g>
+        </g>
+
+        <!-- Right Eye Rig -->
+        <g id="eye-right-container">
+          <ellipse cx="132" cy="110" rx="13" ry="17" fill="#1F000B" stroke="#3B0012" stroke-width="2" />
+          <!-- Pupil & Highlights -->
+          <g clip-path="url(#rightEyeClip)">
+            <g id="pupil-right" transform="translate(132, 110)">
+              <circle cx="0" cy="0" r="11" fill="#2E0012" />
+              <circle cx="-3" cy="-4" r="5" fill="#FFFFFF" />
+              <circle cx="4" cy="5" r="2.5" fill="#FFFFFF" />
+            </g>
+            <!-- Eyelid Overlay -->
+            <rect id="eyelid-right" x="114" y="80" width="36" height="34" fill="#FF2A6D" transform="translate(0, -34)" />
+          </g>
+        </g>
+
+        <!-- Eyebrows (Dynamic Angle & Height) -->
+        <path id="brow-left" d="M 54,88 Q 68,82 80,88" stroke="#3B0012" stroke-width="4" stroke-linecap="round" fill="none" />
+        <path id="brow-right" d="M 120,88 Q 132,82 146,88" stroke="#3B0012" stroke-width="4" stroke-linecap="round" fill="none" />
+
+        <!-- Dynamic Mouth Rig -->
+        <path id="mouth" d="M 86,136 Q 100,152 114,136" stroke="#1F000B" stroke-width="3.5" stroke-linecap="round" fill="none" />
+
+        <!-- Feet -->
+        <ellipse cx="76" cy="196" rx="12" ry="5" fill="#7A0028" stroke="#3B0012" stroke-width="2" />
+        <ellipse cx="124" cy="196" rx="12" ry="5" fill="#7A0028" stroke="#3B0012" stroke-width="2" />
+      </svg>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls-grid">
+      <button class="btn-persona" onclick="setEmotion('guilt')">🔪 Guilt Trip</button>
+      <button class="btn-persona" onclick="setEmotion('hype')">🎉 Unhinged Hype</button>
+      <button class="btn-persona" onclick="setEmotion('sassy')">💅 Sassy</button>
+      <button class="btn-persona" onclick="setEmotion('hug')">🥺 Need Hugs</button>
+    </div>
+
+  </div>
+
+  <script>
+    // Rigging Elements
+    const pommeRig = document.getElementById('pomme-rig');
+    const mascotBox = document.getElementById('mascot-box');
+    const shadow = document.getElementById('shadow');
+    const speech = document.getElementById('speech');
+    const aura = document.getElementById('aura');
+    const confettiContainer = document.getElementById('confetti');
+
+    const pupilLeft = document.getElementById('pupil-left');
+    const pupilRight = document.getElementById('pupil-right');
+    const eyelidLeft = document.getElementById('eyelid-left');
+    const eyelidRight = document.getElementById('eyelid-right');
+    const browLeft = document.getElementById('brow-left');
+    const browRight = document.getElementById('brow-right');
+    const mouth = document.getElementById('mouth');
+    const armLeftGroup = document.getElementById('arm-left-group');
+    const armRightGroup = document.getElementById('arm-right-group');
+    const crownRig = document.getElementById('crown-rig');
+
+    // Mouth Shape Library
+    const mouthShapes = {
+      happy: "M 86,136 Q 100,152 114,136",
+      openSmile: "M 84,134 Q 100,162 116,134 Z",
+      frown: "M 88,146 Q 100,132 112,146",
+      smirk: "M 88,140 Q 100,144 114,134",
+      shock: "M 92,140 A 8,10 0 1,0 108,140 A 8,10 0 1,0 92,140",
+      flat: "M 88,140 L 112,140"
+    };
+
+    // Elastic Drag Physics Engine
+    let isDragging = false;
+    let startX = 0, startY = 0;
+    let currentX = 0, currentY = 0;
+    let targetX = 0, targetY = 0;
+
+    // Spring Constants
+    const k = 0.15; // Stiffness
+    const damping = 0.75; // Friction
+    let vx = 0, vy = 0;
+
+    function physicsLoop() {
+      if (!isDragging) {
+        let forceX = (0 - currentX) * k;
+        let forceY = (0 - currentY) * k;
+
+        vx = (vx + forceX) * damping;
+        vy = (vy + forceY) * damping;
+
+        currentX += vx;
+        currentY += vy;
+      }
+
+      // Calculate Squash and Stretch based on displacement
+      const stretchX = 1 - (currentY * 0.003) + (Math.abs(currentX) * 0.002);
+      const stretchY = 1 + (currentY * 0.003) - (Math.abs(currentX) * 0.002);
+      const rotation = currentX * 0.15;
+
+      pommeRig.style.transform = `translate(${currentX}px, ${currentY}px) scale(${stretchX}, ${stretchY}) rotate(${rotation}deg)`;
+      
+      // Shadow physics
+      shadow.style.transform = `scale(${1 - currentY * 0.002}) translate(${currentX * 0.5}px, 0)`;
+      shadow.style.opacity = `${0.7 - currentY * 0.003}`;
+
+      requestAnimationFrame(physicsLoop);
+    }
+    physicsLoop();
+
+    // Mouse & Touch Drag Handlers
+    mascotBox.addEventListener('mousedown', (e) => startDrag(e.clientX, e.clientY));
+    window.addEventListener('mousemove', (e) => moveDrag(e.clientX, e.clientY));
+    window.addEventListener('mouseup', endDrag);
+
+    mascotBox.addEventListener('touchstart', (e) => startDrag(e.touches[0].clientX, e.touches[0].clientY));
+    window.addEventListener('touchmove', (e) => moveDrag(e.touches[0].clientX, e.touches[0].clientY));
+    window.addEventListener('touchend', endDrag);
+
+    function startDrag(x, y) {
+      isDragging = true;
+      startX = x - currentX;
+      startY = y - currentY;
+      eyelidLeft.setAttribute('transform', 'translate(0, -10)');
+      eyelidRight.setAttribute('transform', 'translate(0, -10)');
+      mouth.setAttribute('d', mouthShapes.shock);
+      speak("WOAH! Elastic stretch! 🎯");
+    }
+
+    function moveDrag(x, y) {
+      if (!isDragging) return;
+      currentX = x - startX;
+      currentY = y - startY;
+
+      // Eye gaze tracks displacement direction
+      const angle = Math.atan2(currentY, currentX);
+      const dist = Math.min(6, Math.hypot(currentX, currentY) / 10);
+      pupilLeft.setAttribute('transform', `translate(${Math.cos(angle)*dist}, ${Math.sin(angle)*dist})`);
+      pupilRight.setAttribute('transform', `translate(${Math.cos(angle)*dist}, ${Math.sin(angle)*dist})`);
+    }
+
+    function endDrag() {
+      if (!isDragging) return;
+      isDragging = false;
+      eyelidLeft.setAttribute('transform', 'translate(0, -34)');
+      eyelidRight.setAttribute('transform', 'translate(0, -34)');
+      mouth.setAttribute('d', mouthShapes.happy);
+      speak("Boing!! Ready for action! ⚡");
+      spawnConfetti(6);
+    }
+
+    // Eye Gaze Tracking (When Idle)
+    document.addEventListener('mousemove', (e) => {
+      if (isDragging) return;
+      const rect = mascotBox.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+
+      const dx = e.clientX - cx;
+      const dy = e.clientY - cy;
+      const angle = Math.atan2(dy, dx);
+      const dist = Math.min(5, Math.hypot(dx, dy) / 40);
+
+      pupilLeft.setAttribute('transform', `translate(${Math.cos(angle)*dist}, ${Math.sin(angle)*dist})`);
+      pupilRight.setAttribute('transform', `translate(${Math.cos(angle)*dist}, ${Math.sin(angle)*dist})`);
+    });
+
+    // Random Blinking Loop
+    function blinkLoop() {
+      if (!isDragging) {
+        eyelidLeft.setAttribute('transform', 'translate(0, 0)');
+        eyelidRight.setAttribute('transform', 'translate(0, 0)');
+        setTimeout(() => {
+          eyelidLeft.setAttribute('transform', 'translate(0, -34)');
+          eyelidRight.setAttribute('transform', 'translate(0, -34)');
+        }, 150);
+      }
+      setTimeout(blinkLoop, Math.random() * 4000 + 2000);
+    }
+    blinkLoop();
+
+    // Speech Controller
+    function speak(text) {
+      speech.innerText = text;
+      speech.style.transform = "scale(1.1)";
+      setTimeout(() => speech.style.transform = "scale(1)", 150);
+    }
+
+    // Confetti / Particle Generator
+    function spawnConfetti(count = 12) {
+      for (let i = 0; i < count; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.innerText = ['💖', '✨', '💎', '👑', '🎉'][Math.floor(Math.random()*5)];
+        p.style.fontSize = (Math.random() * 12 + 14) + 'px';
+        p.style.left = '50%';
+        p.style.top = '50%';
+        
+        const dx = (Math.random() - 0.5) * 180 + 'px';
+        const dy = -(Math.random() * 120 + 60) + 'px';
+        p.style.setProperty('--dx', dx);
+        p.style.setProperty('--dy', dy);
+
+        confettiContainer.appendChild(p);
+        setTimeout(() => p.remove(), 800);
+      }
+    }
+
+    // Emotion State Machine (Duolingo Style)
+    function setEmotion(type) {
+      // Reset Aura
+      aura.classList.remove('active');
+
+      if (type === 'guilt') {
+        aura.classList.add('active');
+        // Side-eye eyebrows
+        browLeft.setAttribute('d', "M 54,82 L 80,92");
+        browRight.setAttribute('d', "M 120,92 L 146,82");
+        // Droop Eyelids
+        eyelidLeft.setAttribute('transform', 'translate(0, -18)');
+        eyelidRight.setAttribute('transform', 'translate(0, -18)');
+        // Flat disappointed mouth
+        mouth.setAttribute('d', mouthShapes.flat);
+        // Arms on hips pose
+        armLeftGroup.style.transform = "rotate(-40deg) translate(-5px, -5px)";
+        armRightGroup.style.transform = "rotate(40deg) translate(5px, -5px)";
+        crownRig.style.transform = "rotate(-8deg)";
+
+        speak("You missed your symptom check-in today... Pomme is watching. 🔪");
+
+      } else if (type === 'hype') {
+        // High arched brows
+        browLeft.setAttribute('d', "M 54,78 Q 68,68 80,78");
+        browRight.setAttribute('d', "M 120,78 Q 132,68 146,78");
+        // Open eyes
+        eyelidLeft.setAttribute('transform', 'translate(0, -34)');
+        eyelidRight.setAttribute('transform', 'translate(0, -34)');
+        // Big open mouth
+        mouth.setAttribute('d', mouthShapes.openSmile);
+        // Arms high in air
+        armLeftGroup.style.transform = "rotate(-120deg) translate(-8px, -15px)";
+        armRightGroup.style.transform = "rotate(120deg) translate(8px, -15px)";
+        crownRig.style.transform = "rotate(0deg) scale(1.1)";
+
+        spawnConfetti(16);
+        speak("7-DAY CHECK-IN STREAK!! YOU'RE CRUSHING IT!! 🔥🎉");
+
+      } else if (type === 'sassy') {
+        // Asymmetric eyebrows
+        browLeft.setAttribute('d', "M 54,80 Q 68,72 80,84");
+        browRight.setAttribute('d', "M 120,90 Q 132,92 146,88");
+        // Half closed eyelids
+        eyelidLeft.setAttribute('transform', 'translate(0, -16)');
+        eyelidRight.setAttribute('transform', 'translate(0, -22)');
+        // Smirk
+        mouth.setAttribute('d', mouthShapes.smirk);
+        // Crossed Arms pose
+        armLeftGroup.style.transform = "rotate(35deg) translate(15px, 0px)";
+        armRightGroup.style.transform = "rotate(-35deg) translate(-15px, 0px)";
+        crownRig.style.transform = "rotate(10deg)";
+
+        speak("Oh, late luteal phase? Time to take a nap and demand chocolate. 💅");
+
+      } else if (type === 'hug') {
+        // Soft worried/loving brows
+        browLeft.setAttribute('d', "M 54,88 Q 68,80 80,84");
+        browRight.setAttribute('d', "M 120,84 Q 132,80 146,88");
+        eyelidLeft.setAttribute('transform', 'translate(0, -34)');
+        eyelidRight.setAttribute('transform', 'translate(0, -34)');
+        mouth.setAttribute('d', mouthShapes.happy);
+        // Hugging arms out
+        armLeftGroup.style.transform = "rotate(-60deg) translate(-10px, -5px)";
+        armRightGroup.style.transform = "rotate(60deg) translate(10px, -5px)";
+        crownRig.style.transform = "rotate(0deg)";
+
+        spawnConfetti(8);
+        speak("Tough day? I've logged your rest day & sent a nudge to your partner. 💖");
+      }
+    }
+  </script>
+</body>
+</html>

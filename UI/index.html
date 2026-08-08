@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EVE — The World Redesigned for Her</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --primary-pink: #FF6B9D;
+      --bg-blush: #FFF0F5;
+      --white: #FFFFFF;
+      --text-plum: #3D1F2E;
+      --accent-red: #E63950;
+      --card-shadow: 0 8px 24px rgba(230, 57, 80, 0.08);
+      --font-heading: 'Baloo 2', cursive, sans-serif;
+      --font-body: 'Inter', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: #121214;
+      font-family: var(--font-body);
+      color: var(--text-plum);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    /* Mobile Frame */
+    .device-frame {
+      width: 375px;
+      height: 812px;
+      background: var(--bg-blush);
+      border-radius: 44px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 12px #2A2A2E;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Screen Wrapper & Transitions */
+    .screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(15px) scale(0.98);
+      transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .screen.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0) scale(1);
+    }
+
+    /* Shared UI Components */
+    .btn-primary {
+      background-color: var(--primary-pink);
+      color: var(--white);
+      border: none;
+      padding: 16px 24px;
+      border-radius: 20px;
+      font-family: var(--font-heading);
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(255, 107, 157, 0.3);
+      transition: transform 0.2s ease, background-color 0.2s ease;
+      width: 100%;
+      margin-top: auto;
+    }
+
+    .btn-primary:active {
+      transform: scale(0.97);
+    }
+
+    /* Mascot Base Styling */
+    .mascot-container {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto;
+      position: relative;
+      transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    }
+
+    .mascot-svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    .mascot-bounce {
+      animation: mascotFloat 3s ease-in-out infinite;
+    }
+
+    @keyframes mascotFloat {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-8px) rotate(2deg); }
+    }
+
+    /* Expression States */
+    .expression-happy .eye-left, 
+    .expression-happy .eye-right {
+      d: path("M 35 48 Q 40 42 45 48");
+      stroke: var(--text-plum);
+      stroke-width: 3.5;
+      fill: none;
+    }
+
+    .expression-happy .mouth {
+      d: path("M 38 56 Q 50 68 62 56");
+      fill: var(--accent-red);
+    }
+
+    .expression-concerned .eye-left,
+    .expression-concerned .eye-right {
+      cy: 46;
+      r: 3.5;
+    }
+
+    .expression-concerned .mouth {
+      d: path("M 42 60 Q 50 55 58 60");
+      stroke: var(--text-plum);
+      stroke-width: 3;
+      fill: none;
+    }
+
+    /* Screen 1: Splash */
+    #screen-splash {
+      background: linear-gradient(180deg, #FF6B9D 0%, #E63950 100%);
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    #screen-splash .brand-title {
+      font-family: var(--font-heading);
+      font-size: 3.5rem;
+      color: var(--white);
+      letter-spacing: 2px;
+      margin-top: 16px;
+    }
+
+    #screen-splash .tagline {
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 1rem;
+      font-weight: 500;
+    }
+
+    /* Screen 2: Welcome */
+    #screen-welcome {
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      gap: 24px;
+    }
+
+    .speech-bubble {
+      background: var(--white);
+      padding: 16px 20px;
+      border-radius: 20px;
+      box-shadow: var(--card-shadow);
+      font-size: 1.05rem;
+      font-weight: 600;
+      position: relative;
+    }
+
+    .speech-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 8px 8px 0;
+      border-style: solid;
+      border-color: var(--white) transparent;
+    }
+
+    /* Screen 3: Onboarding Flow */
+    .progress-bar-track {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 107, 157, 0.2);
+      border-radius: 3px;
+      margin-top: 12px;
+      margin-bottom: 24px;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 20%;
+      background: var(--primary-pink);
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    .question-title {
+      font-family: var(--font-heading);
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+      line-height: 1.25;
+    }
+
+    .options-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .option-card {
+      background: var(--white);
+      border: 2px solid transparent;
+      padding: 16px;
+      border-radius: 16px;
+      font-weight: 500;
+      font-size: 0.95rem;
+      cursor: pointer;
+      box-shadow: var(--card-shadow);
+      transition: all 0.2s ease;
+    }
+
+    .option-card.selected {
+      border-color: var(--primary-pink);
+      background: #FFF5F8;
+      color: var(--primary-pink);
+      font-weight: 600;
+    }
+
+    /* Screen 4: Loading Engine */
+    #screen-loading {
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .loading-status-list {
+      margin-top: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      text-align: left;
+      width: 100%;
+    }
+
+    .status-item {
+      background: var(--white);
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.4s ease;
+    }
+
+    .status-item.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Screen 5: Dashboard */
+    .dashboard-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .dashboard-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+      padding-bottom: 20px;
+    }
+
+    .module-card {
+      background: var(--white);
+      border-radius: 20px;
+      padding: 16px;
+      box-shadow: var(--card-shadow);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .module-icon {
+      width: 44px;
+      height: 44px;
+      background: var(--bg-blush);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="device-frame">
+    
+    <!-- Screen 1: Splash -->
+    <div class="screen active" id="screen-splash">
+      <div class="mascot-container mascot-bounce">
+        <svg class="mascot-svg" viewBox="0 0 100 100">
+          <path d="M 50 15 Q 55 5 62 10 Q 55 18 50 18" fill="#4CAF50"/>
+          <ellipse cx="50" cy="55" rx="36" ry="32" fill="url(#splash-grad)" />
+          <defs>
+            <linearGradient id="splash-grad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#FFFFFF" />
+              <stop offset="100%" stop-color="#FFF0F5" />
+            </linearGradient>
+          </defs>
+          <circle cx="38" cy="50" r="3" fill="#3D1F2E"/>
+          <circle cx="62" cy="50" r="3" fill="#3D1F2E"/>
+          <path d="M 44 58 Q 50 64 56 58" stroke="#3D1F2E" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h1 class="brand-title">EVE</h1>
+      <p class="tagline">The world, redesigned for her.</p>
+    </div>
+
+    <!-- Screen 2: Welcome -->
+    <div class="screen" id="screen-welcome">
+      <div class="speech-bubble">Hi, I'm Eve. Let's get to know you.</div>
+      <div class="mascot-container mascot-bounce expression-curious" id="welcome-mascot">
+        <!-- Reusable SVG dynamically injected via JS -->
+      </div>
+      <button class="btn-primary" onclick="nextScreen(3)">Let's begin</button>
+    </div>
+
+    <!-- Screen 3: Onboarding Questions -->
+    <div class="screen" id="screen-onboarding">
+      <div class="progress-bar-track">
+        <div class="progress-bar-fill" id="progress-fill"></div>
+      </div>
+      
+      <div style="text-align: center; margin-bottom: 16px;">
+        <div class="mascot-container expression-curious" id="onboarding-mascot" style="width: 70px; height: 70px;"></div>
+      </div>
+
+      <h2 class="question-title" id="question-text">Question Title</h2>
+      <div class="options-container" id="options-container"></div>
+      
+      <button class="btn-primary" id="onboarding-next-btn" style="opacity: 0.5; pointer-events: none;" onclick="handleQuestionNext()">Next</button>
+    </div>
+
+    <!-- Screen 4: Loading / Engine Config -->
+    <div class="screen" id="screen-loading">
+      <div class="mascot-container mascot-bounce expression-happy" id="loading-mascot"></div>
+      <h2 class="question-title" style="margin-top: 20px;">Personalizing your EVE...</h2>
+      
+      <div class="loading-status-list" id="loading-status-list">
+        <div class="status-item" id="status-1">✨ Configuring phase engine</div>
+        <div class="status-item" id="status-2">🥗 Tailoring nutrition modules</div>
+        <div class="status-item" id="status-3">💌 Setting up Partner Mode</div>
+      </div>
+    </div>
+
+    <!-- Screen 5: Personalized Dashboard -->
+    <div class="screen" id="screen-dashboard">
+      <div class="dashboard-header">
+        <div>
+          <p style="font-size: 0.85rem; color: #888;">Welcome back</p>
+          <h2 style="font-family: var(--font-heading); font-size: 1.4rem;">Here's your EVE</h2>
+        </div>
+        <div class="mascot-container expression-happy" id="dash-mascot" style="width: 50px; height: 50px; margin: 0;"></div>
+      </div>
+
+      <div class="dashboard-grid" id="dashboard-grid">
+        <!-- Dynamically rendered modules -->
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // State Store
+    const state = {
+      currentStep: 0,
+      answers: {}
+    };
+
+    const questions = [
+      {
+        id: "goal",
+        text: "What are you here for?",
+        options: [
+          "Just tracking my cycle",
+          "Trying to conceive",
+          "I'm pregnant",
+          "Recently had a baby"
+        ]
+      },
+      {
+        id: "cycle_type",
+        text: "How would you describe your cycle right now?",
+        options: [
+          "Pretty regular",
+          "Irregular",
+          "Not sure",
+          "I don't track it yet"
+        ]
+      },
+      {
+        id: "focus",
+        text: "What do you want EVE to help with most?",
+        options: [
+          "Understanding mood & symptoms",
+          "Fitness that fits my cycle",
+          "Nutrition guidance",
+          "Staying on top of appointments"
+        ]
+      },
+      {
+        id: "partner",
+        text: "Do you want a partner or loved one to support you?",
+        options: [
+          "Yes, invite them",
+          "Maybe later",
+          "No thanks"
+        ]
+      },
+      {
+        id: "mindset",
+        text: "How are you feeling about your health journey?",
+        options: [
+          "Confident",
+          "A little overwhelmed",
+          "Curious",
+          "Just getting started"
+        ]
+      }
+    ];
+
+    // Core Mascot SVG Builder
+    function getMascotSVG(expression = 'curious') {
+      let eyePath = `<circle cx="36" cy="48" r="3.5" fill="#3D1F2E"/><circle cx="64" cy="48" r="3.5" fill="#3D1F2E"/>`;
+      let mouthPath = `<path d="M 42 56 Q 50 62 58 56" stroke="#3D1F2E" stroke-width="2.5" fill="none" stroke-linecap="round"/>`;
+
+      if (expression === 'happy') {
+        eyePath = `<path d="M 32 48 Q 37 42 42 48" stroke="#3D1F2E" stroke-width="3" fill="none" stroke-linecap="round"/>
+                   <path d="M 58 48 Q 63 42 68 48" stroke="#3D1F2E" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+        mouthPath = `<path d="M 40 54 Q 50 66 60 54 Z" fill="#E63950"/>`;
+      } else if (expression === 'concerned') {
+        mouthPath = `<path d="M 42 58 Q 50 53 58 58" stroke="#3D1F2E" stroke-width="2.5" fill="none" stroke-linecap="round"/>`;
+      }
+
+      return `
+        <svg class="mascot-svg" viewBox="0 0 100 100">
+          <path d="M 50 18 Q 58 6 64 12 Q 56 20 50 20" fill="#4CAF50"/>
+          <ellipse cx="50" cy="56" rx="36" ry="32" fill="url(#pink-body)" />
+          <circle cx="28" cy="54" r="5" fill="#FFB6C1" opacity="0.6"/>
+          <circle cx="72" cy="54" r="5" fill="#FFB6C1" opacity="0.6"/>
+          <g class="eyes">${eyePath}</g>
+          <g class="mouth">${mouthPath}</g>
+          <defs>
+            <linearGradient id="pink-body" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#FF6B9D" />
+              <stop offset="100%" stop-color="#E63950" />
+            </linearGradient>
+          </defs>
+        </svg>
+      `;
+    }
+
+    function renderMascots() {
+      document.getElementById('welcome-mascot').innerHTML = getMascotSVG('curious');
+      document.getElementById('onboarding-mascot').innerHTML = getMascotSVG('curious');
+      document.getElementById('loading-mascot').innerHTML = getMascotSVG('happy');
+      document.getElementById('dash-mascot').innerHTML = getMascotSVG('happy');
+    }
+
+    function nextScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      
+      if (typeof screenId === 'number') {
+        const screens = ['screen-splash', 'screen-welcome', 'screen-onboarding', 'screen-loading', 'screen-dashboard'];
+        document.getElementById(screens[screenId - 1]).classList.add('active');
+      } else {
+        document.getElementById(screenId).classList.add('active');
+      }
+    }
+
+    // Auto Advance Splash
+    setTimeout(() => {
+      nextScreen(2);
+    }, 2000);
+
+    // Onboarding Flow Logic
+    function renderQuestion() {
+      const q = questions[state.currentStep];
+      document.getElementById('question-text').innerText = q.text;
+      document.getElementById('progress-fill').style.width = `${((state.currentStep + 1) / questions.length) * 100}%`;
+
+      const optionsContainer = document.getElementById('options-container');
+      optionsContainer.innerHTML = '';
+
+      const nextBtn = document.getElementById('onboarding-next-btn');
+      nextBtn.style.opacity = '0.5';
+      nextBtn.style.pointerEvents = 'none';
+
+      q.options.forEach(opt => {
+        const card = document.createElement('div');
+        card.className = 'option-card';
+        card.innerText = opt;
+        
+        if (state.answers[q.id] === opt) {
+          card.classList.add('selected');
+          nextBtn.style.opacity = '1';
+          nextBtn.style.pointerEvents = 'auto';
+        }
+
+        card.onclick = () => {
+          document.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+          card.classList.add('selected');
+          state.answers[q.id] = opt;
+          
+          nextBtn.style.opacity = '1';
+          nextBtn.style.pointerEvents = 'auto';
+
+          // Update mascot expression on final step
+          if (state.currentStep === questions.length - 1) {
+            document.getElementById('onboarding-mascot').innerHTML = getMascotSVG('happy');
+          }
+        };
+
+        optionsContainer.appendChild(card);
+      });
+    }
+
+    function handleQuestionNext() {
+      if (state.currentStep < questions.length - 1) {
+        state.currentStep++;
+        renderQuestion();
+      } else {
+        startLoadingSequence();
+      }
+    }
+
+    function startLoadingSequence() {
+      nextScreen('screen-loading');
+
+      // Hide partner loading indicator if opted out
+      if (state.answers.partner !== "Yes, invite them") {
+        document.getElementById('status-3').style.display = 'none';
+      }
+
+      setTimeout(() => document.getElementById('status-1').classList.add('visible'), 400);
+      setTimeout(() => document.getElementById('status-2').classList.add('visible'), 1000);
+      
+      if (state.answers.partner === "Yes, invite them") {
+        setTimeout(() => document.getElementById('status-3').classList.add('visible'), 1600);
+      }
+
+      setTimeout(() => {
+        buildDashboard();
+        nextScreen('screen-dashboard');
+      }, 2800);
+    }
+
+    // Dynamic Dashboard Renderer
+    function buildDashboard() {
+      const grid = document.getElementById('dashboard-grid');
+      grid.innerHTML = '';
+
+      const isPregnant = state.answers.goal === "I'm pregnant";
+      const isPostpartum = state.answers.goal === "Recently had a baby";
+      const wantsPartner = state.answers.partner === "Yes, invite them";
+
+      let modules = [];
+
+      if (isPregnant) {
+        modules.push(
+          { title: "Pregnancy Milestones", desc: "Trimester 2 • Week 18", icon: "👶" },
+          { title: "Appointment Reminders", desc: "Next scan in 12 days", icon: "📅" }
+        );
+      } else if (isPostpartum) {
+        modules.push(
+          { title: "Postpartum Recovery", desc: "Week 4 care plan", icon: "🌸" },
+          { title: "Pelvic Floor & Rest", desc: "Gentle daily guidance", icon: "🧘" }
+        );
+      } else {
+        modules.push(
+          { title: "Cycle Engine", desc: "Follicular Phase • Day 8", icon: "🩸" },
+          { title: "Ovulation Prediction", desc: "Estimated in 6 days", icon: "✨" }
+        );
+      }
+
+      modules.push({ 
+        title: "Adaptive Nutrition", 
+        desc: isPregnant ? "Iron & folate rich suggestions" : "Phase-aware energy meal plan", 
+        icon: "🥗" 
+      });
+
+      modules.push({ 
+        title: "Mood & Symptom Journal", 
+        desc: "Tap Eve to start daily check-in", 
+        icon: "💭" 
+      });
+
+      if (wantsPartner) {
+        modules.push({ 
+          title: "Partner Connection", 
+          desc: "Linked • Nudges active", 
+          icon: "💌" 
+        });
+      }
+
+      modules.forEach(m => {
+        const card = document.createElement('div');
+        card.className = 'module-card';
+        card.innerHTML = `
+          <div class="module-icon">${m.icon}</div>
+          <div>
+            <h4 style="font-size: 0.95rem; font-weight: 600;">${m.title}</h4>
+            <p style="font-size: 0.8rem; color: #666; margin-top: 2px;">${m.desc}</p>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // Initialization
+    window.onload = () => {
+      renderMascots();
+      renderQuestion();
+    };
+  </script>
+</body>
+</html>

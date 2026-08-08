@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pomme — 3-Stage Top Peeled Mascot</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-light: #FFFFFF;
+      --ruby-main: #E6195E;
+      --ruby-dark: #2A000E;
+      --ruby-blush: #FFA0B8;
+      --ruby-soft: #FFF0F4;
+      --text-dark: #2A000E;
+      --font-display: 'Fredoka', sans-serif;
+      --font-body: 'Quicksand', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-light);
+      font-family: var(--font-body);
+      color: var(--text-dark);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      overflow-x: hidden;
+      padding: 25px 0;
+    }
+
+    /* Guaranteed No-Cut Parent Wrapper Architecture */
+    .stage-container {
+      position: relative;
+      width: 400px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: visible !important;
+    }
+
+    /* Speech Bubble */
+    .speech-bubble {
+      position: relative;
+      background: #FFFFFF;
+      color: var(--ruby-dark);
+      padding: 14px 22px;
+      border-radius: 22px;
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 0.98rem;
+      line-height: 1.35;
+      letter-spacing: 0.2px;
+      border: 3.5px solid var(--ruby-dark);
+      box-shadow: 0 8px 0px var(--ruby-dark);
+      text-align: center;
+      min-width: 180px;
+      max-width: 320px;
+      width: max-content;
+      z-index: 20;
+      transform-origin: bottom center;
+      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease;
+      word-wrap: break-word;
+      margin-bottom: 16px;
+    }
+
+    .speech-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 12px 10px 0;
+      border-style: solid;
+      border-color: var(--ruby-dark) transparent;
+    }
+
+    .speech-bubble::before {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 9px 7px 0;
+      border-style: solid;
+      border-color: #FFFFFF transparent;
+      z-index: 1;
+    }
+
+    /* Mascot Container with strict Overflow Visibility */
+    .mascot-container {
+      position: relative;
+      width: 290px;
+      height: 310px;
+      cursor: grab;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: visible !important;
+    }
+
+    .mascot-container:active {
+      cursor: grabbing;
+    }
+
+    .mascot-shadow {
+      position: absolute;
+      bottom: 8px;
+      width: 150px;
+      height: 22px;
+      background: rgba(42, 0, 14, 0.14);
+      border-radius: 50%;
+      transition: transform 0.1s ease, opacity 0.1s ease;
+      z-index: 1;
+    }
+
+    /* SVG & Canvas Overflow Set to Visible */
+    svg, .mascot-svg {
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      overflow: visible !important;
+      transform-origin: 50% 85%;
+      will-change: transform;
+    }
+
+    /* Dark Aura */
+    .dark-aura {
+      position: absolute;
+      width: 270px;
+      height: 270px;
+      background: radial-gradient(circle, rgba(230, 25, 94, 0.25) 0%, rgba(255, 255, 255, 0) 70%);
+      border-radius: 50%;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .dark-aura.active {
+      opacity: 1;
+      animation: pulseAura 1.2s ease-in-out infinite alternate;
+    }
+
+    @keyframes pulseAura {
+      from { transform: scale(0.95); opacity: 0.25; }
+      to { transform: scale(1.18); opacity: 0.55; }
+    }
+
+    /* Motion Engine: Seed Nodes & Keyframe Depth */
+    .seed-row {
+      transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.35s ease;
+      transition-delay: calc(var(--row-index, 1) * 55ms);
+      will-change: transform, opacity;
+      transform-origin: center center;
+    }
+
+    .seed-node {
+      cursor: pointer;
+      transform-origin: center center;
+      transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.35s ease, opacity 0.3s ease;
+      will-change: transform, filter;
+      filter: drop-shadow(0px 2px 3px rgba(42, 0, 14, 0.25));
+    }
+
+    .seed-node:hover {
+      transform: translateY(-6px) translateX(var(--offset-x, 1px)) scale(1.22);
+      filter: drop-shadow(0px 8px 12px rgba(230, 25, 94, 0.55));
+    }
+
+    .seed-node.floating-top {
+      transform: translateY(-18px) translateX(var(--offset-x, 4px)) scale(1.3) !important;
+      filter: drop-shadow(0px 10px 14px rgba(230, 25, 94, 0.65)) !important;
+    }
+
+    /* 3-Stage Top Peel Controller Card */
+    .peel-control-card {
+      width: 100%;
+      max-width: 360px;
+      background: #FFF5F8;
+      border: 3.5px solid var(--ruby-dark);
+      border-radius: 20px;
+      padding: 16px;
+      box-shadow: 0 6px 0px var(--ruby-dark);
+      margin-top: 18px;
+      z-index: 10;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-family: var(--font-display);
+    }
+
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--ruby-dark);
+    }
+
+    .peel-badge {
+      background: var(--ruby-main);
+      color: #FFFFFF;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      border: 2px solid var(--ruby-dark);
+    }
+
+    /* Stage Selector Stepper Buttons (Updated to 3 columns) */
+    .stage-stepper {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      width: 100%;
+    }
+
+    .btn-stage {
+      background: #FFFFFF;
+      border: 2.5px solid var(--ruby-dark);
+      color: var(--ruby-dark);
+      padding: 10px 0;
+      border-radius: 12px;
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 3px 0px var(--ruby-dark);
+      transition: all 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .btn-stage span {
+      font-size: 0.72rem;
+      opacity: 0.8;
+    }
+
+    .btn-stage:hover {
+      background: #FFE0EC;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 0px var(--ruby-dark);
+    }
+
+    .btn-stage.active {
+      background: var(--ruby-main);
+      color: #FFFFFF;
+      transform: translateY(2px);
+      box-shadow: 0 1px 0px var(--ruby-dark);
+    }
+
+    .btn-stage.active span {
+      color: #FFFFFF;
+      opacity: 1;
+    }
+
+    /* Controls Grid */
+    .controls-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      width: 100%;
+      max-width: 360px;
+      margin-top: 12px;
+      z-index: 10;
+    }
+
+    .btn-persona {
+      background: #FFF5F8;
+      border: 3.5px solid var(--ruby-dark);
+      color: var(--ruby-dark);
+      padding: 10px 12px;
+      border-radius: 16px;
+      font-family: var(--font-display);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 5px 0px var(--ruby-dark);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .btn-persona.full-width {
+      grid-column: span 2;
+      background: var(--ruby-soft);
+    }
+
+    .btn-persona:hover {
+      background: #FFE0EC;
+      transform: translateY(-2px);
+      box-shadow: 0 7px 0px var(--ruby-dark);
+    }
+
+    .btn-persona:active {
+      transform: translateY(3px);
+      box-shadow: 0 2px 0px var(--ruby-dark);
+    }
+
+    /* Particles Container */
+    .confetti-layer {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 30;
+      overflow: visible;
+    }
+
+    .particle {
+      position: absolute;
+      animation: popUp 0.85s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    }
+
+    @keyframes popUp {
+      0% { opacity: 1; transform: translate(0, 0) scale(0.5); }
+      100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1.2) rotate(180deg); }
+    }
+
+    /* SVG Transitions */
+    .peel-transition {
+      transition: d 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="stage-container">
+    
+    <!-- Speech Dialogue -->
+    <div class="speech-bubble" id="speech">Stage 1: 100% Skin — Whole & cozy!</div>
+
+    <!-- Mascot Wrapper -->
+    <div class="mascot-container" id="mascot-box">
+      <div class="dark-aura" id="aura"></div>
+      <div class="mascot-shadow" id="shadow"></div>
+      <div class="confetti-layer" id="confetti"></div>
+
+      <!-- Extended ViewBox (-40 padding) to eliminate top seed/peel clipping completely -->
+      <svg class="mascot-svg" id="pomme-rig" viewBox="0 -40 200 260">
+        <defs>
+          <!-- Eye Clip Paths -->
+          <clipPath id="leftEyeClip">
+            <ellipse cx="68" cy="115" rx="13" ry="17" />
+          </clipPath>
+          <clipPath id="rightEyeClip">
+            <ellipse cx="132" cy="115" rx="13" ry="17" />
+          </clipPath>
+
+          <!-- Top Peel Reservoir Cavity Clip Path -->
+          <clipPath id="topCavityClip">
+            <path id="cavity-clip-path" class="peel-transition" d="M 68,44 Q 100,48 132,44 C 150,44 180,78 180,124 C 180,170 148,194 100,194 C 52,194 20,170 20,124 C 20,78 50,44 68,44 Z" />
+          </clipPath>
+        </defs>
+
+        <!-- Base Dark Backing Silhouette -->
+        <path d="M 100,42 C 154,42 184,76 184,126 C 184,174 150,198 100,198 C 50,198 16,174 16,126 C 16,76 46,42 100,42 Z" fill="#2A000E" />
+
+        <!-- Fixed Outer Body Shell -->
+        <path id="body-main-shell" d="M 100,44 C 152,44 180,78 180,124 C 180,170 148,194 100,194 C 52,194 20,170 20,124 C 20,78 48,44 100,44 Z" fill="#FF2A6D" />
+
+        <!-- Base Body Shadow Crescent -->
+        <path d="M 32,145 C 42,175 68,194 100,194 C 132,194 158,175 168,145 C 150,168 126,182 100,182 C 74,182 50,168 32,145 Z" fill="#C80042" />
+
+        <!-- ========================================================= -->
+        <!-- TOP REVEAL SEED CAVITY & STAGGERED SEED ROWS -->
+        <!-- ========================================================= -->
+        <g id="top-peel-reservoir">
+          <!-- Deep Pith & Chamber Liner -->
+          <path id="top-pith-liner" class="peel-transition" d="M 68,44 Q 100,48 132,44 Q 100,52 68,44 Z" fill="#3D0013" stroke="#2A000E" stroke-width="2.5" />
+          <path id="top-cream-pith" class="peel-transition" d="M 70,44 Q 100,50 130,44 Q 100,56 70,44 Z" fill="#FFF2F5" opacity="0.9" />
+
+          <!-- EXPOSED RUBY SEEDS WITH ELASTIC ARCS & STAGGERED DELAYS -->
+          <g id="top-seed-rows">
+            <!-- Row 1: Topmost Crown Seeds (Always visible base) -->
+            <g id="seed-row-1" class="seed-row" style="--row-index: 1;" transform-origin="100 32">
+              <g class="seed-node" style="--offset-x: -3px;" onclick="tapSeed(this, 'Top Seed: Fresh vitality!')" transform-origin="84 28">
+                <path d="M 80,36 C 74,26 84,18 89,25 C 93,31 87,40 80,36 Z" fill="#D9004C" stroke="#2A000E" stroke-width="2" />
+                <circle cx="84" cy="24" r="1.8" fill="#FFFFFF" opacity="0.8" />
+              </g>
+              <g class="seed-node" style="--offset-x: 0px;" onclick="tapSeed(this, 'Center Gem: Sparkle peak!')" transform-origin="100 24">
+                <path d="M 100,30 C 92,16 108,12 112,23 C 114,30 106,36 100,30 Z" fill="#FF2A6D" stroke="#2A000E" stroke-width="2" />
+                <circle cx="102" cy="19" r="2" fill="#FFFFFF" />
+              </g>
+              <g class="seed-node" style="--offset-x: 3px;" onclick="tapSeed(this, 'Top Seed: Hydration boost!')" transform-origin="116 28">
+                <path d="M 120,36 C 113,40 107,31 111,25 C 116,18 126,27 120,36 Z" fill="#B8003A" stroke="#2A000E" stroke-width="2" />
+                <circle cx="116" cy="24" r="1.8" fill="#FFFFFF" opacity="0.8" />
+              </g>
+            </g>
+
+            <!-- Row 2: Revealed at Stage 2 (85% Skin) -->
+            <g id="seed-row-2" class="seed-row" style="--row-index: 2; opacity: 0; transform: translateY(-10px) scale(0.82);" transform-origin="100 40">
+              <g class="seed-node" style="--offset-x: -2px;" onclick="tapSeed(this, 'Stage 2 Seed: Glow level rising!')" transform-origin="88 40">
+                <path d="M 88,42 C 82,34 94,30 97,38 C 99,44 92,48 88,42 Z" fill="#FF175A" stroke="#2A000E" stroke-width="2" />
+                <circle cx="91" cy="37" r="1.5" fill="#FFFFFF" />
+              </g>
+              <g class="seed-node" style="--offset-x: 2px;" onclick="tapSeed(this, 'Stage 2 Seed: Energy surge!')" transform-origin="112 40">
+                <path d="M 112,42 C 108,48 101,44 103,38 C 106,30 118,34 112,42 Z" fill="#E6004C" stroke="#2A000E" stroke-width="2" />
+                <circle cx="109" cy="37" r="1.5" fill="#FFFFFF" />
+              </g>
+            </g>
+
+            <!-- Row 3: Revealed at Stage 3 (70% Skin) -->
+            <g id="seed-row-3" class="seed-row" style="--row-index: 3; opacity: 0; transform: translateY(-14px) scale(0.82);" transform-origin="100 50">
+              <g class="seed-node" style="--offset-x: -4px;" onclick="tapSeed(this, 'Stage 3 Seed: Deep nourishment!')" transform-origin="76 48">
+                <path d="M 76,52 C 68,44 80,38 85,46 C 88,52 82,58 76,52 Z" fill="#FF2A6D" stroke="#2A000E" stroke-width="2" />
+                <circle cx="80" cy="46" r="1.8" fill="#FFFFFF" />
+              </g>
+              <g class="seed-node" style="--offset-x: 0px;" onclick="tapSeed(this, 'Stage 3 Seed: Sweet harmony!')" transform-origin="100 48">
+                <path d="M 100,52 C 92,42 108,38 110,48 C 112,54 104,58 100,52 Z" fill="#FF5E8E" stroke="#2A000E" stroke-width="2" />
+                <circle cx="102" cy="46" r="1.8" fill="#FFFFFF" />
+              </g>
+              <g class="seed-node" style="--offset-x: 4px;" onclick="tapSeed(this, 'Stage 3 Seed: Radiance peak!')" transform-origin="124 48">
+                <path d="M 124,52 C 118,58 112,52 115,46 C 120,38 132,44 124,52 Z" fill="#D9004C" stroke="#2A000E" stroke-width="2" />
+                <circle cx="120" cy="46" r="1.8" fill="#FFFFFF" />
+              </g>
+            </g>
+          </g>
+        </g>
+
+        <!-- TOP ORGANIC TORN PEEL CROWN -->
+        <g id="peel-crown-group" class="peel-transition" transform-origin="100 42">
+          <!-- Back Peel Flaps -->
+          <path id="crown-back-left" class="peel-transition" d="M 68,44 Q 60,26 74,32 Q 88,38 92,44 Z" fill="#C80042" stroke="#2A000E" stroke-width="3.5" stroke-linejoin="round" />
+          <path id="crown-back-right" class="peel-transition" d="M 132,44 Q 140,26 126,32 Q 112,38 108,44 Z" fill="#C80042" stroke="#2A000E" stroke-width="3.5" stroke-linejoin="round" />
+          
+          <!-- Front Peel Flaps -->
+          <path id="crown-front-left" class="peel-transition" d="M 60,48 Q 48,30 68,36 Q 80,40 84,52 Z" fill="#FF2A6D" stroke="#2A000E" stroke-width="3.5" stroke-linejoin="round" />
+          <path id="crown-front-right" class="peel-transition" d="M 140,48 Q 152,30 132,36 Q 120,40 116,52 Z" fill="#FF2A6D" stroke="#2A000E" stroke-width="3.5" stroke-linejoin="round" />
+          <path id="crown-front-center" class="peel-transition" d="M 82,54 Q 100,62 118,54 Q 100,46 82,54 Z" fill="#FF5E8E" stroke="#2A000E" stroke-width="3.5" stroke-linejoin="round" />
+        </g>
+
+        <!-- Left Arm -->
+        <g id="arm-left-group" transform-origin="34 135">
+          <path id="arm-left" d="M 34,135 Q 14,145 24,162 Q 34,166 40,148 Z" fill="#E6195E" stroke="#2A000E" stroke-width="3.5" stroke-linejoin="round" />
+        </g>
+
+        <!-- Right Arm -->
+        <g id="arm-right-group" transform-origin="166 135">
+          <path id="arm-right" d="M 166,135 Q 186,145 176,162 Q 166,166 160,148 Z" fill="#E6195E" stroke="#2A000E" stroke-width="3.5" stroke-linejoin="round" />
+        </g>
+
+        <!-- FERTILE WINDOW SUBTLE GLOW ELEMENT -->
+        <ellipse id="fertile-glow" cx="100" cy="35" rx="38" ry="18" fill="#FFA0B8" opacity="0" style="transition: opacity 0.4s ease; transform-origin: 100px 35px;" />
+
+        <!-- FACE ELEMENTS -->
+        <g id="under-eye-patches">
+          <ellipse cx="68" cy="130" rx="12.5" ry="5.5" fill="#FFA0B8" opacity="0.9" />
+          <ellipse cx="132" cy="130" rx="12.5" ry="5.5" fill="#FFA0B8" opacity="0.9" />
+        </g>
+
+        <!-- Left Eye Container -->
+        <g id="eye-left-container">
+          <ellipse cx="68" cy="115" rx="13" ry="17" fill="#2A000E" stroke="#2A000E" stroke-width="3.5" />
+          <g clip-path="url(#leftEyeClip)">
+            <g id="pupil-left" transform="translate(68, 115)">
+              <circle cx="0" cy="0" r="11" fill="#150007" />
+              <circle cx="-3" cy="-4" r="5" fill="#FFFFFF" />
+              <circle cx="4" cy="5" r="2.5" fill="#FFFFFF" />
+            </g>
+            <rect id="eyelid-left" x="50" y="85" width="36" height="34" fill="#FF2A6D" transform="translate(0, -34)" />
+          </g>
+        </g>
+
+        <!-- Right Eye Container -->
+        <g id="eye-right-container">
+          <ellipse cx="132" cy="115" rx="13" ry="17" fill="#2A000E" stroke="#2A000E" stroke-width="3.5" />
+          <g clip-path="url(#rightEyeClip)">
+            <g id="pupil-right" transform="translate(132, 115)">
+              <circle cx="0" cy="0" r="11" fill="#150007" />
+              <circle cx="-3" cy="-4" r="5" fill="#FFFFFF" />
+              <circle cx="4" cy="5" r="2.5" fill="#FFFFFF" />
+            </g>
+            <rect id="eyelid-right" x="114" y="85" width="36" height="34" fill="#FF2A6D" transform="translate(0, -34)" />
+          </g>
+        </g>
+
+        <!-- Eyebrows -->
+        <path id="brow-left" d="M 54,92 Q 68,86 80,92" stroke="#2A000E" stroke-width="4" stroke-linecap="round" fill="none" />
+        <path id="brow-right" d="M 120,92 Q 132,86 146,92" stroke="#2A000E" stroke-width="4" stroke-linecap="round" fill="none" />
+
+        <!-- Mouth -->
+        <path id="mouth" d="M 86,140 Q 100,156 114,140" stroke="#2A000E" stroke-width="4" stroke-linecap="round" fill="none" />
+
+        <!-- Feet -->
+        <ellipse cx="76" cy="195" rx="12" ry="5" fill="#2A000E" />
+        <ellipse cx="124" cy="195" rx="12" ry="5" fill="#2A000E" />
+      </svg>
+    </div>
+
+    <!-- Stepper Control Card (3 Stages) -->
+    <div class="peel-control-card">
+      <div class="card-header">
+        <span class="card-title" id="stage-title">Top Peel Level: Stage 1</span>
+        <span class="peel-badge" id="skin-badge">100% Skin</span>
+      </div>
+      
+      <div class="stage-stepper">
+        <button class="btn-stage active" onclick="setPeelStage(1)" id="stage-btn-1">
+          Stage 1 <span>100% Skin</span>
+        </button>
+        <button class="btn-stage" onclick="setPeelStage(2)" id="stage-btn-2">
+          Stage 2 <span>85% Skin</span>
+        </button>
+        <button class="btn-stage" onclick="setPeelStage(3)" id="stage-btn-3">
+          Stage 3 <span>70% Skin</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Controls Grid -->
+    <div class="controls-grid">
+      <button class="btn-persona" onclick="setEmotion('guilt')">Guilt Trip</button>
+      <button class="btn-persona" onclick="setEmotion('hype')">Unhinged Hype</button>
+      <button class="btn-persona" onclick="setEmotion('sassy')">Sassy</button>
+      <button class="btn-persona" onclick="setEmotion('hug')">Need Hugs</button>
+      <button class="btn-persona full-width" onclick="setEmotion('fertile')">🌸 Fertile Window Bloom</button>
+    </div>
+
+  </div>
+
+  <script>
+    // Rigging Elements
+    const pommeRig = document.getElementById('pomme-rig');
+    const mascotBox = document.getElementById('mascot-box');
+    const shadow = document.getElementById('shadow');
+    const speech = document.getElementById('speech');
+    const aura = document.getElementById('aura');
+    const confettiContainer = document.getElementById('confetti');
+
+    const pupilLeft = document.getElementById('pupil-left');
+    const pupilRight = document.getElementById('pupil-right');
+    const eyelidLeft = document.getElementById('eyelid-left');
+    const eyelidRight = document.getElementById('eyelid-right');
+    const browLeft = document.getElementById('brow-left');
+    const browRight = document.getElementById('brow-right');
+    const mouth = document.getElementById('mouth');
+    const armLeftGroup = document.getElementById('arm-left-group');
+    const armRightGroup = document.getElementById('arm-right-group');
+    const fertileGlow = document.getElementById('fertile-glow');
+
+    // Dynamic Top Peel Elements
+    const topPithLiner = document.getElementById('top-pith-liner');
+    const topCreamPith = document.getElementById('top-cream-pith');
+    const peelCrownGroup = document.getElementById('peel-crown-group');
+    
+    const seedRow2 = document.getElementById('seed-row-2');
+    const seedRow3 = document.getElementById('seed-row-3');
+
+    const stageTitle = document.getElementById('stage-title');
+    const skinBadge = document.getElementById('skin-badge');
+
+    // Clean 3 Peel Stages Configuration
+    const stageConfigs = {
+      1: {
+        skin: "100% Skin",
+        title: "Stage 1: Closed Top Crown",
+        speech: "Stage 1: 100% Skin — Whole, intact & cozy!",
+        linerD: "M 68,44 Q 100,48 132,44 Q 100,52 68,44 Z",
+        creamD: "M 70,44 Q 100,50 130,44 Q 100,56 70,44 Z",
+        crownTransform: "translate(0, 0) scale(1)",
+        rows: [false, false]
+      },
+      2: {
+        skin: "85% Skin",
+        title: "Stage 2: Mid-Top Peel (15% Peel)",
+        speech: "Stage 2: 85% Skin — Crown easing open, fresh ruby seeds peeking!",
+        linerD: "M 62,44 Q 100,62 138,44 Q 100,72 62,44 Z",
+        creamD: "M 64,44 Q 100,64 136,44 Q 100,76 64,44 Z",
+        crownTransform: "translate(0, 6px) scale(1.04)",
+        rows: [true, false]
+      },
+      3: {
+        skin: "70% Skin",
+        title: "Stage 3: Full Top Reservoir (30% Peel)",
+        speech: "Stage 3: 70% Skin — Maximum top peel! Fully bloomed ruby chamber!",
+        linerD: "M 56,44 Q 100,76 144,44 Q 100,86 56,44 Z",
+        creamD: "M 58,44 Q 100,78 142,44 Q 100,90 58,44 Z",
+        crownTransform: "translate(0, 12px) scale(1.08)",
+        rows: [true, true]
+      }
+    };
+
+    let currentStage = 1;
+
+    function setPeelStage(stage) {
+      currentStage = stage;
+      const config = stageConfigs[stage];
+
+      for (let i = 1; i <= 3; i++) {
+        const btn = document.getElementById(`stage-btn-${i}`);
+        if (btn) {
+          if (i === stage) {
+            btn.classList.add('active');
+          } else {
+            btn.classList.remove('active');
+          }
+        }
+      }
+
+      stageTitle.innerText = config.title;
+      skinBadge.innerText = config.skin;
+
+      topPithLiner.setAttribute('d', config.linerD);
+      topCreamPith.setAttribute('d', config.creamD);
+      peelCrownGroup.style.transform = config.crownTransform;
+
+      const rows = [seedRow2, seedRow3];
+      config.rows.forEach((visible, idx) => {
+        if (rows[idx]) {
+          if (visible) {
+            rows[idx].style.opacity = '1';
+            rows[idx].style.transform = 'translateY(0px) scale(1)';
+          } else {
+            rows[idx].style.opacity = '0';
+            rows[idx].style.transform = `translateY(-${(idx + 2) * 5}px) scale(0.82)`;
+          }
+        }
+      });
+
+      speak(config.speech);
+      spawnConfetti(stage * 4);
+    }
+
+    // Tap Individual Exposed Seed Action with Physics Lift & Arc
+    function tapSeed(element, message) {
+      if (element) {
+        element.classList.add('floating-top');
+        setTimeout(() => element.classList.remove('floating-top'), 550);
+      }
+      speak(message);
+      spawnConfetti(8);
+    }
+
+    const mouthShapes = {
+      happy: "M 86,140 Q 100,156 114,140",
+      openSmile: "M 84,138 Q 100,166 116,138 Z",
+      flat: "M 88,144 L 112,144",
+      smirk: "M 88,144 Q 100,148 114,138",
+      shock: "M 92,142 A 8,10 0 1,0 108,142 A 8,10 0 1,0 92,142"
+    };
+
+    let isDragging = false;
+    let currentEmotion = null;
+    let startX = 0, startY = 0;
+    let currentX = 0, currentY = 0;
+    const k = 0.14;
+    const damping = 0.74;
+    let vx = 0, vy = 0;
+
+    let targetPupilX = 0, targetPupilY = 0;
+    let currentPupilX = 0, currentPupilY = 0;
+    let idleTimer = 0;
+
+    function physicsLoop() {
+      idleTimer += 0.04;
+
+      if (!isDragging) {
+        const breathY = Math.sin(idleTimer * 2) * 1.6;
+        const breathX = Math.cos(idleTimer) * 0.6;
+
+        let forceX = (0 - currentX) * k;
+        let forceY = (0 - currentY) * k;
+
+        vx = (vx + forceX) * damping;
+        vy = (vy + forceY) * damping;
+
+        currentX += vx;
+        currentY += vy;
+
+        const activeX = currentX + breathX;
+        const activeY = currentY + breathY;
+
+        const stretchX = 1 - (activeY * 0.003) + (Math.abs(activeX) * 0.002);
+        const stretchY = 1 + (activeY * 0.003) - (Math.abs(activeX) * 0.002);
+        const rotation = activeX * 0.15;
+
+        pommeRig.style.transform = `translate(${activeX}px, ${activeY}px) scale(${stretchX}, ${stretchY}) rotate(${rotation}deg)`;
+
+        if (!currentEmotion) {
+          const armSwayLeft = Math.sin(idleTimer * 1.8) * 3;
+          const armSwayRight = -Math.sin(idleTimer * 1.8) * 3;
+          armLeftGroup.style.transform = `rotate(${armSwayLeft}deg)`;
+          armRightGroup.style.transform = `rotate(${armSwayRight}deg)`;
+        }
+
+        shadow.style.transform = `scale(${1 - activeY * 0.002}) translate(${activeX * 0.5}px, 0)`;
+        shadow.style.opacity = `${0.6 - activeY * 0.003}`;
+      }
+
+      currentPupilX += (targetPupilX - currentPupilX) * 0.12;
+      currentPupilY += (targetPupilY - currentPupilY) * 0.12;
+
+      pupilLeft.setAttribute('transform', `translate(68, 115) translate(${currentPupilX}, ${currentPupilY})`);
+      pupilRight.setAttribute('transform', `translate(132, 115) translate(${currentPupilX}, ${currentPupilY})`);
+
+      requestAnimationFrame(physicsLoop);
+    }
+    physicsLoop();
+
+    // Event Handlers
+    mascotBox.addEventListener('mousedown', (e) => startDrag(e.clientX, e.clientY));
+    window.addEventListener('mousemove', (e) => moveDrag(e.clientX, e.clientY));
+    window.addEventListener('mouseup', endDrag);
+
+    mascotBox.addEventListener('touchstart', (e) => startDrag(e.touches[0].clientX, e.touches[0].clientY));
+    window.addEventListener('touchmove', (e) => moveDrag(e.touches[0].clientX, e.touches[0].clientY));
+    window.addEventListener('touchend', endDrag);
+
+    function startDrag(x, y) {
+      isDragging = true;
+      startX = x - currentX;
+      startY = y - currentY;
+      eyelidLeft.setAttribute('transform', 'translate(0, -10)');
+      eyelidRight.setAttribute('transform', 'translate(0, -10)');
+      mouth.setAttribute('d', mouthShapes.shock);
+      speak("SQUISH! Floating top seeds!");
+    }
+
+    function moveDrag(x, y) {
+      if (!isDragging) return;
+      currentX = x - startX;
+      currentY = y - startY;
+
+      const angle = Math.atan2(currentY, currentX);
+      const dist = Math.min(6, Math.hypot(currentX, currentY) / 10);
+      targetPupilX = Math.cos(angle) * dist;
+      targetPupilY = Math.sin(angle) * dist;
+    }
+
+    function endDrag() {
+      if (!isDragging) return;
+      isDragging = false;
+      eyelidLeft.setAttribute('transform', 'translate(0, -34)');
+      eyelidRight.setAttribute('transform', 'translate(0, -34)');
+      mouth.setAttribute('d', mouthShapes.happy);
+      speak("Boing! Soft, squishy & unclipped!");
+      spawnConfetti(6);
+    }
+
+    document.addEventListener('mousemove', (e) => {
+      if (isDragging) return;
+      const rect = mascotBox.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+
+      const dx = e.clientX - cx;
+      const dy = e.clientY - cy;
+      const angle = Math.atan2(dy, dx);
+      const dist = Math.min(6, Math.hypot(dx, dy) / 35);
+
+      targetPupilX = Math.cos(angle) * dist;
+      targetPupilY = Math.sin(angle) * dist;
+    });
+
+    function blinkLoop() {
+      if (!isDragging) {
+        eyelidLeft.setAttribute('transform', 'translate(0, 0)');
+        eyelidRight.setAttribute('transform', 'translate(0, 0)');
+        setTimeout(() => {
+          eyelidLeft.setAttribute('transform', 'translate(0, -34)');
+          eyelidRight.setAttribute('transform', 'translate(0, -34)');
+        }, 140);
+      }
+      setTimeout(blinkLoop, Math.random() * 3800 + 2200);
+    }
+    blinkLoop();
+
+    function speak(text) {
+      speech.innerText = text;
+      speech.style.transform = "scale(1.08)";
+      setTimeout(() => speech.style.transform = "scale(1)", 150);
+    }
+
+    function spawnConfetti(count = 12) {
+      const palette = ['#FF2A6D', '#FF8CAE', '#2A000E', '#FFD1DC', '#E6195E', '#FF5E8E'];
+      
+      for (let i = 0; i < count; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const size = Math.floor(Math.random() * 8 + 6);
+        const shapeType = Math.floor(Math.random() * 3);
+
+        p.style.width = size + 'px';
+        p.style.height = size + 'px';
+        p.style.backgroundColor = palette[Math.floor(Math.random() * palette.length)];
+        p.style.left = '50%';
+        p.style.top = '50%';
+
+        if (shapeType === 0) {
+          p.style.borderRadius = '50%';
+        } else if (shapeType === 1) {
+          p.style.transform = 'rotate(45deg)';
+        } else {
+          p.style.borderRadius = '2px';
+        }
+        
+        const dx = (Math.random() - 0.5) * 200 + 'px';
+        const dy = -(Math.random() * 130 + 60) + 'px';
+        p.style.setProperty('--dx', dx);
+        p.style.setProperty('--dy', dy);
+
+        confettiContainer.appendChild(p);
+        setTimeout(() => p.remove(), 850);
+      }
+    }
+
+    function setEmotion(type) {
+      aura.classList.remove('active');
+      fertileGlow.style.opacity = "0";
+      currentEmotion = type;
+
+      if (type === 'guilt') {
+        aura.classList.add('active');
+        browLeft.setAttribute('d', "M 54,86 L 80,96");
+        browRight.setAttribute('d', "M 120,96 L 146,86");
+        eyelidLeft.setAttribute('transform', 'translate(0, -18)');
+        eyelidRight.setAttribute('transform', 'translate(0, -18)');
+        mouth.setAttribute('d', mouthShapes.flat);
+        armLeftGroup.style.transform = "rotate(-40deg) translate(-5px, -5px)";
+        armRightGroup.style.transform = "rotate(40deg) translate(5px, -5px)";
+
+        speak("You missed your symptom check-in today... Pomme is watching.");
+
+      } else if (type === 'hype') {
+        browLeft.setAttribute('d', "M 54,82 Q 68,72 80,82");
+        browRight.setAttribute('d', "M 120,82 Q 132,72 146,82");
+        eyelidLeft.setAttribute('transform', 'translate(0, -34)');
+        eyelidRight.setAttribute('transform', 'translate(0, -34)');
+        mouth.setAttribute('d', mouthShapes.openSmile);
+        armLeftGroup.style.transform = "rotate(-120deg) translate(-8px, -15px)";
+        armRightGroup.style.transform = "rotate(120deg) translate(8px, -15px)";
+
+        spawnConfetti(18);
+        speak("7-DAY CHECK-IN STREAK! YOU'RE CRUSHING IT!");
+
+      } else if (type === 'sassy') {
+        browLeft.setAttribute('d', "M 54,84 Q 68,76 80,88");
+        browRight.setAttribute('d', "M 120,94 Q 132,96 146,92");
+        eyelidLeft.setAttribute('transform', 'translate(0, -16)');
+        eyelidRight.setAttribute('transform', 'translate(0, -22)');
+        mouth.setAttribute('d', mouthShapes.smirk);
+        armLeftGroup.style.transform = "rotate(35deg) translate(15px, 0px)";
+        armRightGroup.style.transform = "rotate(-35deg) translate(-15px, 0px)";
+
+        speak("Late luteal phase? Time to take a nap and demand chocolate.");
+
+      } else if (type === 'hug') {
+        browLeft.setAttribute('d', "M 54,92 Q 68,84 80,88");
+        browRight.setAttribute('d', "M 120,88 Q 132,84 146,92");
+        eyelidLeft.setAttribute('transform', 'translate(0, -34)');
+        eyelidRight.setAttribute('transform', 'translate(0, -34)');
+        mouth.setAttribute('d', mouthShapes.happy);
+        armLeftGroup.style.transform = "rotate(-60deg) translate(-10px, -5px)";
+        armRightGroup.style.transform = "rotate(60deg) translate(10px, -5px)";
+
+        spawnConfetti(8);
+        speak("Tough day? Logged your rest day & sent a nudge to your partner.");
+
+      } else if (type === 'fertile') {
+        setPeelStage(3);
+        fertileGlow.style.opacity = '0.85';
+
+        browLeft.setAttribute('d', "M 54,90 Q 68,84 80,88");
+        browRight.setAttribute('d', "M 120,88 Q 132,84 146,90");
+        eyelidLeft.setAttribute('transform', 'translate(0, -34)');
+        eyelidRight.setAttribute('transform', 'translate(0, -34)');
+        mouth.setAttribute('d', mouthShapes.happy);
+        
+        armLeftGroup.style.transform = "rotate(-45deg) translate(-6px, -2px)";
+        armRightGroup.style.transform = "rotate(45deg) translate(6px, -2px)";
+
+        spawnConfetti(16);
+        speak("🌸 Fertile Window Bloom! Fully exposed top ruby seeds!");
+      }
+    }
+  </script>
+</body>
+</html>

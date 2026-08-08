@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EVE — Mobile App Flow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-light: #FFF8FA;
+      --card-bg: #FFFFFF;
+      --ruby-main: #FF2A6D;
+      --ruby-dark: #2A000E;
+      --ruby-blush: #FFA0B8;
+      --ruby-soft: #FFF0F4;
+      --ruby-shadow: #2A000E;
+      --font-display: 'Fredoka', sans-serif;
+      --font-body: 'Quicksand', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #120207;
+      font-family: var(--font-body);
+      color: var(--ruby-dark);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px 10px;
+    }
+
+    /* Mobile Device Frame */
+    .mobile-frame {
+      position: relative;
+      width: 100%;
+      max-width: 390px;
+      height: 844px;
+      background: var(--bg-light);
+      border-radius: 44px;
+      border: 5px solid var(--ruby-dark);
+      box-shadow: 0 16px 0px var(--ruby-dark), 0 24px 40px rgba(0,0,0,0.3);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Top Camera Notch */
+    .notch {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 26px;
+      background: var(--ruby-dark);
+      border-radius: 14px;
+      z-index: 100;
+    }
+
+    /* Dynamic Screen Manager */
+    .screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 50px 24px 24px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(20px);
+      transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      background: var(--bg-light);
+      z-index: 10;
+    }
+
+    .screen.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+      z-index: 20;
+    }
+
+    /* Common Buttons */
+    .btn-primary {
+      width: 100%;
+      background: var(--ruby-main);
+      color: #FFFFFF;
+      border: 3px solid var(--ruby-dark);
+      padding: 16px;
+      border-radius: 20px;
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 0px var(--ruby-dark);
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0px var(--ruby-dark);
+    }
+
+    /* ----------------------------------------------------
+       SCREEN 1: POPUP / WELCOME (EVE BRANDING)
+    ---------------------------------------------------- */
+    #screen-welcome {
+      justify-content: space-between;
+      align-items: center;
+      text-align: center;
+    }
+
+    .speech-bubble {
+      position: relative;
+      background: #FFFFFF;
+      color: var(--ruby-dark);
+      padding: 14px 20px;
+      border-radius: 20px;
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 1.05rem;
+      border: 3.5px solid var(--ruby-dark);
+      box-shadow: 0 6px 0px var(--ruby-dark);
+      text-align: center;
+      max-width: 280px;
+      margin-top: 10px;
+      transform-origin: bottom center;
+      transition: transform 0.2s ease;
+    }
+
+    .speech-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -13px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 10px 9px 0;
+      border-style: solid;
+      border-color: var(--ruby-dark) transparent;
+    }
+
+    .speech-bubble::before {
+      content: '';
+      position: absolute;
+      bottom: -7px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 7px 6px 0;
+      border-style: solid;
+      border-color: #FFFFFF transparent;
+      z-index: 1;
+    }
+
+    .mascot-stage-mobile {
+      position: relative;
+      width: 240px;
+      height: 250px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: grab;
+    }
+
+    .mascot-stage-mobile:active {
+      cursor: grabbing;
+    }
+
+    .mascot-shadow {
+      position: absolute;
+      bottom: 12px;
+      width: 130px;
+      height: 18px;
+      background: rgba(42, 0, 14, 0.14);
+      border-radius: 50%;
+      transition: transform 0.1s ease, opacity 0.1s ease;
+    }
+
+    .mascot-svg {
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      overflow: visible;
+      transform-origin: 50% 85%;
+      will-change: transform;
+    }
+
+    .brand-footer {
+      margin-bottom: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .brand-eve {
+      font-family: var(--font-display);
+      font-size: 3.8rem;
+      font-weight: 700;
+      color: var(--ruby-dark);
+      letter-spacing: 2px;
+      line-height: 1;
+      text-shadow: 0 4px 0 var(--ruby-blush);
+    }
+
+    .brand-sub {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--ruby-main);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    /* ----------------------------------------------------
+       SCREEN 2: SURVEY PHASE
+    ---------------------------------------------------- */
+    #screen-survey {
+      justify-content: space-between;
+    }
+
+    .survey-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .mini-mascot-box {
+      width: 60px;
+      height: 60px;
+      background: var(--ruby-soft);
+      border: 3px solid var(--ruby-dark);
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 0 var(--ruby-dark);
+      flex-shrink: 0;
+    }
+
+    .survey-progress-bar {
+      flex-grow: 1;
+      height: 14px;
+      background: #FFE0EC;
+      border: 3px solid var(--ruby-dark);
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .survey-progress-fill {
+      width: 33%;
+      height: 100%;
+      background: var(--ruby-main);
+      transition: width 0.3s ease;
+    }
+
+    .survey-content {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 10px;
+    }
+
+    .survey-title {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      color: var(--ruby-dark);
+      line-height: 1.25;
+    }
+
+    .survey-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .option-card {
+      background: #FFFFFF;
+      border: 3px solid var(--ruby-dark);
+      padding: 14px 18px;
+      border-radius: 18px;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--ruby-dark);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      box-shadow: 0 4px 0 var(--ruby-dark);
+      transition: all 0.15s ease;
+    }
+
+    .option-card:hover, .option-card.selected {
+      background: var(--ruby-soft);
+      border-color: var(--ruby-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 0 var(--ruby-dark);
+    }
+
+    .option-card.selected {
+      background: var(--ruby-blush);
+      color: var(--ruby-dark);
+    }
+
+    .radio-circle {
+      width: 20px;
+      height: 20px;
+      border: 3px solid var(--ruby-dark);
+      border-radius: 50%;
+      background: #FFFFFF;
+    }
+
+    .option-card.selected .radio-circle {
+      background: var(--ruby-dark);
+    }
+
+    /* ----------------------------------------------------
+       SCREEN 3: HOME DASHBOARD
+    ---------------------------------------------------- */
+    #screen-home {
+      padding: 45px 18px 80px 18px;
+      overflow-y: auto;
+      gap: 16px;
+    }
+
+    #screen-home::-webkit-scrollbar {
+      display: none;
+    }
+
+    .home-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .user-greeting {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      color: var(--ruby-dark);
+    }
+
+    .phase-badge {
+      background: var(--ruby-blush);
+      border: 2.5px solid var(--ruby-dark);
+      padding: 6px 12px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      box-shadow: 0 3px 0 var(--ruby-dark);
+    }
+
+    /* Home Hero Mascot Widget */
+    .home-hero-card {
+      background: #FFFFFF;
+      border: 3px solid var(--ruby-dark);
+      border-radius: 24px;
+      padding: 16px;
+      box-shadow: 0 6px 0 var(--ruby-dark);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .home-speech-bubble {
+      background: var(--ruby-soft);
+      border: 2.5px solid var(--ruby-dark);
+      border-radius: 16px;
+      padding: 10px 14px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 8px;
+      width: 100%;
+      box-shadow: 0 3px 0 var(--ruby-dark);
+    }
+
+    .bento-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .bento-card {
+      background: #FFFFFF;
+      border: 3px solid var(--ruby-dark);
+      border-radius: 20px;
+      padding: 14px;
+      box-shadow: 0 5px 0 var(--ruby-dark);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .bento-card.full-width {
+      grid-column: span 2;
+    }
+
+    .bento-title {
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: var(--ruby-main);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .bento-value {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      color: var(--ruby-dark);
+    }
+
+    .bento-desc {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #666;
+    }
+
+    /* Bottom Navigation Bar */
+    .bottom-nav {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 70px;
+      background: #FFFFFF;
+      border-top: 3.5px solid var(--ruby-dark);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 50;
+      padding-bottom: 10px;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: var(--ruby-dark);
+      cursor: pointer;
+      opacity: 0.5;
+      transition: opacity 0.2s ease;
+    }
+
+    .nav-item.active {
+      opacity: 1;
+      color: var(--ruby-main);
+    }
+
+    .nav-icon {
+      width: 22px;
+      height: 22px;
+      fill: currentColor;
+    }
+
+    /* Confetti Burst Layer */
+    .confetti-layer {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 90;
+    }
+
+    .particle {
+      position: absolute;
+      animation: popUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    }
+
+    @keyframes popUp {
+      0% { opacity: 1; transform: translate(0, 0) scale(0.5); }
+      100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1.2) rotate(180deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Mobile Frame Shell -->
+  <div class="mobile-frame">
+    <div class="notch"></div>
+    <div class="confetti-layer" id="confetti"></div>
+
+    <!-- SHARED REUSABLE SVG MASCOT RIG -->
+    <template id="mascot-svg-template">
+      <svg class="mascot-svg" viewBox="0 0 200 220">
+        <defs>
+          <clipPath id="leftEyeClip">
+            <ellipse cx="68" cy="115" rx="13" ry="17" />
+          </clipPath>
+          <clipPath id="rightEyeClip">
+            <ellipse cx="132" cy="115" rx="13" ry="17" />
+          </clipPath>
+        </defs>
+
+        <path d="M 100,42 C 154,42 184,76 184,126 C 184,174 150,198 100,198 C 50,198 16,174 16,126 C 16,76 46,42 100,42 Z" fill="#2A000E" />
+        <path class="body-mesh" d="M 100,44 C 152,44 180,78 180,124 C 180,170 148,194 100,194 C 52,194 20,170 20,124 C 20,78 48,44 100,44 Z" fill="#FF2A6D" />
+        <path d="M 32,145 C 42,175 68,194 100,194 C 132,194 158,175 168,145 C 150,168 126,182 100,182 C 74,182 50,168 32,145 Z" fill="#C80042" />
+
+        <!-- Left Arm -->
+        <g class="arm-left-group" transform-origin="34 135">
+          <path d="M 34,135 Q 14,145 24,162 Q 34,166 40,148 Z" fill="#E6195E" stroke="#2A000E" stroke-width="3.5" stroke-linejoin="round" />
+        </g>
+
+        <!-- Right Arm -->
+        <g class="arm-right-group" transform-origin="166 135">
+          <path d="M 166,135 Q 186,145 176,162 Q 166,166 160,148 Z" fill="#E6195E" stroke="#2A000E" stroke-width="3.5" stroke-linejoin="round" />
+        </g>
+
+        <!-- POMEGRANATE SEEDS -->
+        <g class="top-seeds-group" transform-origin="100 35">
+          <ellipse cx="100" cy="42" rx="32" ry="10" fill="#2A000E" opacity="0.3" />
+          <g>
+            <path d="M 78,38 C 72,28 82,18 88,26 C 92,32 86,42 78,38 Z" fill="#D9004C" stroke="#2A000E" stroke-width="2.5" />
+            <circle cx="82" cy="25" r="2" fill="#FFFFFF" opacity="0.8" />
+          </g>
+          <g>
+            <path d="M 100,32 C 92,18 108,12 112,24 C 114,32 106,38 100,32 Z" fill="#FF2A6D" stroke="#2A000E" stroke-width="2.5" />
+            <circle cx="102" cy="20" r="2.5" fill="#FFFFFF" />
+          </g>
+          <g>
+            <path d="M 122,38 C 114,42 108,32 112,26 C 118,18 128,28 122,38 Z" fill="#B8003A" stroke="#2A000E" stroke-width="2.5" />
+            <circle cx="118" cy="25" r="2" fill="#FFFFFF" opacity="0.8" />
+          </g>
+          <g>
+            <path d="M 94,42 C 90,34 102,30 105,36 C 107,42 98,46 94,42 Z" fill="#FF5E8E" stroke="#2A000E" stroke-width="2" />
+            <circle cx="97" cy="35" r="1.5" fill="#FFFFFF" />
+          </g>
+        </g>
+
+        <!-- PEEL CROWN -->
+        <g class="peel-crown" transform-origin="100 42">
+          <path d="M 68,44 Q 60,26 74,32 Q 88,38 92,44 Z" fill="#C80042" stroke="#2A000E" stroke-width="3" stroke-linejoin="round" />
+          <path d="M 132,44 Q 140,26 126,32 Q 112,38 108,44 Z" fill="#C80042" stroke="#2A000E" stroke-width="3" stroke-linejoin="round" />
+          <path d="M 60,48 Q 48,30 68,36 Q 80,40 84,52 Z" fill="#FF2A6D" stroke="#2A000E" stroke-width="3.5" stroke-linejoin="round" />
+          <path d="M 140,48 Q 152,30 132,36 Q 120,40 116,52 Z" fill="#FF2A6D" stroke="#2A000E" stroke-width="3.5" stroke-linejoin="round" />
+          <path d="M 82,54 Q 100,62 118,54 Q 100,46 82,54 Z" fill="#FF5E8E" stroke="#2A000E" stroke-width="3" />
+        </g>
+
+        <g class="under-eye-patches">
+          <ellipse cx="68" cy="130" rx="12.5" ry="5.5" fill="#FFA0B8" opacity="0.9" />
+          <ellipse cx="132" cy="130" rx="12.5" ry="5.5" fill="#FFA0B8" opacity="0.9" />
+        </g>
+
+        <!-- Eyes & Rigging -->
+        <g class="eye-left-container">
+          <ellipse cx="68" cy="115" rx="13" ry="17" fill="#2A000E" stroke="#2A000E" stroke-width="2" />
+          <g clip-path="url(#leftEyeClip)">
+            <g class="pupil-left" transform="translate(68, 115)">
+              <circle cx="0" cy="0" r="11" fill="#150007" />
+              <circle cx="-3" cy="-4" r="5" fill="#FFFFFF" />
+              <circle cx="4" cy="5" r="2.5" fill="#FFFFFF" />
+            </g>
+            <rect class="eyelid-left" x="50" y="85" width="36" height="34" fill="#FF2A6D" transform="translate(0, -34)" />
+          </g>
+        </g>
+
+        <g class="eye-right-container">
+          <ellipse cx="132" cy="115" rx="13" ry="17" fill="#2A000E" stroke="#2A000E" stroke-width="2" />
+          <g clip-path="url(#rightEyeClip)">
+            <g class="pupil-right" transform="translate(132, 115)">
+              <circle cx="0" cy="0" r="11" fill="#150007" />
+              <circle cx="-3" cy="-4" r="5" fill="#FFFFFF" />
+              <circle cx="4" cy="5" r="2.5" fill="#FFFFFF" />
+            </g>
+            <rect class="eyelid-right" x="114" y="85" width="36" height="34" fill="#FF2A6D" transform="translate(0, -34)" />
+          </g>
+        </g>
+
+        <path class="brow-left" d="M 54,92 Q 68,86 80,92" stroke="#2A000E" stroke-width="4" stroke-linecap="round" fill="none" />
+        <path class="brow-right" d="M 120,92 Q 132,86 146,92" stroke="#2A000E" stroke-width="4" stroke-linecap="round" fill="none" />
+        <path class="mouth" d="M 86,140 Q 100,156 114,140" stroke="#2A000E" stroke-width="4" stroke-linecap="round" fill="none" />
+
+        <ellipse cx="76" cy="195" rx="12" ry="5" fill="#2A000E" />
+        <ellipse cx="124" cy="195" rx="12" ry="5" fill="#2A000E" />
+      </svg>
+    </template>
+
+    <!-- STEP 1: POPUP / WELCOME SCREEN -->
+    <div class="screen active" id="screen-welcome">
+      <div class="speech-bubble" id="welcome-speech">Peeled & ready! Let's get your check-in started!</div>
+
+      <div class="mascot-stage-mobile" id="welcome-mascot-box">
+        <div class="mascot-shadow" id="welcome-shadow"></div>
+        <!-- SVG Injected here dynamically -->
+      </div>
+
+      <div class="brand-footer">
+        <div class="brand-eve">EVE</div>
+        <div class="brand-sub">Cycle & Wellness Companion</div>
+      </div>
+
+      <button class="btn-primary" onclick="goToScreen('screen-survey')">
+        Begin Check-In ➔
+      </button>
+    </div>
+
+    <!-- STEP 2: SURVEY PHASE -->
+    <div class="screen" id="screen-survey">
+      <div class="survey-header">
+        <div class="mini-mascot-box" id="survey-mini-mascot">
+          <!-- Mini SVG Injected -->
+        </div>
+        <div class="survey-progress-bar">
+          <div class="survey-progress-fill" id="survey-progress"></div>
+        </div>
+      </div>
+
+      <div class="survey-content">
+        <div class="survey-title" id="survey-question">How are your energy levels feeling today?</div>
+
+        <div class="survey-options" id="survey-options-container">
+          <div class="option-card" onclick="selectOption(this)">
+            <span>High & Unstoppable</span>
+            <div class="radio-circle"></div>
+          </div>
+          <div class="option-card" onclick="selectOption(this)">
+            <span>Balanced & Steady</span>
+            <div class="radio-circle"></div>
+          </div>
+          <div class="option-card" onclick="selectOption(this)">
+            <span>Low & Need Rest</span>
+            <div class="radio-circle"></div>
+          </div>
+          <div class="option-card" onclick="selectOption(this)">
+            <span>Mood Cranky / Need Snacks</span>
+            <div class="radio-circle"></div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-primary" id="survey-next-btn" onclick="nextSurveyStep()">
+        Continue ➔
+      </button>
+    </div>
+
+    <!-- STEP 3: HOME DASHBOARD -->
+    <div class="screen" id="screen-home">
+      <div class="home-header">
+        <div>
+          <div class="user-greeting">Hey, Maya! ✨</div>
+          <div style="font-size: 0.85rem; font-weight: 700; color: #666;">Here is your Pomme status</div>
+        </div>
+        <div class="phase-badge">Follicular • Day 9</div>
+      </div>
+
+      <!-- Hero Mascot Card -->
+      <div class="home-hero-card">
+        <div class="home-speech-bubble" id="home-speech">You're in your energy peak! Great day for workouts!</div>
+        <div class="mascot-stage-mobile" id="home-mascot-box" style="height: 180px;">
+          <div class="mascot-shadow" id="home-shadow"></div>
+        </div>
+      </div>
+
+      <!-- Bento Metric Cards -->
+      <div class="bento-grid">
+        <div class="bento-card">
+          <div class="bento-title">Next Period</div>
+          <div class="bento-value">in 14 Days</div>
+          <div class="bento-desc">Regular cycle rhythm</div>
+        </div>
+
+        <div class="bento-card">
+          <div class="bento-title">Streak</div>
+          <div class="bento-value">🔥 8 Days</div>
+          <div class="bento-desc">Daily logging habit</div>
+        </div>
+
+        <div class="bento-card full-width">
+          <div class="bento-title">Daily Recommendation</div>
+          <div class="bento-value" style="font-size: 1.05rem;">Boost Collagen & Iron Intake</div>
+          <div class="bento-desc">Pomegranates & leafy greens suit your current phase best today.</div>
+        </div>
+      </div>
+
+      <!-- Navigation Bar -->
+      <div class="bottom-nav">
+        <div class="nav-item active">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+          Home
+        </div>
+        <div class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg>
+          Log
+        </div>
+        <div class="nav-item">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
+          Insights
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Inject Mascot SVGs into Container Slots
+    const svgTemplate = document.getElementById('mascot-svg-template').content;
+    document.getElementById('welcome-mascot-box').appendChild(svgTemplate.cloneNode(true));
+    document.getElementById('survey-mini-mascot').appendChild(svgTemplate.cloneNode(true));
+    document.getElementById('home-mascot-box').appendChild(svgTemplate.cloneNode(true));
+
+    // Screen Switching Navigation
+    function goToScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+
+      if (screenId === 'screen-home') {
+        spawnConfetti(20);
+      }
+    }
+
+    // Survey Multi-step State Management
+    let surveyStep = 0;
+    const surveyData = [
+      {
+        question: "How are your energy levels feeling today?",
+        options: ["⚡ High & Unstoppable", "🌸 Balanced & Steady", "🛋️ Low & Need Rest", "🍫 Mood Cranky / Need Snacks"]
+      },
+      {
+        question: "Any physical symptoms to track today?",
+        options: ["✨ Feeling Great", "💆 Light Cramps", "😴 Fatigue & Brain Fog", "💧 Bloating"]
+      }
+    ];
+
+    function selectOption(element) {
+      const parent = element.parentElement;
+      parent.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+      element.classList.add('selected');
+    }
+
+    function nextSurveyStep() {
+      surveyStep++;
+      if (surveyStep < surveyData.length) {
+        document.getElementById('survey-progress').style.width = '66%';
+        document.getElementById('survey-question').innerText = surveyData[surveyStep].question;
+        
+        const container = document.getElementById('survey-options-container');
+        container.innerHTML = '';
+        surveyData[surveyStep].options.forEach(opt => {
+          container.innerHTML += `
+            <div class="option-card" onclick="selectOption(this)">
+              <span>${opt}</span>
+              <div class="radio-circle"></div>
+            </div>
+          `;
+        });
+        document.getElementById('survey-next-btn').innerText = "Finish Survey ➔";
+      } else {
+        goToScreen('screen-home');
+      }
+    }
+
+    // Dynamic Vector Particle Burst
+    function spawnConfetti(count = 14) {
+      const container = document.getElementById('confetti');
+      const palette = ['#FF2A6D', '#FF8CAE', '#2A000E', '#FFD1DC', '#E6195E'];
+      
+      for (let i = 0; i < count; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const size = Math.floor(Math.random() * 8 + 6);
+        p.style.width = size + 'px';
+        p.style.height = size + 'px';
+        p.style.backgroundColor = palette[Math.floor(Math.random() * palette.length)];
+        p.style.left = '50%';
+        p.style.top = '40%';
+        p.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+        
+        const dx = (Math.random() - 0.5) * 220 + 'px';
+        const dy = -(Math.random() * 140 + 60) + 'px';
+        p.style.setProperty('--dx', dx);
+        p.style.setProperty('--dy', dy);
+
+        container.appendChild(p);
+        setTimeout(() => p.remove(), 850);
+      }
+    }
+
+    // Shared Mascot Life & Physics Engine Loop
+    let idleTimer = 0;
+    function globalPhysicsLoop() {
+      idleTimer += 0.04;
+      const breathY = Math.sin(idleTimer * 2) * 1.8;
+      const breathX = Math.cos(idleTimer) * 0.8;
+
+      document.querySelectorAll('.mascot-svg').forEach(svg => {
+        svg.style.transform = `translate(${breathX}px, ${breathY}px)`;
+      });
+
+      requestAnimationFrame(globalPhysicsLoop);
+    }
+    globalPhysicsLoop();
+  </script>
+</body>
+</html>

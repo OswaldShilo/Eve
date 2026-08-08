@@ -1,0 +1,2622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EVE — Cycle & Wellness Companion</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Quicksand:wght@600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-light: #FFF8FA;
+      --card-bg: #FFFFFF;
+      --ruby-main: #FF2A6D;
+      --ruby-dark: #2A000E;
+      --ruby-blush: #FFA0B8;
+      --ruby-soft: #FFF0F4;
+      --partner-blue: #3D7BFF;
+      --fertile-teal: #2EC4B6;
+      --symptom-purple: #9B51E0;
+      --appointment-orange: #FF9F1C;
+      --font-display: 'Fredoka', sans-serif;
+      --font-body: 'Quicksand', sans-serif;
+    }
+
+    body.dark-theme {
+      --bg-light: #1A050D;
+      --card-bg: #2A0916;
+      --ruby-dark: #FFF0F4;
+      --ruby-soft: #380C1E;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #120207;
+      font-family: var(--font-body);
+      color: var(--ruby-dark);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px 10px;
+    }
+
+    .mobile-frame {
+      position: relative;
+      width: 100%;
+      max-width: 390px;
+      height: 844px;
+      background: var(--bg-light);
+      border-radius: 44px;
+      border: 5px solid #2A000E;
+      box-shadow: 0 16px 0px #2A000E, 0 24px 40px rgba(0,0,0,0.3);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: background 0.3s ease;
+    }
+
+    .notch {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 26px;
+      background: #2A000E;
+      border-radius: 14px;
+      z-index: 100;
+    }
+
+    .screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 50px 20px 20px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(20px);
+      transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      background: var(--bg-light);
+      z-index: 10;
+    }
+
+    .screen.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+      z-index: 20;
+    }
+
+    .btn-primary {
+      width: 100%;
+      background: var(--ruby-main);
+      color: #FFFFFF;
+      border: 3.5px solid #2A000E;
+      padding: 16px;
+      border-radius: 20px;
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 0px #2A000E;
+      transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .btn-primary:hover {
+      background: #FF175A;
+    }
+
+    .btn-primary:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0px #2A000E;
+    }
+
+    .btn-back {
+      background: var(--card-bg);
+      border: 3px solid #2A000E;
+      border-radius: 14px;
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: var(--ruby-dark);
+      cursor: pointer;
+      box-shadow: 0 4px 0px #2A000E;
+      flex-shrink: 0;
+    }
+
+    .btn-back:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0px #2A000E;
+    }
+
+    .btn-google-auth {
+      background: #FFFFFF;
+      color: #2A000E;
+      border: 3.5px solid #2A000E;
+      padding: 16px 20px;
+      border-radius: 20px;
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 0px #2A000E;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+
+    .btn-google-auth:hover {
+      background: var(--ruby-soft);
+    }
+
+    .btn-google-auth:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0px #2A000E;
+    }
+
+    .survey-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+      flex-shrink: 0;
+    }
+
+    .mascot-guidance-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--ruby-soft);
+      border: 3.5px solid #2A000E;
+      border-radius: 20px;
+      padding: 10px 14px;
+      box-shadow: 0 4px 0px #2A000E;
+      margin-bottom: 8px;
+      flex-shrink: 0;
+    }
+
+    .mascot-guidance-text {
+      font-family: var(--font-display);
+      font-size: 0.86rem;
+      font-weight: 600;
+      color: var(--ruby-dark);
+      line-height: 1.25;
+    }
+
+    .mini-mascot-box {
+      width: 52px;
+      height: 52px;
+      background: var(--ruby-soft);
+      border: 3.5px solid #2A000E;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 0px #2A000E;
+      flex-shrink: 0;
+      position: relative;
+      overflow: visible !important;
+    }
+
+    .mini-mascot-box .mascot-svg {
+      transform: scale(0.32) translateY(18px);
+    }
+
+    .survey-progress-bar {
+      flex-grow: 1;
+      height: 16px;
+      background: #FFE0EC;
+      border: 3.5px solid #2A000E;
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .survey-progress-fill {
+      width: 15%;
+      height: 100%;
+      background: var(--ruby-main);
+      transition: width 0.35s ease;
+    }
+
+    .onboarding-screen-content {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding-right: 4px;
+      margin-top: 4px;
+      margin-bottom: 12px;
+    }
+
+    .onboarding-screen-content::-webkit-scrollbar {
+      display: none;
+    }
+
+    .survey-title {
+      font-family: var(--font-display);
+      font-size: 1.45rem;
+      color: var(--ruby-dark);
+      line-height: 1.22;
+    }
+
+    .survey-subtitle {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #777;
+      margin-top: -6px;
+    }
+
+    .survey-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .option-card {
+      background: var(--card-bg);
+      border: 3.5px solid #2A000E;
+      padding: 14px 16px;
+      border-radius: 20px;
+      font-size: 0.96rem;
+      font-weight: 700;
+      color: var(--ruby-dark);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      box-shadow: 0 5px 0px #2A000E;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+    .option-card:hover, .option-card.selected {
+      background: var(--ruby-soft);
+      transform: translateY(-2px);
+      box-shadow: 0 7px 0px #2A000E;
+    }
+
+    .option-card.selected {
+      background: var(--ruby-blush);
+    }
+
+    .radio-circle {
+      width: 22px;
+      height: 22px;
+      border: 3.5px solid #2A000E;
+      border-radius: 50%;
+      background: #FFFFFF;
+      flex-shrink: 0;
+    }
+
+    .option-card.selected .radio-circle {
+      background: #2A000E;
+    }
+
+    .check-box-icon {
+      width: 22px;
+      height: 22px;
+      border: 3.5px solid #2A000E;
+      border-radius: 7px;
+      background: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+      color: transparent;
+    }
+
+    .option-card.selected .check-box-icon {
+      background: #2A000E;
+      color: #FFFFFF;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .form-label {
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: var(--ruby-dark);
+    }
+
+    .form-input, .form-select {
+      width: 100%;
+      background: var(--card-bg);
+      border: 3.5px solid #2A000E;
+      border-radius: 18px;
+      padding: 12px 16px;
+      font-family: var(--font-body);
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--ruby-dark);
+      box-shadow: 0 4px 0px #2A000E;
+      outline: none;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .sub-choice-container {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+      padding-left: 6px;
+    }
+
+    .sub-chip {
+      background: var(--card-bg);
+      border: 2.5px solid #2A000E;
+      border-radius: 12px;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 3px 0px #2A000E;
+    }
+
+    .sub-chip.selected {
+      background: var(--ruby-main);
+      color: #FFFFFF;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--ruby-soft);
+      border: 3.5px solid #2A000E;
+      padding: 14px 16px;
+      border-radius: 20px;
+      box-shadow: 0 5px 0px #2A000E;
+      margin-top: 6px;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 50px;
+      height: 28px;
+      background: #DDD;
+      border: 3px solid #2A000E;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .toggle-switch.active {
+      background: var(--ruby-main);
+    }
+
+    .toggle-knob {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 18px;
+      height: 18px;
+      background: #FFFFFF;
+      border: 2px solid #2A000E;
+      border-radius: 50%;
+      transition: transform 0.2s ease;
+    }
+
+    .toggle-switch.active .toggle-knob {
+      transform: translateX(22px);
+    }
+
+    .greyed-out {
+      opacity: 0.42;
+      pointer-events: none;
+    }
+
+    .mascot-svg {
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      overflow: visible !important;
+      transform-origin: 50% 85%;
+      will-change: transform;
+    }
+
+    .peel-transition {
+      transition: d 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+    }
+
+    .seed-row {
+      transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.35s ease;
+      will-change: transform, opacity;
+      transform-origin: center center;
+    }
+
+    .seed-node {
+      cursor: pointer;
+      transform-origin: center center;
+      transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.35s ease;
+    }
+
+    .seed-node:hover {
+      transform: translateY(-6px) scale(1.22);
+      filter: drop-shadow(0px 8px 12px rgba(230, 25, 94, 0.55));
+    }
+
+    #screen-welcome {
+      justify-content: space-between;
+      align-items: center;
+      text-align: center;
+      padding-top: 55px;
+    }
+
+    .speech-bubble {
+      position: relative;
+      background: #FFFFFF;
+      color: #2A000E;
+      padding: 14px 20px;
+      border-radius: 20px;
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 1.02rem;
+      border: 3.5px solid #2A000E;
+      box-shadow: 0 6px 0px #2A000E;
+      text-align: center;
+      max-width: 290px;
+      transform-origin: bottom center;
+      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 25;
+    }
+
+    .speech-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -13px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 10px 9px 0;
+      border-style: solid;
+      border-color: #2A000E transparent;
+    }
+
+    .speech-bubble::before {
+      content: '';
+      position: absolute;
+      bottom: -7px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 7px 6px 0;
+      border-style: solid;
+      border-color: #FFFFFF transparent;
+      z-index: 1;
+    }
+
+    .mascot-stage-welcome {
+      position: relative;
+      width: 230px;
+      height: 230px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: grab;
+      margin-top: 10px;
+      overflow: visible !important;
+    }
+
+    .mascot-stage-welcome:active {
+      cursor: grabbing;
+    }
+
+    .mascot-shadow {
+      position: absolute;
+      bottom: 8px;
+      width: 130px;
+      height: 18px;
+      background: rgba(42, 0, 14, 0.14);
+      border-radius: 50%;
+      transition: transform 0.1s ease, opacity 0.1s ease;
+      z-index: 1;
+    }
+
+    .brand-footer {
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .brand-eve {
+      font-family: var(--font-display);
+      font-size: 3.8rem;
+      font-weight: 700;
+      color: var(--ruby-dark);
+      letter-spacing: 2px;
+      line-height: 1;
+      text-shadow: 0 4px 0 var(--ruby-blush);
+    }
+
+    .brand-sub {
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: var(--ruby-main);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+
+    #screen-completion {
+      justify-content: space-between;
+      align-items: center;
+      text-align: center;
+      padding-top: 55px;
+    }
+
+    #screen-home {
+      padding: 52px 18px 80px 18px;
+      overflow-y: auto;
+      gap: 16px;
+    }
+
+    #screen-home::-webkit-scrollbar {
+      display: none;
+    }
+
+    .home-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .user-greeting {
+      font-family: var(--font-display);
+      font-size: 1.45rem;
+      color: var(--ruby-dark);
+    }
+
+    .phase-badge {
+      background: var(--ruby-blush);
+      border: 3px solid #2A000E;
+      padding: 6px 12px;
+      border-radius: 14px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: #2A000E;
+      box-shadow: 0 4px 0px #2A000E;
+    }
+
+    .home-hero-card {
+      background: var(--card-bg);
+      border: 3.5px solid #2A000E;
+      border-radius: 24px;
+      padding: 16px;
+      box-shadow: 0 6px 0px #2A000E;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      overflow: visible !important;
+    }
+
+    .home-speech-bubble {
+      background: var(--ruby-soft);
+      border: 3px solid #2A000E;
+      border-radius: 16px;
+      padding: 10px 14px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--ruby-dark);
+      text-align: center;
+      margin-bottom: 4px;
+      width: 100%;
+      box-shadow: 0 4px 0px #2A000E;
+      font-family: var(--font-display);
+    }
+
+    .mascot-stage-home {
+      position: relative;
+      width: 210px;
+      height: 190px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: grab;
+      margin-top: 10px;
+      overflow: visible !important;
+    }
+
+    .bento-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .bento-card {
+      background: var(--card-bg);
+      border: 3.5px solid #2A000E;
+      border-radius: 22px;
+      padding: 14px 16px;
+      box-shadow: 0 6px 0px #2A000E;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .bento-card:active {
+      transform: translateY(3px);
+      box-shadow: 0 2px 0px #2A000E;
+    }
+
+    .bento-card.full-width {
+      grid-column: span 2;
+    }
+
+    .bento-title {
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--ruby-main);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .bento-value {
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      color: var(--ruby-dark);
+    }
+
+    .bento-desc {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #666;
+    }
+
+    .emotion-toggles {
+      display: flex;
+      gap: 6px;
+      width: 100%;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .emotion-toggles::-webkit-scrollbar {
+      display: none;
+    }
+
+    .btn-emotion-chip {
+      background: var(--card-bg);
+      border: 2.5px solid #2A000E;
+      border-radius: 14px;
+      padding: 6px 10px;
+      font-family: var(--font-display);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--ruby-dark);
+      box-shadow: 0 3px 0px #2A000E;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .btn-emotion-chip.active {
+      background: var(--ruby-main);
+      color: #FFFFFF;
+    }
+
+    #screen-chat {
+      padding: 52px 18px 80px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .chat-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 3.5px solid #2A000E;
+      flex-shrink: 0;
+    }
+
+    .avatar-circle {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--partner-blue);
+      color: #FFFFFF;
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 3.5px solid #2A000E;
+      box-shadow: 0 4px 0px #2A000E;
+      flex-shrink: 0;
+    }
+
+    .chat-header-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .partner-name {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      color: var(--ruby-dark);
+      line-height: 1.1;
+    }
+
+    .partner-status {
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: #666;
+    }
+
+    .chat-thread {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding-right: 4px;
+    }
+
+    .chat-thread::-webkit-scrollbar {
+      display: none;
+    }
+
+    .chat-bubble {
+      max-width: 82%;
+      padding: 12px 16px;
+      border-radius: 20px;
+      border: 3.5px solid #2A000E;
+      box-shadow: 0 4px 0px #2A000E;
+      font-size: 0.9rem;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+
+    .chat-bubble.wife {
+      align-self: flex-end;
+      background: var(--ruby-main);
+      color: #FFFFFF;
+      border-bottom-right-radius: 4px;
+    }
+
+    .chat-bubble.partner {
+      align-self: flex-start;
+      background: var(--partner-blue);
+      color: #FFFFFF;
+      border-bottom-left-radius: 4px;
+    }
+
+    .chat-bubble.eve-system {
+      align-self: center;
+      max-width: 98%;
+      background: var(--ruby-soft);
+      color: var(--ruby-dark);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      border-radius: 18px;
+      padding: 12px 14px;
+      border: 3.5px solid #2A000E;
+      box-shadow: 0 5px 0px #2A000E;
+    }
+
+    .eve-system-mascot {
+      width: 42px;
+      height: 42px;
+      flex-shrink: 0;
+      position: relative;
+      overflow: visible !important;
+    }
+
+    .eve-system-mascot .mascot-svg {
+      transform: scale(0.28) translateY(24px);
+    }
+
+    .quick-replies {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 4px 0;
+      flex-shrink: 0;
+    }
+
+    .quick-replies::-webkit-scrollbar {
+      display: none;
+    }
+
+    .chip-btn {
+      white-space: nowrap;
+      background: var(--card-bg);
+      border: 3px solid #2A000E;
+      border-radius: 20px;
+      padding: 8px 14px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: var(--ruby-dark);
+      box-shadow: 0 4px 0px #2A000E;
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+
+    .chip-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0px #2A000E;
+    }
+
+    .chat-input-bar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .chat-input {
+      flex: 1;
+      background: var(--card-bg);
+      border: 3.5px solid #2A000E;
+      border-radius: 18px;
+      padding: 12px 16px;
+      font-family: var(--font-body);
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--ruby-dark);
+      box-shadow: 0 4px 0px #2A000E;
+      outline: none;
+    }
+
+    .chat-send-btn {
+      background: var(--ruby-main);
+      color: #FFFFFF;
+      border: 3.5px solid #2A000E;
+      border-radius: 18px;
+      width: 46px;
+      height: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 0px #2A000E;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    #screen-log {
+      padding: 52px 18px 80px 18px;
+      overflow-y: auto;
+      gap: 12px;
+    }
+
+    #screen-log::-webkit-scrollbar {
+      display: none;
+    }
+
+    .log-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .month-label {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      color: var(--ruby-dark);
+    }
+
+    .month-nav {
+      display: flex;
+      gap: 8px;
+    }
+
+    .nav-arrow-btn {
+      background: var(--card-bg);
+      border: 3px solid #2A000E;
+      border-radius: 14px;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      color: var(--ruby-dark);
+      box-shadow: 0 4px 0px #2A000E;
+      cursor: pointer;
+    }
+
+    .legend-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 12px;
+      padding: 10px 14px;
+      background: var(--card-bg);
+      border: 3.5px solid #2A000E;
+      border-radius: 18px;
+      box-shadow: 0 4px 0px #2A000E;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.74rem;
+      font-weight: 800;
+      color: var(--ruby-dark);
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 2px solid #2A000E;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      background: var(--card-bg);
+      border: 3.5px solid #2A000E;
+      border-radius: 22px;
+      padding: 12px;
+      box-shadow: 0 6px 0px #2A000E;
+    }
+
+    .day-header {
+      text-align: center;
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--ruby-main);
+      padding-bottom: 4px;
+    }
+
+    .calendar-cell {
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      position: relative;
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--ruby-dark);
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+
+    .calendar-cell.has-data {
+      border-color: rgba(42, 0, 14, 0.15);
+      background: var(--ruby-soft);
+    }
+
+    .calendar-cell.selected {
+      background: var(--ruby-blush);
+      border-color: #2A000E;
+      transform: scale(1.08);
+      z-index: 2;
+    }
+
+    .dot-container {
+      display: flex;
+      gap: 2px;
+      position: absolute;
+      bottom: 3px;
+    }
+
+    .dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      border: 1px solid #2A000E;
+    }
+
+    .log-mascot-toast {
+      background: var(--ruby-soft);
+      border: 3.5px solid #2A000E;
+      border-radius: 20px;
+      padding: 12px 14px;
+      box-shadow: 0 5px 0px #2A000E;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 4px;
+    }
+
+    .log-toast-mascot-box {
+      width: 48px;
+      height: 48px;
+      flex-shrink: 0;
+      position: relative;
+      overflow: visible !important;
+    }
+
+    .log-toast-mascot-box .mascot-svg {
+      transform: scale(0.32) translateY(18px);
+    }
+
+    .log-toast-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .log-toast-title {
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      color: var(--ruby-dark);
+    }
+
+    .log-toast-desc {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #555;
+    }
+
+    .fab-btn {
+      position: absolute;
+      bottom: 84px;
+      right: 20px;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--ruby-main);
+      color: #FFFFFF;
+      border: 3.5px solid #2A000E;
+      box-shadow: 0 6px 0px #2A000E;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      z-index: 40;
+    }
+
+    .bottom-nav {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 72px;
+      background: var(--card-bg);
+      border-top: 3.5px solid #2A000E;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 50;
+      padding-bottom: 8px;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: var(--ruby-dark);
+      cursor: pointer;
+      opacity: 0.5;
+      transition: opacity 0.2s ease, color 0.2s ease;
+    }
+
+    .nav-item.active {
+      opacity: 1;
+      color: var(--ruby-main);
+    }
+
+    .nav-icon {
+      width: 24px;
+      height: 24px;
+      fill: currentColor;
+    }
+
+    .confetti-layer {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 90;
+      overflow: visible;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="mobile-frame" id="app-frame">
+    <div class="notch"></div>
+    <div class="confetti-layer" id="confetti-layer"></div>
+
+    <template id="mascot-svg-template">
+      <svg class="mascot-svg" viewBox="0 -40 200 260">
+        <defs>
+          <clipPath class="leftEyeClip">
+            <ellipse cx="68" cy="115" rx="13" ry="17" />
+          </clipPath>
+          <clipPath class="rightEyeClip">
+            <ellipse cx="132" cy="115" rx="13" ry="17" />
+          </clipPath>
+        </defs>
+
+        <path d="M 100,42 C 154,42 184,76 184,126 C 184,174 150,198 100,198 C 50,198 16,174 16,126 C 16,76 46,42 100,42 Z" fill="#2A000E" />
+        <path class="body-main-shell" d="M 100,44 C 152,44 180,78 180,124 C 180,170 148,194 100,194 C 52,194 20,170 20,124 C 20,78 48,44 100,44 Z" fill="#FF2A6D" />
+        <path d="M 32,145 C 42,175 68,194 100,194 C 132,194 158,175 168,145 C 150,168 126,182 100,182 C 74,182 50,168 32,145 Z" fill="#C80042" />
+
+        <g class="top-peel-reservoir">
+          <path class="top-pith-liner peel-transition" d="M 68,44 Q 100,48 132,44 Q 100,52 68,44 Z" fill="#3D0013" stroke="#2A000E" stroke-width="2.5" />
+          <path class="top-cream-pith peel-transition" d="M 70,44 Q 100,50 130,44 Q 100,56 70,44 Z" fill="#FFF2F5" opacity="0.9" />
+
+          <g class="top-seed-rows">
+            <g class="seed-row-1 seed-row" style="--row-index: 1;" transform-origin="100 32">
+              <g class="seed-node" style="--offset-x: -3px;" transform-origin="84 28">
+                <path d="M 80,36 C 74,26 84,18 89,25 C 93,31 87,40 80,36 Z" fill="#D9004C" stroke="#2A000E" stroke-width="2" />
+                <circle cx="84" cy="24" r="1.8" fill="#FFFFFF" opacity="0.8" />
+              </g>
+              <g class="seed-node" style="--offset-x: 0px;" transform-origin="100 24">
+                <path d="M 100,30 C 92,16 108,12 112,23 C 114,30 106,36 100,30 Z" fill="#FF2A6D" stroke="#2A000E" stroke-width="2" />
+                <circle cx="102" cy="19" r="2" fill="#FFFFFF" />
+              </g>
+              <g class="seed-node" style="--offset-x: 3px;" transform-origin="116 28">
+                <path d="M 120,36 C 113,40 107,31 111,25 C 116,18 126,27 120,36 Z" fill="#B8003A" stroke="#2A000E" stroke-width="2" />
+                <circle cx="116" cy="24" r="1.8" fill="#FFFFFF" opacity="0.8" />
+              </g>
+            </g>
+
+            <g class="seed-row-2 seed-row" style="--row-index: 2; opacity: 0; transform: translateY(-10px) scale(0.82);" transform-origin="100 40">
+              <g class="seed-node" style="--offset-x: -2px;" transform-origin="88 40">
+                <path d="M 88,42 C 82,34 94,30 97,38 C 99,44 92,48 88,42 Z" fill="#FF175A" stroke="#2A000E" stroke-width="2" />
+                <circle cx="91" cy="37" r="1.5" fill="#FFFFFF" />
+              </g>
+              <g class="seed-node" style="--offset-x: 2px;" transform-origin="112 40">
+                <path d="M 112,42 C 108,48 101,44 103,38 C 106,30 118,34 112,42 Z" fill="#E6004C" stroke="#2A000E" stroke-width="2" />
+                <circle cx="109" cy="37" r="1.5" fill="#FFFFFF" />
+              </g>
+            </g>
+
+            <g class="seed-row-3 seed-row" style="--row-index: 3; opacity: 0; transform: translateY(-14px) scale(0.82);" transform-origin="100 50">
+              <g class="seed-node" style="--offset-x: -4px;" transform-origin="76 48">
+                <path d="M 76,52 C 68,44 80,38 85,46 C 88,52 82,58 76,52 Z" fill="#FF2A6D" stroke="#2A000E" stroke-width="2" />
+                <circle cx="80" cy="46" r="1.8" fill="#FFFFFF" />
+              </g>
+              <g class="seed-node" style="--offset-x: 0px;" transform-origin="100 48">
+                <path d="M 100,52 C 92,42 108,38 110,48 C 112,54 104,58 100,52 Z" fill="#FF5E8E" stroke="#2A000E" stroke-width="2" />
+                <circle cx="102" cy="46" r="1.8" fill="#FFFFFF" />
+              </g>
+              <g class="seed-node" style="--offset-x: 4px;" transform-origin="124 48">
+                <path d="M 124,52 C 118,58 112,52 115,46 C 120,38 132,44 124,52 Z" fill="#D9004C" stroke="#2A000E" stroke-width="2" />
+                <circle cx="120" cy="46" r="1.8" fill="#FFFFFF" />
+              </g>
+            </g>
+          </g>
+        </g>
+
+        <g class="peel-crown-group peel-transition" transform-origin="100 42">
+          <path class="crown-back-left peel-transition" d="M 68,44 Q 60,26 74,32 Q 88,38 92,44 Z" fill="#C80042" stroke="#2A000E" stroke-width="3.5" stroke-linejoin="round" />
+          <path class="crown-back-right peel-transition" d="M 132,44 Q 140,26 126,32 Q 112,38 108,44 Z" fill="#C80042" stroke="#2A000E" stroke-width="3.5" stroke-linejoin="round" />
+          <path class="crown-front-left peel-transition" d="M 60,48 Q 48,30 68,36 Q 80,40 84,52 Z" fill="#FF2A6D" stroke="#2A000E" stroke-width="3.5" stroke-linejoin="round" />
+          <path class="crown-front-right peel-transition" d="M 140,48 Q 152,30 132,36 Q 120,40 116,52 Z" fill="#FF2A6D" stroke="#2A000E" stroke-width="3.5" stroke-linejoin="round" />
+          <path class="crown-front-center peel-transition" d="M 82,54 Q 100,62 118,54 Q 100,46 82,54 Z" fill="#FF5E8E" stroke="#2A000E" stroke-width="3.5" stroke-linejoin="round" />
+        </g>
+
+        <g class="arm-left-group" transform-origin="34 135">
+          <path class="arm-left" d="M 34,135 Q 14,145 24,162 Q 34,166 40,148 Z" fill="#E6195E" stroke="#2A000E" stroke-width="3.5" stroke-linejoin="round" />
+        </g>
+
+        <g class="arm-right-group" transform-origin="166 135">
+          <path class="arm-right" d="M 166,135 Q 186,145 176,162 Q 166,166 160,148 Z" fill="#E6195E" stroke="#2A000E" stroke-width="3.5" stroke-linejoin="round" />
+        </g>
+
+        <ellipse class="fertile-glow" cx="100" cy="35" rx="38" ry="18" fill="#FFA0B8" opacity="0" style="transition: opacity 0.4s ease; transform-origin: 100px 35px;" />
+
+        <g class="under-eye-patches">
+          <ellipse cx="68" cy="130" rx="12.5" ry="5.5" fill="#FFA0B8" opacity="0.9" />
+          <ellipse cx="132" cy="130" rx="12.5" ry="5.5" fill="#FFA0B8" opacity="0.9" />
+        </g>
+
+        <g class="eye-left-container">
+          <ellipse cx="68" cy="115" rx="13" ry="17" fill="#2A000E" stroke="#2A000E" stroke-width="3.5" />
+          <g class="left-eye-clip-wrapper">
+            <g class="pupil-left" transform="translate(68, 115)">
+              <circle cx="0" cy="0" r="11" fill="#150007" />
+              <circle cx="-3" cy="-4" r="5" fill="#FFFFFF" />
+              <circle cx="4" cy="5" r="2.5" fill="#FFFFFF" />
+            </g>
+            <rect class="eyelid-left" x="50" y="85" width="36" height="34" fill="#FF2A6D" transform="translate(0, -34)" />
+          </g>
+        </g>
+
+        <g class="eye-right-container">
+          <ellipse cx="132" cy="115" rx="13" ry="17" fill="#2A000E" stroke="#2A000E" stroke-width="3.5" />
+          <g class="right-eye-clip-wrapper">
+            <g class="pupil-right" transform="translate(132, 115)">
+              <circle cx="0" cy="0" r="11" fill="#150007" />
+              <circle cx="-3" cy="-4" r="5" fill="#FFFFFF" />
+              <circle cx="4" cy="5" r="2.5" fill="#FFFFFF" />
+            </g>
+            <rect class="eyelid-right" x="114" y="85" width="36" height="34" fill="#FF2A6D" transform="translate(0, -34)" />
+          </g>
+        </g>
+
+        <path class="brow-left" d="M 54,92 Q 68,86 80,92" stroke="#2A000E" stroke-width="4" stroke-linecap="round" fill="none" />
+        <path class="brow-right" d="M 120,92 Q 132,86 146,92" stroke="#2A000E" stroke-width="4" stroke-linecap="round" fill="none" />
+        <path class="mouth" d="M 86,140 Q 100,156 114,140" stroke="#2A000E" stroke-width="4" stroke-linecap="round" fill="none" />
+
+        <ellipse cx="76" cy="195" rx="12" ry="5" fill="#2A000E" />
+        <ellipse cx="124" cy="195" rx="12" ry="5" fill="#2A000E" />
+      </svg>
+    </template>
+
+    <!-- WELCOME SCREEN -->
+    <div class="screen active" id="screen-welcome">
+      <div class="speech-bubble" id="welcome-speech">Welcome to EVE. Let us personalize your health and cycle tracking experience.</div>
+
+      <div class="mascot-stage-welcome" id="welcome-mascot-box">
+        <div class="mascot-shadow" id="welcome-shadow"></div>
+      </div>
+
+      <div class="brand-footer">
+        <div class="brand-eve">EVE</div>
+        <div class="brand-sub">Cycle & Wellness Companion</div>
+      </div>
+
+      <button class="btn-primary" onclick="startOnboardingFlow()">
+        Begin Setup
+      </button>
+    </div>
+
+    <!-- ONBOARDING STEP 1: AUTH SCREEN -->
+    <div class="screen" id="screen-auth">
+      <div class="survey-header">
+        <div class="btn-back" onclick="prevOnboardingStep()">‹</div>
+        <div class="survey-progress-bar"><div class="survey-progress-fill"></div></div>
+      </div>
+      <div class="mascot-guidance-card">
+        <div class="mini-mascot-box" id="mascot-box-auth"></div>
+        <div class="mascot-guidance-text">Sign in to securely back up your health data, or continue as a guest.</div>
+      </div>
+      <div class="onboarding-screen-content" style="justify-content: center; align-items: center; text-align: center; gap: 20px;">
+        <div class="survey-title">Welcome to EVE</div>
+        <div class="survey-subtitle">Sign in to back up your health insights securely.</div>
+        <button class="btn-google-auth" onclick="handleGoogleAuth()">
+          <svg class="google-icon-svg" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+          Sign in with Google
+        </button>
+      </div>
+      <button class="btn-primary" onclick="nextOnboardingStep()">Continue as Guest</button>
+    </div>
+
+    <!-- ONBOARDING STEP 2: BASIC PROFILE -->
+    <div class="screen" id="screen-profile">
+      <div class="survey-header">
+        <div class="btn-back" onclick="prevOnboardingStep()">‹</div>
+        <div class="survey-progress-bar"><div class="survey-progress-fill"></div></div>
+      </div>
+      <div class="mascot-guidance-card">
+        <div class="mini-mascot-box" id="mascot-box-profile"></div>
+        <div class="mascot-guidance-text">Enter your basic profile details so EVE can personalize your tracking.</div>
+      </div>
+      <div class="onboarding-screen-content">
+        <div class="survey-title">About You</div>
+        <div class="survey-subtitle">Providing basic details helps EVE tailor your health predictions.</div>
+        
+        <div class="form-group">
+          <label class="form-label">Name</label>
+          <input type="text" class="form-input" id="profile-name-input" value="Maya" oninput="surveyState.name = this.value">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Age</label>
+            <input type="number" class="form-input" value="28" oninput="surveyState.age = this.value">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Height (cm)</label>
+            <input type="number" class="form-input" value="165" oninput="surveyState.height = this.value">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Weight (kg)</label>
+            <input type="number" class="form-input" value="60" oninput="surveyState.weight = this.value">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Country</label>
+            <select class="form-select" onchange="surveyState.country = this.value">
+              <option value="India">India</option>
+              <option value="United States">United States</option>
+              <option value="United Kingdom">United Kingdom</option>
+              <option value="Canada">Canada</option>
+              <option value="Australia">Australia</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="nextOnboardingStep()">Next Step</button>
+    </div>
+
+    <!-- ONBOARDING STEP 3: LIFE-STAGE SELECTOR -->
+    <div class="screen" id="screen-lifestage">
+      <div class="survey-header">
+        <div class="btn-back" onclick="prevOnboardingStep()">‹</div>
+        <div class="survey-progress-bar"><div class="survey-progress-fill"></div></div>
+      </div>
+      <div class="mascot-guidance-card">
+        <div class="mini-mascot-box" id="mascot-box-lifestage"></div>
+        <div class="mascot-guidance-text">Select your current stage to customize your tracking experience.</div>
+      </div>
+      <div class="onboarding-screen-content">
+        <div class="survey-title">Which describes your current stage best?</div>
+        <div class="survey-subtitle">Select your primary stage to customize your experience.</div>
+
+        <div class="survey-options">
+          <div class="option-card selected" onclick="selectLifeStage('cycle', this)">
+            <span>Tracking my cycle</span>
+            <div class="radio-circle"></div>
+          </div>
+          <div class="option-card" onclick="selectLifeStage('conceive', this)">
+            <span>Trying to conceive</span>
+            <div class="radio-circle"></div>
+          </div>
+          <div class="option-card" onclick="selectLifeStage('pregnant', this)">
+            <span>Currently pregnant</span>
+            <div class="radio-circle"></div>
+          </div>
+          <div class="option-card" onclick="selectLifeStage('postpartum', this)">
+            <span>Postpartum</span>
+            <div class="radio-circle"></div>
+          </div>
+          <div class="option-card" onclick="selectLifeStage('menopause', this)">
+            <span>Perimenopause / Menopause</span>
+            <div class="radio-circle"></div>
+          </div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="nextOnboardingStep()">Continue</button>
+    </div>
+
+    <!-- BRANCH 1: TRACKING CYCLE — CYCLE INFO -->
+    <div class="screen" id="screen-cycle-info">
+      <div class="survey-header">
+        <div class="btn-back" onclick="prevOnboardingStep()">‹</div>
+        <div class="survey-progress-bar"><div class="survey-progress-fill"></div></div>
+      </div>
+      <div class="mascot-guidance-card">
+        <div class="mini-mascot-box" id="mascot-box-cycle-info"></div>
+        <div class="mascot-guidance-text">Provide your typical cycle length and flow details.</div>
+      </div>
+      <div class="onboarding-screen-content">
+        <div class="survey-title">Cycle Details</div>
+
+        <div class="form-group">
+          <label class="form-label">Average cycle length</label>
+          <div class="survey-options">
+            <div class="option-card selected" onclick="selectSingleOption('cycleLength', '25–28', this)"><span>25–28 days</span><div class="radio-circle"></div></div>
+            <div class="option-card" onclick="selectSingleOption('cycleLength', '21–24', this)"><span>21–24 days</span><div class="radio-circle"></div></div>
+            <div class="option-card" onclick="selectSingleOption('cycleLength', '29–35', this)"><span>29–35 days</span><div class="radio-circle"></div></div>
+            <div class="option-card" onclick="selectSingleOption('cycleLength', 'Irregular', this)"><span>Irregular</span><div class="radio-circle"></div></div>
+            <div class="option-card" onclick="selectSingleOption('cycleLength', 'Unsure', this)"><span>Unsure</span><div class="radio-circle"></div></div>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 10px;">
+          <label class="form-label">Average period length</label>
+          <select class="form-select" onchange="surveyState.periodLength = this.value">
+            <option value="3">3 days</option>
+            <option value="4">4 days</option>
+            <option value="5" selected>5 days</option>
+            <option value="6">6 days</option>
+            <option value="7+">7+ days</option>
+            <option value="Not sure">Not sure</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-top: 10px;">
+          <label class="form-label">Flow intensity</label>
+          <div class="form-row">
+            <div class="sub-chip" onclick="selectChip('flow', 'Light', this)">Light</div>
+            <div class="sub-chip selected" onclick="selectChip('flow', 'Moderate', this)">Moderate</div>
+            <div class="sub-chip" onclick="selectChip('flow', 'Heavy', this)">Heavy</div>
+          </div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="nextOnboardingStep()">Next</button>
+    </div>
+
+    <!-- BRANCH 1: TRACKING CYCLE — SYMPTOMS -->
+    <div class="screen" id="screen-cycle-symptoms">
+      <div class="survey-header">
+        <div class="btn-back" onclick="prevOnboardingStep()">‹</div>
+        <div class="survey-progress-bar"><div class="survey-progress-fill"></div></div>
+      </div>
+      <div class="mascot-guidance-card">
+        <div class="mini-mascot-box" id="mascot-box-cycle-symptoms"></div>
+        <div class="mascot-guidance-text">Select any symptoms you regularly experience during your cycle.</div>
+      </div>
+      <div class="onboarding-screen-content">
+        <div class="survey-title">Frequent Symptoms</div>
+        <div class="survey-subtitle">Select any symptoms you usually experience.</div>
+
+        <div class="survey-options">
+          <div class="option-card" onclick="toggleMultiSelect('cycleSymptoms', 'Cramps', this)"><span>Cramps</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleMultiSelect('cycleSymptoms', 'Acne', this)"><span>Acne</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleMultiSelect('cycleSymptoms', 'Headache', this)"><span>Headache</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleMultiSelect('cycleSymptoms', 'Breast tenderness', this)"><span>Breast tenderness</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleMultiSelect('cycleSymptoms', 'Bloating', this)"><span>Bloating</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleMultiSelect('cycleSymptoms', 'Mood swings', this)"><span>Mood swings</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleMultiSelect('cycleSymptoms', 'Back pain', this)"><span>Back pain</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleMultiSelect('cycleSymptoms', 'Fatigue', this)"><span>Fatigue</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleMultiSelect('cycleSymptoms', 'Food cravings', this)"><span>Food cravings</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleMultiSelect('cycleSymptoms', 'Nausea', this)"><span>Nausea</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleMultiSelect('cycleSymptoms', 'None', this)"><span>None</span><div class="check-box-icon">✓</div></div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="nextOnboardingStep()">Next</button>
+    </div>
+
+    <!-- BRANCH 1: TRACKING CYCLE — GOALS -->
+    <div class="screen" id="screen-cycle-goals">
+      <div class="survey-header">
+        <div class="btn-back" onclick="prevOnboardingStep()">‹</div>
+        <div class="survey-progress-bar"><div class="survey-progress-fill"></div></div>
+      </div>
+      <div class="mascot-guidance-card">
+        <div class="mini-mascot-box" id="mascot-box-cycle-goals"></div>
+        <div class="mascot-guidance-text">Select your primary goals for cycle tracking with EVE.</div>
+      </div>
+      <div class="onboarding-screen-content">
+        <div class="survey-title">Your Primary Goals</div>
+        <div class="survey-subtitle">Select how EVE can assist with your cycle health.</div>
+
+        <div class="survey-options">
+          <div class="option-card" onclick="toggleMultiSelect('cycleGoals', 'Predict my next period', this)"><span>Predict my next period</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleMultiSelect('cycleGoals', 'Understand body trends', this)"><span>Understand body trends</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleMultiSelect('cycleGoals', 'Improve fitness', this)"><span>Improve fitness</span><div class="check-box-icon">✓</div></div>
+          
+          <div class="option-card" id="card-nutrition-goal" onclick="toggleNutritionGoal(this)">
+            <span>Improve nutrition</span>
+            <div class="check-box-icon">✓</div>
+          </div>
+          <div class="sub-choice-container" id="nutrition-sub-choice" style="display: none;">
+            <div class="sub-chip selected" onclick="selectDietSubChoice('Vegetarian', this)">Vegetarian</div>
+            <div class="sub-chip" onclick="selectDietSubChoice('Non-vegetarian', this)">Non-vegetarian</div>
+            <div class="sub-chip" onclick="selectDietSubChoice('Vegan', this)">Vegan</div>
+          </div>
+
+          <div class="option-card" onclick="toggleMultiSelect('cycleGoals', 'Improve mental wellbeing', this)"><span>Improve mental wellbeing</span><div class="check-box-icon">✓</div></div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="nextOnboardingStep()">Next</button>
+    </div>
+
+    <!-- BRANCH 2: PREGNANT — DUE DATE -->
+    <div class="screen" id="screen-pregnant-due">
+      <div class="survey-header">
+        <div class="btn-back" onclick="prevOnboardingStep()">‹</div>
+        <div class="survey-progress-bar"><div class="survey-progress-fill"></div></div>
+      </div>
+      <div class="mascot-guidance-card">
+        <div class="mini-mascot-box" id="mascot-box-pregnant-due"></div>
+        <div class="mascot-guidance-text">Enter your timeline details to calculate key pregnancy milestones.</div>
+      </div>
+      <div class="onboarding-screen-content">
+        <div class="survey-title">Pregnancy Timeline</div>
+
+        <div class="form-group">
+          <label class="form-label">Calculation method</label>
+          <div class="survey-options">
+            <div class="option-card selected" onclick="selectSingleOption('dueMethod', 'Expected due date', this)"><span>Expected due date</span><div class="radio-circle"></div></div>
+            <div class="option-card" onclick="selectSingleOption('dueMethod', 'First day of last period', this)"><span>First day of last period</span><div class="radio-circle"></div></div>
+            <div class="option-card" onclick="selectSingleOption('dueMethod', 'Doctor\'s estimated week', this)"><span>Doctor's estimated week</span><div class="radio-circle"></div></div>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 8px;">
+          <label class="form-label">Target Date</label>
+          <input type="date" class="form-input" value="2026-11-15" onchange="surveyState.dueDate = this.value">
+        </div>
+
+        <div class="form-row" style="margin-top: 8px;">
+          <div class="form-group">
+            <label class="form-label">High-risk pregnancy?</label>
+            <div class="form-row">
+              <div class="sub-chip selected" onclick="selectChip('highRisk', 'No', this)">No</div>
+              <div class="sub-chip" onclick="selectChip('highRisk', 'Yes', this)">Yes</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Pregnancy Type</label>
+            <div class="form-row">
+              <div class="sub-chip selected" onclick="selectChip('pregnancyType', 'Single', this)">Single</div>
+              <div class="sub-chip" onclick="selectChip('pregnancyType', 'Twins', this)">Twins</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="nextOnboardingStep()">Next</button>
+    </div>
+
+    <!-- BRANCH 2: PREGNANT — MEDICATION & CARE -->
+    <div class="screen" id="screen-pregnant-meds">
+      <div class="survey-header">
+        <div class="btn-back" onclick="prevOnboardingStep()">‹</div>
+        <div class="survey-progress-bar"><div class="survey-progress-fill"></div></div>
+      </div>
+      <div class="mascot-guidance-card">
+        <div class="mini-mascot-box" id="mascot-box-pregnant-meds"></div>
+        <div class="mascot-guidance-text">Record your current medications and care routines for personalized safety.</div>
+      </div>
+      <div class="onboarding-screen-content">
+        <div class="survey-title">Medication & Care</div>
+
+        <div class="form-group">
+          <label class="form-label">Current Medications</label>
+          <input type="text" class="form-input" placeholder="e.g. Levothyroxine" oninput="surveyState.medications = this.value">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Allergies</label>
+          <input type="text" class="form-input" placeholder="e.g. Penicillin, Latex" oninput="surveyState.allergies = this.value">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Taking Prenatal Vitamins?</label>
+          <div class="form-row">
+            <div class="sub-chip selected" onclick="selectChip('prenatalVitamins', 'Yes', this)">Yes</div>
+            <div class="sub-chip" onclick="selectChip('prenatalVitamins', 'No', this)">No</div>
+          </div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="nextOnboardingStep()">Next</button>
+    </div>
+
+    <!-- BRANCH 2: PREGNANT — SYMPTOMS -->
+    <div class="screen" id="screen-pregnant-symptoms">
+      <div class="survey-header">
+        <div class="btn-back" onclick="prevOnboardingStep()">‹</div>
+        <div class="survey-progress-bar"><div class="survey-progress-fill"></div></div>
+      </div>
+      <div class="mascot-guidance-card">
+        <div class="mini-mascot-box" id="mascot-box-pregnant-symptoms"></div>
+        <div class="mascot-guidance-text">Select any pregnancy symptoms you are currently experiencing.</div>
+      </div>
+      <div class="onboarding-screen-content">
+        <div class="survey-title">Pregnancy Symptoms</div>
+        <div class="survey-subtitle">Select symptoms you are currently experiencing.</div>
+
+        <div class="survey-options">
+          <div class="option-card" onclick="toggleMultiSelect('pregnantSymptoms', 'Morning sickness', this)"><span>Morning sickness</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleMultiSelect('pregnantSymptoms', 'Swelling', this)"><span>Swelling</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleMultiSelect('pregnantSymptoms', 'Back pain', this)"><span>Back pain</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleMultiSelect('pregnantSymptoms', 'Heartburn', this)"><span>Heartburn</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleMultiSelect('pregnantSymptoms', 'Headache', this)"><span>Headache</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleMultiSelect('pregnantSymptoms', 'None', this)"><span>None</span><div class="check-box-icon">✓</div></div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="nextOnboardingStep()">Next</button>
+    </div>
+
+    <!-- SIMPLIFIED BRANCH SCREEN (Conceive / Postpartum / Menopause) -->
+    <div class="screen" id="screen-simplified-branch">
+      <div class="survey-header">
+        <div class="btn-back" onclick="prevOnboardingStep()">‹</div>
+        <div class="survey-progress-bar"><div class="survey-progress-fill"></div></div>
+      </div>
+      <div class="mascot-guidance-card">
+        <div class="mini-mascot-box" id="mascot-box-simplified-branch"></div>
+        <div class="mascot-guidance-text">Select your primary symptoms and focus areas for this stage.</div>
+      </div>
+      <div class="onboarding-screen-content">
+        <div class="survey-title" id="simplified-branch-title">Stage Details</div>
+        <div class="survey-subtitle">Select your symptoms and goals for this stage.</div>
+
+        <div class="form-group">
+          <label class="form-label">Symptoms & Focus</label>
+          <div class="survey-options" id="simplified-symptoms-container"></div>
+        </div>
+
+        <div class="form-group" style="margin-top: 10px;">
+          <label class="form-label">Goals</label>
+          <div class="survey-options" id="simplified-goals-container"></div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="nextOnboardingStep()">Next</button>
+    </div>
+
+    <!-- COMMON STEP 1: FOOD PREFERENCES -->
+    <div class="screen" id="screen-food">
+      <div class="survey-header">
+        <div class="btn-back" onclick="prevOnboardingStep()">‹</div>
+        <div class="survey-progress-bar"><div class="survey-progress-fill"></div></div>
+      </div>
+      <div class="mascot-guidance-card">
+        <div class="mini-mascot-box" id="mascot-box-food"></div>
+        <div class="mascot-guidance-text">Indicate your dietary preferences and any food allergies.</div>
+      </div>
+      <div class="onboarding-screen-content">
+        <div class="survey-title">Food Preferences</div>
+
+        <div class="form-group">
+          <label class="form-label">Food Allergies / Dietary Restrictions</label>
+          <input type="text" class="form-input" placeholder="e.g. Peanuts, Gluten, Dairy" oninput="surveyState.foodAllergies = this.value">
+        </div>
+
+        <div class="form-group" style="margin-top: 6px;">
+          <label class="form-label">Preferred Cuisines</label>
+          <div class="survey-options">
+            <div class="option-card" onclick="toggleMultiSelect('cuisines', 'Italian', this)"><span>Italian</span><div class="check-box-icon">✓</div></div>
+            <div class="option-card" onclick="toggleMultiSelect('cuisines', 'Indian', this)"><span>Indian</span><div class="check-box-icon">✓</div></div>
+            <div class="option-card" onclick="toggleMultiSelect('cuisines', 'Asian', this)"><span>Asian</span><div class="check-box-icon">✓</div></div>
+            <div class="option-card" onclick="toggleMultiSelect('cuisines', 'Mediterranean', this)"><span>Mediterranean</span><div class="check-box-icon">✓</div></div>
+            <div class="option-card" onclick="toggleMultiSelect('cuisines', 'Mexican', this)"><span>Mexican</span><div class="check-box-icon">✓</div></div>
+            <div class="option-card" onclick="toggleMultiSelect('cuisines', 'American', this)"><span>American</span><div class="check-box-icon">✓</div></div>
+          </div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="nextOnboardingStep()">Next</button>
+    </div>
+
+    <!-- COMMON STEP 2: WORKOUT PREFERENCE -->
+    <div class="screen" id="screen-workout">
+      <div class="survey-header">
+        <div class="btn-back" onclick="prevOnboardingStep()">‹</div>
+        <div class="survey-progress-bar"><div class="survey-progress-fill"></div></div>
+      </div>
+      <div class="mascot-guidance-card">
+        <div class="mini-mascot-box" id="mascot-box-workout"></div>
+        <div class="mascot-guidance-text">Select the physical activities you prefer to keep energetic.</div>
+      </div>
+      <div class="onboarding-screen-content">
+        <div class="survey-title">Workout Preferences</div>
+        <div class="survey-subtitle">What activities keep you feeling energetic?</div>
+
+        <div class="survey-options">
+          <div class="option-card" onclick="toggleMultiSelect('workouts', 'Walking', this)"><span>Walking</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleMultiSelect('workouts', 'Yoga', this)"><span>Yoga</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleMultiSelect('workouts', 'Gym', this)"><span>Gym</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleMultiSelect('workouts', 'Home workout', this)"><span>Home workout</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleMultiSelect('workouts', 'Dance', this)"><span>Dance</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleMultiSelect('workouts', 'Pilates', this)"><span>Pilates</span><div class="check-box-icon">✓</div></div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="nextOnboardingStep()">Next</button>
+    </div>
+
+    <!-- COMMON STEP 3: NOTIFICATIONS -->
+    <div class="screen" id="screen-notifications">
+      <div class="survey-header">
+        <div class="btn-back" onclick="prevOnboardingStep()">‹</div>
+        <div class="survey-progress-bar"><div class="survey-progress-fill"></div></div>
+      </div>
+      <div class="mascot-guidance-card">
+        <div class="mini-mascot-box" id="mascot-box-notifications"></div>
+        <div class="mascot-guidance-text">Choose which reminders and updates you would like to receive.</div>
+      </div>
+      <div class="onboarding-screen-content">
+        <div class="survey-title">Notification Preferences</div>
+        <div class="survey-subtitle">Choose what reminders EVE should send you.</div>
+
+        <div class="survey-options">
+          <div class="option-card" onclick="toggleMultiSelect('notifications', 'Morning reminder', this)"><span>Morning reminder</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleMultiSelect('notifications', 'Medication reminder', this)"><span>Medication reminder</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleMultiSelect('notifications', 'Workout reminder', this)"><span>Workout reminder</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleMultiSelect('notifications', 'Water intake reminder', this)"><span>Water intake reminder</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleMultiSelect('notifications', 'Sleep schedule reminder', this)"><span>Sleep schedule reminder</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleMultiSelect('notifications', 'Cycle tracking reminder', this)"><span>Cycle tracking reminder</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleMultiSelect('notifications', 'Appointment reminder', this)"><span>Appointment reminder</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleMultiSelect('notifications', 'Mood check-in reminder', this)"><span>Mood check-in reminder</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleMultiSelect('notifications', 'Daily health insights', this)"><span>Daily health insights</span><div class="check-box-icon">✓</div></div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="nextOnboardingStep()">Next</button>
+    </div>
+
+    <!-- COMMON STEP 4: AI ASSISTANT SCOPE -->
+    <div class="screen" id="screen-ai-scope">
+      <div class="survey-header">
+        <div class="btn-back" onclick="prevOnboardingStep()">‹</div>
+        <div class="survey-progress-bar"><div class="survey-progress-fill"></div></div>
+      </div>
+      <div class="mascot-guidance-card">
+        <div class="mini-mascot-box" id="mascot-box-ai-scope"></div>
+        <div class="mascot-guidance-text">Select the key areas where you would like assistance from EVE.</div>
+      </div>
+      <div class="onboarding-screen-content">
+        <div class="survey-title">What would you like EVE to help with?</div>
+
+        <div class="survey-options" id="ai-scope-options">
+          <div class="option-card" onclick="toggleAIScopeOption('Everything', this)" style="background: var(--ruby-soft);">
+            <span>All topics</span>
+            <div class="check-box-icon">✓</div>
+          </div>
+          <div class="option-card" onclick="toggleAIScopeOption('Answer health questions', this)"><span>Answer health questions</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleAIScopeOption('Nutrition', this)"><span>Nutrition guidance</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleAIScopeOption('Workout', this)"><span>Workout guidance</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleAIScopeOption('Mental wellbeing', this)"><span>Mental wellbeing support</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleAIScopeOption('Medication reminders', this)"><span>Medication reminders</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleAIScopeOption('Doctor prep', this)"><span>Doctor visit preparation</span><div class="check-box-icon">✓</div></div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="nextOnboardingStep()">Next</button>
+    </div>
+
+    <!-- PARTNER SETUP 1: ASK -->
+    <div class="screen" id="screen-partner-ask">
+      <div class="survey-header">
+        <div class="btn-back" onclick="prevOnboardingStep()">‹</div>
+        <div class="survey-progress-bar"><div class="survey-progress-fill"></div></div>
+      </div>
+      <div class="mascot-guidance-card">
+        <div class="mini-mascot-box" id="mascot-box-partner-ask"></div>
+        <div class="mascot-guidance-text">Decide whether to invite a partner to share updates and schedule reminders.</div>
+      </div>
+      <div class="onboarding-screen-content" style="justify-content: center; gap: 16px;">
+        <div class="survey-title" style="text-align: center;">Would you like to invite your partner?</div>
+        <div class="survey-subtitle" style="text-align: center;">Partner mode enables shared updates and schedule reminders.</div>
+
+        <div class="survey-options">
+          <div class="option-card" onclick="selectPartnerInvite(true, this)">
+            <span>Yes, invite my partner</span>
+            <div class="radio-circle"></div>
+          </div>
+          <div class="option-card selected" onclick="selectPartnerInvite(false, this)">
+            <span>No, keep EVE private</span>
+            <div class="radio-circle"></div>
+          </div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="nextOnboardingStep()">Continue</button>
+    </div>
+
+    <!-- PARTNER SETUP 2: RELATIONSHIP -->
+    <div class="screen" id="screen-partner-rel">
+      <div class="survey-header">
+        <div class="btn-back" onclick="prevOnboardingStep()">‹</div>
+        <div class="survey-progress-bar"><div class="survey-progress-fill"></div></div>
+      </div>
+      <div class="mascot-guidance-card">
+        <div class="mini-mascot-box" id="mascot-box-partner-rel"></div>
+        <div class="mascot-guidance-text">Specify your partner's relationship for tailored communications.</div>
+      </div>
+      <div class="onboarding-screen-content">
+        <div class="survey-title">Relationship</div>
+
+        <div class="survey-options">
+          <div class="option-card selected" onclick="selectSingleOption('partnerRelation', 'Husband', this)"><span>Husband</span><div class="radio-circle"></div></div>
+          <div class="option-card" onclick="selectSingleOption('partnerRelation', 'Boyfriend', this)"><span>Boyfriend</span><div class="radio-circle"></div></div>
+          <div class="option-card" onclick="selectSingleOption('partnerRelation', 'Partner', this)"><span>Partner</span><div class="radio-circle"></div></div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="nextOnboardingStep()">Next</button>
+    </div>
+
+    <!-- PARTNER SETUP 3: PERMISSIONS -->
+    <div class="screen" id="screen-partner-perm">
+      <div class="survey-header">
+        <div class="btn-back" onclick="prevOnboardingStep()">‹</div>
+        <div class="survey-progress-bar"><div class="survey-progress-fill"></div></div>
+      </div>
+      <div class="mascot-guidance-card">
+        <div class="mini-mascot-box" id="mascot-box-partner-perm"></div>
+        <div class="mascot-guidance-text">Select which health updates your partner is permitted to view.</div>
+      </div>
+      <div class="onboarding-screen-content">
+        <div class="survey-title">Partner Sharing Permissions</div>
+
+        <div class="survey-options" id="partner-perm-list">
+          <div class="option-card" onclick="toggleMultiSelect('partnerPermissions', 'Appointment reminders', this)"><span>Appointment reminders</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" id="perm-pregnancy-milestones" onclick="toggleMultiSelect('partnerPermissions', 'Pregnancy milestones', this)" style="display: none;"><span>Pregnancy milestones</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleMultiSelect('partnerPermissions', 'Support suggestions', this)"><span>Support suggestions</span><div class="check-box-icon">✓</div></div>
+          <div class="option-card" onclick="toggleMultiSelect('partnerPermissions', 'Mood updates', this)"><span>Mood updates</span><div class="check-box-icon">✓</div></div>
+        </div>
+
+        <div class="toggle-row">
+          <div>
+            <div style="font-weight: 800; font-size: 0.9rem;">Only what I approve</div>
+            <div style="font-size: 0.76rem; color: #666;">Requires manual approval before sharing updates</div>
+          </div>
+          <div class="toggle-switch" id="only-approve-toggle" onclick="toggleOnlyApproveMaster()">
+            <div class="toggle-knob"></div>
+          </div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="nextOnboardingStep()">Next</button>
+    </div>
+
+    <!-- PERSONALIZATION: THEME -->
+    <div class="screen" id="screen-theme">
+      <div class="survey-header">
+        <div class="btn-back" onclick="prevOnboardingStep()">‹</div>
+        <div class="survey-progress-bar"><div class="survey-progress-fill"></div></div>
+      </div>
+      <div class="mascot-guidance-card">
+        <div class="mini-mascot-box" id="mascot-box-theme"></div>
+        <div class="mascot-guidance-text">Select your preferred color scheme for the application interface.</div>
+      </div>
+      <div class="onboarding-screen-content">
+        <div class="survey-title">Choose Theme</div>
+
+        <div class="survey-options">
+          <div class="option-card selected" onclick="selectTheme('Default', this)"><span>Default (Ruby Blush)</span><div class="radio-circle"></div></div>
+          <div class="option-card" onclick="selectTheme('Light', this)"><span>Light Theme</span><div class="radio-circle"></div></div>
+          <div class="option-card" onclick="selectTheme('Dark', this)"><span>Dark Theme</span><div class="radio-circle"></div></div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="nextOnboardingStep()">Finish Setup</button>
+    </div>
+
+    <!-- COMPLETION SCREEN -->
+    <div class="screen" id="screen-completion">
+      <div class="speech-bubble" id="completion-speech">Your EVE profile setup is complete.</div>
+
+      <div class="mascot-stage-welcome" id="completion-mascot-box">
+        <div class="mascot-shadow"></div>
+      </div>
+
+      <div class="brand-footer">
+        <div class="brand-eve">All Set!</div>
+        <div class="brand-sub">Tailored specifically for your health journey</div>
+      </div>
+
+      <button class="btn-primary" onclick="finishOnboardingToHome()">
+        Enter EVE
+      </button>
+    </div>
+
+    <!-- HOME DASHBOARD -->
+    <div class="screen" id="screen-home">
+      <div class="home-header">
+        <div>
+          <div class="user-greeting" id="home-greeting-text">Welcome back, Maya</div>
+          <div style="font-size: 0.85rem; font-weight: 800; color: #666;">Current status overview</div>
+        </div>
+        <div class="phase-badge" id="home-phase-badge">Follicular Phase • Day 9</div>
+      </div>
+
+      <div class="home-hero-card">
+        <div class="home-speech-bubble" id="home-speech">7-Day Check-in Streak Active</div>
+        <div class="mascot-stage-home" id="home-mascot-box">
+          <div class="mascot-shadow" id="home-shadow"></div>
+        </div>
+
+        <div class="emotion-toggles" style="margin-top: 8px;">
+          <button class="btn-emotion-chip active" onclick="triggerHomeEmotion('hype', '7-Day Check-in Streak Active')">Standard</button>
+          <button class="btn-emotion-chip" onclick="triggerHomeEmotion('hug', 'Rest and recovery recorded.')">Support</button>
+          <button class="btn-emotion-chip" onclick="triggerHomeEmotion('sassy', 'Late luteal phase: Prioritize restful activities and nutrition.')">Focus</button>
+          <button class="btn-emotion-chip" onclick="triggerHomeEmotion('fertile', 'Fertile Window: Estimated peak vitality.')">Vitality</button>
+        </div>
+      </div>
+
+      <div class="bento-grid">
+        <div class="bento-card" onclick="triggerHomeEmotion('fertile', 'Fertile Window predicted in 5 days')">
+          <div class="bento-title">Next Cycle Phase</div>
+          <div class="bento-value" id="home-card1-val">in 14 Days</div>
+          <div class="bento-desc" id="home-card1-desc">Regular cycle rhythm</div>
+        </div>
+
+        <div class="bento-card" onclick="triggerHomeEmotion('hype', '8-Day Daily Check-in Streak')">
+          <div class="bento-title">Check-in Streak</div>
+          <div class="bento-value">8 Days</div>
+          <div class="bento-desc">Daily logging habit</div>
+        </div>
+
+        <div class="bento-card full-width" onclick="triggerHomeEmotion('hug', 'Pomegranates and leafy greens suit your current phase best.')">
+          <div class="bento-title">Daily Recommendation</div>
+          <div class="bento-value" style="font-size: 1.05rem;" id="home-recommendation-title">Boost Collagen & Iron Intake</div>
+          <div class="bento-desc" id="home-recommendation-desc">Pomegranates and leafy greens are recommended for your current phase.</div>
+        </div>
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-item active" onclick="goToScreen('screen-home')">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+          Home
+        </div>
+        <div class="nav-item" onclick="goToScreen('screen-chat')">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+          Chat
+        </div>
+        <div class="nav-item" onclick="goToScreen('screen-log')">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg>
+          Log
+        </div>
+      </div>
+    </div>
+
+    <!-- CHAT SCREEN -->
+    <div class="screen" id="screen-chat">
+      <div class="chat-header">
+        <div class="avatar-circle">R</div>
+        <div class="chat-header-info">
+          <div class="partner-name">Ryan</div>
+          <div class="partner-status">Partner • Active today</div>
+        </div>
+      </div>
+
+      <div class="chat-thread" id="chat-thread">
+        <div class="chat-bubble wife">I have completed my daily health check-in.</div>
+        <div class="chat-bubble partner">Great to hear. How are you feeling today?</div>
+        <div class="chat-bubble wife">I am feeling slightly low on energy and experiencing mild cramps.</div>
+        
+        <div class="chat-bubble eve-system">
+          <div class="eve-system-mascot" id="chat-eve-mascot"></div>
+          <div>Eve: Maya recorded low energy and mild cramps today. Consider offering support.</div>
+        </div>
+
+        <div class="chat-bubble partner">I am bringing dinner home and preparing a warm compress for you.</div>
+        <div class="chat-bubble wife">Thank you, I appreciate it.</div>
+      </div>
+
+      <div class="quick-replies">
+        <button class="chip-btn" onclick="sendQuickReply('Sending support')">Sending support</button>
+        <button class="chip-btn" onclick="sendQuickReply('You are doing great')">You are doing great</button>
+        <button class="chip-btn" onclick="sendQuickReply('Do you need anything?')">Do you need anything?</button>
+      </div>
+
+      <div class="chat-input-bar">
+        <input type="text" class="chat-input" id="chat-input-field" placeholder="Type a message..." onkeydown="if(event.key==='Enter') sendMessage()">
+        <button class="chat-send-btn" onclick="sendMessage()">➔</button>
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-item" onclick="goToScreen('screen-home')">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+          Home
+        </div>
+        <div class="nav-item active" onclick="goToScreen('screen-chat')">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+          Chat
+        </div>
+        <div class="nav-item" onclick="goToScreen('screen-log')">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg>
+          Log
+        </div>
+      </div>
+    </div>
+
+    <!-- LOG CALENDAR SCREEN -->
+    <div class="screen" id="screen-log">
+      <div class="log-header">
+        <div class="month-label">March 2026</div>
+        <div class="month-nav">
+          <div class="nav-arrow-btn">‹</div>
+          <div class="nav-arrow-btn">›</div>
+        </div>
+      </div>
+
+      <div class="legend-row">
+        <div class="legend-item"><div class="legend-dot" style="background: var(--ruby-main);"></div> Period</div>
+        <div class="legend-item"><div class="legend-dot" style="background: var(--fertile-teal);"></div> Fertile Window</div>
+        <div class="legend-item"><div class="legend-dot" style="background: var(--symptom-purple);"></div> Symptom</div>
+        <div class="legend-item"><div class="legend-dot" style="background: var(--appointment-orange);"></div> Appointment</div>
+      </div>
+
+      <div class="calendar-grid">
+        <div class="day-header">S</div>
+        <div class="day-header">M</div>
+        <div class="day-header">T</div>
+        <div class="day-header">W</div>
+        <div class="day-header">T</div>
+        <div class="day-header">F</div>
+        <div class="day-header">S</div>
+
+        <div class="calendar-cell" onclick="selectDate(this, 'March 1', 'No logs recorded.', 'neutral')">1</div>
+        <div class="calendar-cell" onclick="selectDate(this, 'March 2', 'No logs recorded.', 'neutral')">2</div>
+        <div class="calendar-cell has-data" onclick="selectDate(this, 'March 3', 'Logged: Heavy Flow, Moderate Cramps', 'caring')">3<div class="dot-container"><div class="dot" style="background: var(--ruby-main)"></div></div></div>
+        <div class="calendar-cell has-data" onclick="selectDate(this, 'March 4', 'Logged: Medium Flow, Fatigue', 'caring')">4<div class="dot-container"><div class="dot" style="background: var(--ruby-main)"></div></div></div>
+        <div class="calendar-cell has-data" onclick="selectDate(this, 'March 5', 'Logged: Light Flow, Mood: Calm', 'neutral')">5<div class="dot-container"><div class="dot" style="background: var(--ruby-main)"></div></div></div>
+        <div class="calendar-cell has-data" onclick="selectDate(this, 'March 6', 'Logged: Spotting, High Energy', 'hype')">6<div class="dot-container"><div class="dot" style="background: var(--ruby-main)"></div></div></div>
+        <div class="calendar-cell" onclick="selectDate(this, 'March 7', 'No logs recorded.', 'neutral')">7</div>
+
+        <div class="calendar-cell" onclick="selectDate(this, 'March 8', 'No logs recorded.', 'neutral')">8</div>
+        <div class="calendar-cell" onclick="selectDate(this, 'March 9', 'No logs recorded.', 'neutral')">9</div>
+        <div class="calendar-cell" onclick="selectDate(this, 'March 10', 'No logs recorded.', 'neutral')">10</div>
+        <div class="calendar-cell" onclick="selectDate(this, 'March 11', 'No logs recorded.', 'neutral')">11</div>
+        <div class="calendar-cell has-data" onclick="selectDate(this, 'March 12', 'Logged: Slight Bloating', 'sassy')">12<div class="dot-container"><div class="dot" style="background: var(--symptom-purple)"></div></div></div>
+        <div class="calendar-cell" onclick="selectDate(this, 'March 13', 'No logs recorded.', 'neutral')">13</div>
+        <div class="calendar-cell has-data selected" onclick="selectDate(this, 'March 14', 'Logged: Light cramps, Mood: Balanced', 'neutral')">14<div class="dot-container"><div class="dot" style="background: var(--symptom-purple)"></div><div class="dot" style="background: var(--ruby-blush)"></div></div></div>
+
+        <div class="calendar-cell" onclick="selectDate(this, 'March 15', 'No logs recorded.', 'neutral')">15</div>
+        <div class="calendar-cell has-data" onclick="selectDate(this, 'March 16', 'Fertile Window Begins', 'fertile')">16<div class="dot-container"><div class="dot" style="background: var(--fertile-teal)"></div></div></div>
+        <div class="calendar-cell has-data" onclick="selectDate(this, 'March 17', 'High Chance of Conception', 'fertile')">17<div class="dot-container"><div class="dot" style="background: var(--fertile-teal)"></div></div></div>
+        <div class="calendar-cell has-data" onclick="selectDate(this, 'March 18', 'Peak Fertility Day', 'fertile')">18<div class="dot-container"><div class="dot" style="background: var(--fertile-teal)"></div></div></div>
+        <div class="calendar-cell has-data" onclick="selectDate(this, 'March 19', 'Fertile Window', 'fertile')">19<div class="dot-container"><div class="dot" style="background: var(--fertile-teal)"></div></div></div>
+        <div class="calendar-cell has-data" onclick="selectDate(this, 'March 20', 'Fertile Window Ends', 'fertile')">20<div class="dot-container"><div class="dot" style="background: var(--fertile-teal)"></div></div></div>
+        <div class="calendar-cell" onclick="selectDate(this, 'March 21', 'No logs recorded.', 'neutral')">21</div>
+
+        <div class="calendar-cell has-data" onclick="selectDate(this, 'March 22', 'Appointment: Annual Wellness Check (10:00 AM)', 'hype')">22<div class="dot-container"><div class="dot" style="background: var(--appointment-orange)"></div></div></div>
+        <div class="calendar-cell" onclick="selectDate(this, 'March 23', 'No logs recorded.', 'neutral')">23</div>
+        <div class="calendar-cell" onclick="selectDate(this, 'March 24', 'No logs recorded.', 'neutral')">24</div>
+        <div class="calendar-cell" onclick="selectDate(this, 'March 25', 'No logs recorded.', 'neutral')">25</div>
+        <div class="calendar-cell" onclick="selectDate(this, 'March 26', 'No logs recorded.', 'neutral')">26</div>
+        <div class="calendar-cell" onclick="selectDate(this, 'March 27', 'No logs recorded.', 'neutral')">27</div>
+        <div class="calendar-cell has-data" onclick="selectDate(this, 'March 28', 'Logged: Headache, Low Energy', 'caring')">28<div class="dot-container"><div class="dot" style="background: var(--symptom-purple)"></div></div></div>
+
+        <div class="calendar-cell" onclick="selectDate(this, 'March 29', 'No logs recorded.', 'neutral')">29</div>
+        <div class="calendar-cell" onclick="selectDate(this, 'March 30', 'No logs recorded.', 'neutral')">30</div>
+        <div class="calendar-cell" onclick="selectDate(this, 'March 31', 'No logs recorded.', 'neutral')">31</div>
+      </div>
+
+      <div class="log-mascot-toast">
+        <div class="log-toast-mascot-box" id="log-toast-mascot"></div>
+        <div class="log-toast-info">
+          <div class="log-toast-title" id="log-date-title">March 14</div>
+          <div class="log-toast-desc" id="log-date-desc">Logged: Light cramps, Mood: Balanced</div>
+        </div>
+      </div>
+
+      <div class="fab-btn">+</div>
+
+      <div class="bottom-nav">
+        <div class="nav-item" onclick="goToScreen('screen-home')">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+          Home
+        </div>
+        <div class="nav-item" onclick="goToScreen('screen-chat')">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+          Chat
+        </div>
+        <div class="nav-item active" onclick="goToScreen('screen-log')">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg>
+          Log
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const surveyState = {
+      name: 'Maya',
+      age: '28',
+      height: '165',
+      weight: '60',
+      country: 'India',
+      lifeStage: 'cycle',
+      cycleLength: '25–28',
+      periodLength: '5',
+      flow: 'Moderate',
+      cycleSymptoms: [],
+      cycleGoals: [],
+      nutritionDiet: 'Vegetarian',
+      dueDate: '2026-11-15',
+      dueMethod: 'Expected due date',
+      highRisk: 'No',
+      pregnancyType: 'Single',
+      medications: '',
+      allergies: '',
+      prenatalVitamins: 'Yes',
+      pregnantSymptoms: [],
+      foodAllergies: '',
+      cuisines: [],
+      workouts: [],
+      notifications: [],
+      aiScope: [],
+      partnerInvite: false,
+      partnerRelation: 'Husband',
+      partnerPermissions: [],
+      onlyApproveMaster: false,
+      theme: 'Default',
+      simplifiedSymptoms: [],
+      simplifiedGoals: []
+    };
+
+    let onboardingSequence = [];
+    let currentOnboardingIndex = 0;
+
+    const surveyMascotConfigs = {
+      'screen-auth': { boxId: 'mascot-box-auth', key: 'auth', emotion: 'neutral' },
+      'screen-profile': { boxId: 'mascot-box-profile', key: 'profile', emotion: 'neutral' },
+      'screen-lifestage': { boxId: 'mascot-box-lifestage', key: 'lifestage', emotion: 'neutral' },
+      'screen-cycle-info': { boxId: 'mascot-box-cycle-info', key: 'cycle-info', emotion: 'neutral' },
+      'screen-cycle-symptoms': { boxId: 'mascot-box-cycle-symptoms', key: 'cycle-symptoms', emotion: 'caring' },
+      'screen-cycle-goals': { boxId: 'mascot-box-cycle-goals', key: 'cycle-goals', emotion: 'neutral' },
+      'screen-pregnant-due': { boxId: 'mascot-box-pregnant-due', key: 'pregnant-due', emotion: 'neutral' },
+      'screen-pregnant-meds': { boxId: 'mascot-box-pregnant-meds', key: 'pregnant-meds', emotion: 'caring' },
+      'screen-pregnant-symptoms': { boxId: 'mascot-box-pregnant-symptoms', key: 'pregnant-symptoms', emotion: 'caring' },
+      'screen-simplified-branch': { boxId: 'mascot-box-simplified-branch', key: 'simplified-branch', emotion: 'caring' },
+      'screen-food': { boxId: 'mascot-box-food', key: 'food', emotion: 'neutral' },
+      'screen-workout': { boxId: 'mascot-box-workout', key: 'workout', emotion: 'neutral' },
+      'screen-notifications': { boxId: 'mascot-box-notifications', key: 'notifications', emotion: 'neutral' },
+      'screen-ai-scope': { boxId: 'mascot-box-ai-scope', key: 'ai-scope', emotion: 'neutral' },
+      'screen-partner-ask': { boxId: 'mascot-box-partner-ask', key: 'partner-ask', emotion: 'neutral' },
+      'screen-partner-rel': { boxId: 'mascot-box-partner-rel', key: 'partner-rel', emotion: 'neutral' },
+      'screen-partner-perm': { boxId: 'mascot-box-partner-perm', key: 'partner-perm', emotion: 'caring' },
+      'screen-theme': { boxId: 'mascot-box-theme', key: 'theme', emotion: 'warm' }
+    };
+
+    const mascotRigs = {};
+
+    function createMascotInstance(containerId, instanceKey) {
+      const container = document.getElementById(containerId);
+      if (!container) return null;
+
+      const templateContent = document.getElementById('mascot-svg-template').content;
+      const clone = templateContent.cloneNode(true);
+
+      const leftClipId = `leftEyeClip_${instanceKey}`;
+      const rightClipId = `rightEyeClip_${instanceKey}`;
+
+      const leftClip = clone.querySelector('.leftEyeClip');
+      const rightClip = clone.querySelector('.rightEyeClip');
+      if (leftClip) leftClip.id = leftClipId;
+      if (rightClip) rightClip.id = rightClipId;
+
+      const leftWrapper = clone.querySelector('.left-eye-clip-wrapper');
+      const rightWrapper = clone.querySelector('.right-eye-clip-wrapper');
+      if (leftWrapper) leftWrapper.setAttribute('clip-path', `url(#${leftClipId})`);
+      if (rightWrapper) rightWrapper.setAttribute('clip-path', `url(#${rightClipId})`);
+
+      container.appendChild(clone);
+      return container.querySelector('.mascot-svg');
+    }
+
+    function getRigNodes(svgElement) {
+      if (!svgElement) return null;
+      return {
+        svg: svgElement,
+        pupilLeft: svgElement.querySelector('.pupil-left'),
+        pupilRight: svgElement.querySelector('.pupil-right'),
+        eyelidLeft: svgElement.querySelector('.eyelid-left'),
+        eyelidRight: svgElement.querySelector('.eyelid-right'),
+        browLeft: svgElement.querySelector('.brow-left'),
+        browRight: svgElement.querySelector('.brow-right'),
+        mouth: svgElement.querySelector('.mouth'),
+        armLeftGroup: svgElement.querySelector('.arm-left-group'),
+        armRightGroup: svgElement.querySelector('.arm-right-group'),
+        fertileGlow: svgElement.querySelector('.fertile-glow'),
+        topPithLiner: svgElement.querySelector('.top-pith-liner'),
+        topCreamPith: svgElement.querySelector('.top-cream-pith'),
+        peelCrownGroup: svgElement.querySelector('.peel-crown-group'),
+        seedRow1: svgElement.querySelector('.seed-row-1'),
+        seedRow2: svgElement.querySelector('.seed-row-2'),
+        seedRow3: svgElement.querySelector('.seed-row-3'),
+        baseEyelidY: -34
+      };
+    }
+
+    function setMascotEmotion(rig, emotion) {
+      if (!rig) return;
+
+      let mouthPath = "M 86,140 Q 100,154 114,140";
+      let browLeftPath = "M 54,92 Q 68,88 80,92";
+      let browRightPath = "M 120,92 Q 132,88 146,92";
+      let eyelidY = -34;
+      let fertileOpacity = 0;
+
+      if (emotion === 'caring' || emotion === 'hug' || emotion === 'concerned') {
+        mouthPath = "M 88,142 Q 100,150 112,142";
+        browLeftPath = "M 54,88 Q 68,94 80,91";
+        browRightPath = "M 120,91 Q 132,94 146,88";
+        eyelidY = -28;
+      } else if (emotion === 'warm' || emotion === 'happy' || emotion === 'positive') {
+        mouthPath = "M 84,138 Q 100,162 116,138 Z";
+        browLeftPath = "M 54,88 Q 68,82 80,88";
+        browRightPath = "M 120,88 Q 132,82 146,88";
+        eyelidY = -34;
+      } else if (emotion === 'hype') {
+        mouthPath = "M 82,136 Q 100,168 118,136 Z";
+        browLeftPath = "M 54,84 Q 68,78 80,84";
+        browRightPath = "M 120,84 Q 132,78 146,84";
+        eyelidY = -34;
+      } else if (emotion === 'sassy') {
+        mouthPath = "M 88,144 Q 100,138 112,142";
+        browLeftPath = "M 54,86 Q 68,80 80,88";
+        browRightPath = "M 120,92 Q 132,94 146,90";
+        eyelidY = -32;
+      } else if (emotion === 'fertile') {
+        mouthPath = "M 86,140 Q 100,156 114,140";
+        fertileOpacity = 0.8;
+      }
+
+      rig.baseEyelidY = eyelidY;
+
+      if (rig.mouth) rig.mouth.setAttribute('d', mouthPath);
+      if (rig.browLeft) rig.browLeft.setAttribute('d', browLeftPath);
+      if (rig.browRight) rig.browRight.setAttribute('d', browRightPath);
+      if (rig.eyelidLeft) rig.eyelidLeft.setAttribute('transform', `translate(0, ${eyelidY})`);
+      if (rig.eyelidRight) rig.eyelidRight.setAttribute('transform', `translate(0, ${eyelidY})`);
+      if (rig.fertileGlow) rig.fertileGlow.style.opacity = fertileOpacity;
+    }
+
+    function setMascotPeel(rig, percent) {
+      if (!rig) return;
+      if (rig.seedRow2) rig.seedRow2.style.opacity = percent >= 35 ? '1' : '0';
+      if (rig.seedRow3) rig.seedRow3.style.opacity = percent >= 70 ? '1' : '0';
+      if (rig.peelCrownGroup) {
+        if (percent < 35) {
+          rig.peelCrownGroup.setAttribute('transform', 'scale(1)');
+        } else if (percent < 70) {
+          rig.peelCrownGroup.setAttribute('transform', 'scale(1.08) rotate(-4deg)');
+        } else {
+          rig.peelCrownGroup.setAttribute('transform', 'scale(1.15) rotate(-8deg)');
+        }
+      }
+    }
+
+    function initAllMascots() {
+      mascotRigs['welcome'] = getRigNodes(createMascotInstance('welcome-mascot-box', 'welcome'));
+      mascotRigs['completion'] = getRigNodes(createMascotInstance('completion-mascot-box', 'completion'));
+      mascotRigs['home'] = getRigNodes(createMascotInstance('home-mascot-box', 'home'));
+      mascotRigs['chat'] = getRigNodes(createMascotInstance('chat-eve-mascot', 'chat'));
+      mascotRigs['log'] = getRigNodes(createMascotInstance('log-toast-mascot', 'log'));
+
+      Object.keys(surveyMascotConfigs).forEach(screenId => {
+        const cfg = surveyMascotConfigs[screenId];
+        const svgEl = createMascotInstance(cfg.boxId, cfg.key);
+        const rig = getRigNodes(svgEl);
+        mascotRigs[cfg.key] = rig;
+        if (rig) {
+          setMascotEmotion(rig, cfg.emotion);
+        }
+      });
+    }
+
+    let idleTime = 0;
+    let isBlinking = false;
+
+    function runIdleAnimation() {
+      idleTime += 0.03;
+      const floatOffset = Math.sin(idleTime) * 2;
+
+      if (Math.floor(idleTime * 10) % 35 === 0 && !isBlinking) {
+        isBlinking = true;
+        setTimeout(() => { isBlinking = false; }, 150);
+      }
+
+      Object.keys(mascotRigs).forEach(key => {
+        const rig = mascotRigs[key];
+        if (!rig || !rig.svg) return;
+
+        rig.svg.style.transform = `translateY(${floatOffset}px)`;
+
+        if (rig.eyelidLeft && rig.eyelidRight) {
+          if (isBlinking) {
+            rig.eyelidLeft.setAttribute('transform', 'translate(0, 0)');
+            rig.eyelidRight.setAttribute('transform', 'translate(0, 0)');
+          } else {
+            const targetY = rig.baseEyelidY || -34;
+            rig.eyelidLeft.setAttribute('transform', `translate(0, ${targetY})`);
+            rig.eyelidRight.setAttribute('transform', `translate(0, ${targetY})`);
+          }
+        }
+      });
+
+      requestAnimationFrame(runIdleAnimation);
+    }
+
+    function buildOnboardingSequence() {
+      const basePrefix = ['screen-auth', 'screen-profile', 'screen-lifestage'];
+      let branchScreens = [];
+
+      if (surveyState.lifeStage === 'cycle') {
+        branchScreens = ['screen-cycle-info', 'screen-cycle-symptoms', 'screen-cycle-goals'];
+      } else if (surveyState.lifeStage === 'pregnant') {
+        branchScreens = ['screen-pregnant-due', 'screen-pregnant-meds', 'screen-pregnant-symptoms'];
+      } else {
+        branchScreens = ['screen-simplified-branch'];
+      }
+
+      const commonScreens = ['screen-food', 'screen-workout', 'screen-notifications', 'screen-ai-scope', 'screen-partner-ask'];
+      
+      if (surveyState.partnerInvite) {
+        commonScreens.push('screen-partner-rel', 'screen-partner-perm');
+      }
+      
+      commonScreens.push('screen-theme', 'screen-completion');
+
+      onboardingSequence = [...basePrefix, ...branchScreens, ...commonScreens];
+    }
+
+    function updateSurveyProgress() {
+      const total = onboardingSequence.length;
+      const curr = currentOnboardingIndex;
+      const pct = Math.min(100, Math.max(10, Math.round(((curr + 1) / total) * 100)));
+
+      document.querySelectorAll('.survey-progress-fill').forEach(bar => {
+        bar.style.width = pct + '%';
+      });
+
+      const activeScreenId = onboardingSequence[curr];
+      const cfg = surveyMascotConfigs[activeScreenId];
+      if (cfg && mascotRigs[cfg.key]) {
+        setMascotPeel(mascotRigs[cfg.key], pct);
+      }
+    }
+
+    function goToScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      const target = document.getElementById(screenId);
+      if (target) {
+        target.classList.add('active');
+      }
+
+      document.querySelectorAll('.bottom-nav .nav-item').forEach(item => {
+        item.classList.remove('active');
+      });
+
+      if (screenId === 'screen-home') {
+        const homeNav = target.querySelector('.nav-item:nth-child(1)');
+        if (homeNav) homeNav.classList.add('active');
+      } else if (screenId === 'screen-chat') {
+        const chatNav = target.querySelector('.nav-item:nth-child(2)');
+        if (chatNav) chatNav.classList.add('active');
+      } else if (screenId === 'screen-log') {
+        const logNav = target.querySelector('.nav-item:nth-child(3)');
+        if (logNav) logNav.classList.add('active');
+      }
+    }
+
+    function startOnboardingFlow() {
+      buildOnboardingSequence();
+      currentOnboardingIndex = 0;
+      goToScreen(onboardingSequence[0]);
+      updateSurveyProgress();
+    }
+
+    function nextOnboardingStep() {
+      if (currentOnboardingIndex < onboardingSequence.length - 1) {
+        currentOnboardingIndex++;
+        const nextScreenId = onboardingSequence[currentOnboardingIndex];
+        if (nextScreenId === 'screen-simplified-branch') {
+          renderSimplifiedBranch();
+        }
+        goToScreen(nextScreenId);
+        updateSurveyProgress();
+      }
+    }
+
+    function prevOnboardingStep() {
+      if (currentOnboardingIndex > 0) {
+        currentOnboardingIndex--;
+        goToScreen(onboardingSequence[currentOnboardingIndex]);
+        updateSurveyProgress();
+      } else {
+        goToScreen('screen-welcome');
+      }
+    }
+
+    function selectLifeStage(stage, cardEl) {
+      surveyState.lifeStage = stage;
+      const parent = cardEl.parentElement;
+      parent.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+      cardEl.classList.add('selected');
+      buildOnboardingSequence();
+    }
+
+    function selectSingleOption(key, val, cardEl) {
+      surveyState[key] = val;
+      const parent = cardEl.parentElement;
+      parent.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+      cardEl.classList.add('selected');
+    }
+
+    function toggleMultiSelect(key, val, cardEl) {
+      if (!Array.isArray(surveyState[key])) {
+        surveyState[key] = [];
+      }
+      const list = surveyState[key];
+      const idx = list.indexOf(val);
+      if (idx > -1) {
+        list.splice(idx, 1);
+        cardEl.classList.remove('selected');
+      } else {
+        list.push(val);
+        cardEl.classList.add('selected');
+      }
+    }
+
+    function selectChip(key, val, chipEl) {
+      surveyState[key] = val;
+      const parent = chipEl.parentElement;
+      parent.querySelectorAll('.sub-chip').forEach(c => c.classList.remove('selected'));
+      chipEl.classList.add('selected');
+    }
+
+    function toggleNutritionGoal(cardEl) {
+      cardEl.classList.toggle('selected');
+      const sub = document.getElementById('nutrition-sub-choice');
+      if (sub) {
+        sub.style.display = cardEl.classList.contains('selected') ? 'flex' : 'none';
+      }
+    }
+
+    function selectDietSubChoice(val, chipEl) {
+      surveyState.nutritionDiet = val;
+      const parent = chipEl.parentElement;
+      parent.querySelectorAll('.sub-chip').forEach(c => c.classList.remove('selected'));
+      chipEl.classList.add('selected');
+    }
+
+    function toggleAIScopeOption(val, cardEl) {
+      toggleMultiSelect('aiScope', val, cardEl);
+    }
+
+    function selectPartnerInvite(boolVal, cardEl) {
+      surveyState.partnerInvite = boolVal;
+      const parent = cardEl.parentElement;
+      parent.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+      cardEl.classList.add('selected');
+      buildOnboardingSequence();
+    }
+
+    function toggleOnlyApproveMaster() {
+      surveyState.onlyApproveMaster = !surveyState.onlyApproveMaster;
+      const switchEl = document.getElementById('only-approve-toggle');
+      if (switchEl) {
+        switchEl.classList.toggle('active', surveyState.onlyApproveMaster);
+      }
+    }
+
+    function selectTheme(themeName, cardEl) {
+      surveyState.theme = themeName;
+      const parent = cardEl.parentElement;
+      parent.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+      cardEl.classList.add('selected');
+
+      if (themeName === 'Dark') {
+        document.body.classList.add('dark-theme');
+      } else {
+        document.body.classList.remove('dark-theme');
+      }
+    }
+
+    function renderSimplifiedBranch() {
+      const stage = surveyState.lifeStage;
+      const titleEl = document.getElementById('simplified-branch-title');
+      const symptomsCont = document.getElementById('simplified-symptoms-container');
+      const goalsCont = document.getElementById('simplified-goals-container');
+
+      if (!symptomsCont || !goalsCont) return;
+
+      symptomsCont.innerHTML = '';
+      goalsCont.innerHTML = '';
+
+      let symptoms = [];
+      let goals = [];
+
+      if (stage === 'conceive') {
+        if (titleEl) titleEl.textContent = 'Trying to Conceive Details';
+        symptoms = ['Ovulation tracking', 'Basal body temperature', 'Cervical mucus tracking', 'Light spotting'];
+        goals = ['Identify fertile window', 'Cycle regularity insights', 'Preconception health'];
+      } else if (stage === 'postpartum') {
+        if (titleEl) titleEl.textContent = 'Postpartum Care Details';
+        symptoms = ['Postpartum fatigue', 'Mood changes', 'Night sweats', 'Hormonal hair changes'];
+        goals = ['Recovery tracking', 'Nursing & rest logging', 'Mental wellness support'];
+      } else if (stage === 'menopause') {
+        if (titleEl) titleEl.textContent = 'Menopause & Perimenopause Details';
+        symptoms = ['Hot flashes', 'Night sweats', 'Sleep disruption', 'Mood fluctuations', 'Brain fog'];
+        goals = ['Symptom intensity logging', 'Bone & cardiovascular health', 'Sleep quality management'];
+      }
+
+      symptoms.forEach(sym => {
+        const card = document.createElement('div');
+        card.className = 'option-card';
+        card.onclick = function() { toggleMultiSelect('simplifiedSymptoms', sym, this); };
+        card.innerHTML = `<span>${sym}</span><div class="check-box-icon">✓</div>`;
+        symptomsCont.appendChild(card);
+      });
+
+      goals.forEach(g => {
+        const card = document.createElement('div');
+        card.className = 'option-card';
+        card.onclick = function() { toggleMultiSelect('simplifiedGoals', g, this); };
+        card.innerHTML = `<span>${g}</span><div class="check-box-icon">✓</div>`;
+        goalsCont.appendChild(card);
+      });
+    }
+
+    function finishOnboardingToHome() {
+      const greetingEl = document.getElementById('home-greeting-text');
+      if (greetingEl) {
+        greetingEl.textContent = `Welcome back, ${surveyState.name || 'User'}`;
+      }
+      goToScreen('screen-home');
+    }
+
+    function triggerHomeEmotion(key, msg) {
+      const speechEl = document.getElementById('home-speech');
+      if (speechEl) {
+        speechEl.textContent = msg;
+      }
+      const homeRig = mascotRigs['home'];
+      if (homeRig) {
+        setMascotEmotion(homeRig, key);
+      }
+      document.querySelectorAll('#screen-home .btn-emotion-chip').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      if (window.event && window.event.target) {
+        window.event.target.classList.add('active');
+      }
+    }
+
+    function sendMessage() {
+      const input = document.getElementById('chat-input-field');
+      if (!input || !input.value.trim()) return;
+      const text = input.value.trim();
+      appendChatMessage(text, 'wife');
+      input.value = '';
+    }
+
+    function sendQuickReply(text) {
+      appendChatMessage(text, 'wife');
+    }
+
+    function appendChatMessage(text, sender) {
+      const thread = document.getElementById('chat-thread');
+      if (!thread) return;
+      const bubble = document.createElement('div');
+      bubble.className = `chat-bubble ${sender}`;
+      bubble.textContent = text;
+      thread.appendChild(bubble);
+      thread.scrollTop = thread.scrollHeight;
+    }
+
+    function selectDate(cell, dateStr, infoStr, emotionKey) {
+      document.querySelectorAll('.calendar-cell').forEach(c => c.classList.remove('selected'));
+      if (cell) cell.classList.add('selected');
+
+      const titleEl = document.getElementById('log-date-title');
+      const descEl = document.getElementById('log-date-desc');
+      if (titleEl) titleEl.textContent = dateStr;
+      if (descEl) descEl.textContent = infoStr;
+
+      const logRig = mascotRigs['log'];
+      if (logRig) {
+        setMascotEmotion(logRig, emotionKey || 'neutral');
+      }
+    }
+
+    function handleGoogleAuth() {
+      nextOnboardingStep();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initAllMascots();
+      buildOnboardingSequence();
+      runIdleAnimation();
+    });
+  </script>
+</body>
+</html>
