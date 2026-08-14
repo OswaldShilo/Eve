@@ -1,0 +1,31 @@
+name: eve_app
+description: EVE — an AI-powered adaptive health companion for women.
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+  flutter: '>=3.19.0'
+
+# NOTE: the ranges below are floors only, to keep this scaffold runnable.
+# plans/03-tech-stack.md is the source of truth for exact pinned versions —
+# check there before tightening or loosening any of these.
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^2.5.0
+  go_router: ^14.0.0
+  google_fonts: ^6.2.0
+  firebase_core: ^2.27.0
+  firebase_auth: ^4.17.0
+  cloud_firestore: ^4.15.0
+  cupertino_icons: ^1.0.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  mocktail: ^1.0.3
+
+flutter:
+  uses-material-design: true
