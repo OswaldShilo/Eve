@@ -18,6 +18,11 @@ void main() {
     expect(find.text('Partner'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('onboarding-primary-button')));
+    expect(pressed, isFalse, reason: 'a relationship must be chosen first');
+
+    await tester.tap(find.text('Husband'));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('onboarding-primary-button')));
     expect(pressed, isTrue);
   });
 }

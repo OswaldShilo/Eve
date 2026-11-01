@@ -19,7 +19,11 @@ void main() {
     expect(find.text('Postpartum'), findsOneWidget);
     expect(find.text('Perimenopause / Menopause'), findsOneWidget);
 
+    await tester.tap(find.byKey(const Key('onboarding-primary-button')));
+    expect(pressed, isFalse, reason: 'a life stage must be chosen first');
+
     await tester.tap(find.byKey(const Key('option-pregnant')));
+    await tester.pump();
     await tester.tap(find.byKey(const Key('onboarding-primary-button')));
     expect(pressed, isTrue);
   });

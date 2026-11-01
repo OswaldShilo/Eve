@@ -148,55 +148,16 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/onboarding/welcome',
       name: 'onboarding-welcome',
-      builder: (context, state) => Stack(
-        children: [
-          WelcomeScreen(onContinue: () => context.go('/onboarding/auth')),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 8,
-            child: SafeArea(
-              child: TextButton(
-                key: const Key('welcome-partner-join'),
-                onPressed: () => context.go('/partner/join'),
-                child: const Text('Joining a partner? Enter an invite code'),
-              ),
-            ),
-          ),
-        ],
+      builder: (context, state) => WelcomeScreen(
+        onContinue: () => context.go('/onboarding/auth'),
+        onJoinPartner: () => context.go('/partner/join'),
       ),
     ),
     ..._middleScreenBuilders.keys.map(_onboardingRoute),
     GoRoute(
       path: '/onboarding/completion',
       name: 'onboarding-completion',
-      builder: (context, state) => Consumer(
-        builder: (context, ref, _) => CompletionScreen(
-          onContinue: () async {
-            final uid = ref.read(currentUidProvider);
-            String? inviteCode;
-            if (uid != null) {
-              try {
-                inviteCode = await ref
-                    .read(onboardingRepositoryProvider)
-                    .saveOnboarding(uid, ref.read(onboardingStateProvider));
-              } catch (_) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text('We could not save your answers. Please check your connection and try again.'),
-                  ));
-                }
-                return;
-              }
-            }
-            if (!context.mounted) return;
-            if (inviteCode != null) {
-              await showDialog<void>(context: context, builder: (_) => PartnerInviteCodeDialog(code: inviteCode!));
-            }
-            if (context.mounted) context.go('/home');
-          },
-        ),
-      ),
+      builder: (context, state) => const _CompletionRoute(),
     ),
     GoRoute(
       path: '/home',
@@ -333,25 +294,89 @@ final GoRouter appRouter = GoRouter(
   ],
 );
 
+/// Saves her answers on "Enter EVE" (busy while saving), shows the partner
+/// invite code when she invited one, then opens Home. System back returns to
+/// the last survey screen.
+class _CompletionRoute extends ConsumerStatefulWidget {
+  const _CompletionRoute();
+
+  @override
+  ConsumerState<_CompletionRoute> createState() => _CompletionRouteState();
+}
+
+class _CompletionRouteState extends ConsumerState<_CompletionRoute> {
+  bool _saving = false;
+
+  Future<void> _finish() async {
+    if (_saving) return;
+    final uid = ref.read(currentUidProvider);
+    String? inviteCode;
+    if (uid != null) {
+      setState(() => _saving = true);
+      try {
+        inviteCode = await ref.read(onboardingRepositoryProvider).saveOnboarding(uid, ref.read(onboardingStateProvider));
+      } catch (_) {
+        if (mounted) {
+          setState(() => _saving = false);
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('We could not save your answers. Please check your connection and try again.'),
+          ));
+        }
+        return;
+      }
+    }
+    if (!mounted) return;
+    if (inviteCode != null) {
+      await showDialog<void>(context: context, builder: (_) => PartnerInviteCodeDialog(code: inviteCode!));
+    }
+    if (mounted) context.go('/home');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sequence = onboardingSequence(ref.watch(onboardingStateProvider));
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop || _saving) return;
+        context.go(routeForScreen(sequence[sequence.length - 2]));
+      },
+      child: CompletionScreen(busy: _saving, onContinue: _finish),
+    );
+  }
+}
+
 /// Signs in (Google or anonymous guest) before advancing, and records the
-/// uid every repository call is keyed by.
-class _AuthRoute extends ConsumerWidget {
+/// uid every repository call is keyed by. The tapped button shows a spinner
+/// and further taps are ignored until sign-in finishes.
+class _AuthRoute extends ConsumerStatefulWidget {
   const _AuthRoute({required this.onContinue, required this.onBack, required this.progressPercent});
 
   final VoidCallback onContinue;
   final VoidCallback onBack;
   final double progressPercent;
 
-  Future<void> _signIn(BuildContext context, WidgetRef ref, {required bool google}) async {
+  @override
+  ConsumerState<_AuthRoute> createState() => _AuthRouteState();
+}
+
+class _AuthRouteState extends ConsumerState<_AuthRoute> {
+  bool? _busyGoogle; // null = idle
+
+  Future<void> _signIn({required bool google}) async {
+    if (_busyGoogle != null) return;
+    setState(() => _busyGoogle = google);
     final appwrite = ref.read(appwriteServiceProvider);
     try {
       if (await appwrite.currentUserId() == null) {
         google ? await appwrite.signInWithGoogle() : await appwrite.signInAsGuest();
       }
       ref.read(currentUidProvider.notifier).state = await appwrite.currentUserId();
-      onContinue();
+      if (mounted) setState(() => _busyGoogle = null);
+      widget.onContinue();
     } catch (_) {
-      if (context.mounted) {
+      if (mounted) {
+        setState(() => _busyGoogle = null);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Sign-in did not complete. Please try again.')),
         );
@@ -360,10 +385,12 @@ class _AuthRoute extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => AuthScreen(
-        progressPercent: progressPercent,
-        onBack: onBack,
-        onGoogleSignIn: () => _signIn(context, ref, google: true),
-        onContinue: () => _signIn(context, ref, google: false),
+  Widget build(BuildContext context) => AuthScreen(
+        progressPercent: widget.progressPercent,
+        onBack: widget.onBack,
+        guestBusy: _busyGoogle == false,
+        googleBusy: _busyGoogle == true,
+        onGoogleSignIn: () => _signIn(google: true),
+        onContinue: () => _signIn(google: false),
       );
 }

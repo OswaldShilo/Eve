@@ -20,7 +20,30 @@ void main() {
     expect(find.byKey(const Key('profile-weight-field')), findsOneWidget);
     expect(find.byKey(const Key('profile-country-field')), findsOneWidget);
 
+    // Next Step stays disabled until she enters her name.
+    await tester.tap(find.byKey(const Key('onboarding-primary-button')));
+    expect(pressed, isFalse);
+
+    await tester.enterText(find.byKey(const Key('profile-name-field')), 'Maya');
+    await tester.pump();
     await tester.tap(find.byKey(const Key('onboarding-primary-button')));
     expect(pressed, isTrue);
+  });
+
+  testWidgets('a non-numeric age shows an error and blocks Next Step', (tester) async {
+    var pressed = false;
+    await tester.pumpWidget(ProviderScope(
+      child: MaterialApp(
+        home: ProfileScreen(onContinue: () => pressed = true, onBack: () {}),
+      ),
+    ));
+
+    await tester.enterText(find.byKey(const Key('profile-name-field')), 'Maya');
+    await tester.enterText(find.byKey(const Key('profile-age-field')), 'abc');
+    await tester.pump();
+
+    expect(find.text('Enter a number'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('onboarding-primary-button')));
+    expect(pressed, isFalse);
   });
 }

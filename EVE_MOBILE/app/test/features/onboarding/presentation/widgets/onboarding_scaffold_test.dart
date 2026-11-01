@@ -105,4 +105,27 @@ void main() {
 
     expect(find.byKey(const Key('eve-button-busy')), findsOneWidget);
   });
+
+  testWidgets('Android system back calls onBack instead of leaving the app', (tester) async {
+    var backPressed = 0;
+    await tester.pumpWidget(MaterialApp(
+      home: OnboardingScaffold(
+        progressPercent: 30,
+        emotion: EveEmotion.neutral,
+        guidanceText: 'g',
+        title: 'About You',
+        primaryLabel: 'Next',
+        onPrimaryPressed: () {},
+        onBack: () => backPressed++,
+        child: const SizedBox(),
+      ),
+    ));
+
+    final handled = await tester.binding.handlePopRoute();
+    await tester.pump();
+
+    expect(handled, isTrue, reason: 'the pop must be consumed, not bubble out of the app');
+    expect(backPressed, 1);
+    expect(find.text('About You'), findsOneWidget);
+  });
 }

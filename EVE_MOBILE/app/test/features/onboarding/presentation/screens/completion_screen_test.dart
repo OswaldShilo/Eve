@@ -17,4 +17,15 @@ void main() {
     await tester.tap(find.byKey(const Key('completion-enter-eve-button')));
     expect(pressed, isTrue);
   });
+
+  testWidgets('CompletionScreen busy shows a spinner and ignores taps', (tester) async {
+    var pressed = false;
+    await tester.pumpWidget(MaterialApp(
+      home: CompletionScreen(onContinue: () => pressed = true, busy: true),
+    ));
+
+    expect(find.byKey(const Key('eve-button-busy')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('completion-enter-eve-button')));
+    expect(pressed, isFalse);
+  });
 }

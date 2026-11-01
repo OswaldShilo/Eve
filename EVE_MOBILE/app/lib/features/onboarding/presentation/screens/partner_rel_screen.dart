@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:eve_app/features/mascot/eve_emotion.dart';
 import 'package:eve_app/features/onboarding/domain/onboarding_state.dart';
+import 'package:eve_app/features/onboarding/domain/onboarding_validation.dart';
 import 'package:eve_app/features/onboarding/presentation/widgets/onboarding_scaffold.dart';
 import 'package:eve_app/features/onboarding/presentation/widgets/option_list.dart';
 
@@ -36,6 +37,7 @@ class PartnerRelScreen extends ConsumerWidget {
       primaryLabel: 'Next',
       onPrimaryPressed: onContinue,
       onBack: onBack,
+      primaryEnabled: canContinueFrom('partner-rel', state),
       child: OptionList(
         items: _items,
         mode: OptionSelectionMode.single,

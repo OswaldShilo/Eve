@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:eve_app/features/mascot/eve_emotion.dart';
 import 'package:eve_app/features/mascot/eve_mascot.dart';
+import 'package:eve_app/shared/widgets/eve_components.dart';
 
 class WelcomeScreen extends StatelessWidget {
-  const WelcomeScreen({super.key, required this.onContinue});
+  const WelcomeScreen({super.key, required this.onContinue, this.onJoinPartner});
 
   final VoidCallback onContinue;
+
+  /// "Joining a partner?" link shown under Begin Setup when set.
+  final VoidCallback? onJoinPartner;
 
   @override
   Widget build(BuildContext context) {
@@ -37,13 +41,21 @@ class WelcomeScreen extends StatelessWidget {
                   Text('Cycle & Wellness Companion', style: TextStyle(color: Color(0xFF666666))),
                 ],
               ),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  key: const Key('welcome-begin-setup-button'),
-                  onPressed: onContinue,
-                  child: const Text('Begin Setup'),
-                ),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  EveButton(
+                    key: const Key('welcome-begin-setup-button'),
+                    label: 'Begin Setup',
+                    onPressed: onContinue,
+                  ),
+                  if (onJoinPartner != null)
+                    TextButton(
+                      key: const Key('welcome-partner-join'),
+                      onPressed: onJoinPartner,
+                      child: const Text('Joining a partner? Enter an invite code'),
+                    ),
+                ],
               ),
             ],
           ),

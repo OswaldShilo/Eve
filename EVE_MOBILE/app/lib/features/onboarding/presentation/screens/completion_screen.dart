@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:eve_app/features/mascot/eve_emotion.dart';
 import 'package:eve_app/features/mascot/eve_mascot.dart';
+import 'package:eve_app/shared/widgets/eve_components.dart';
 
 class CompletionScreen extends StatelessWidget {
-  const CompletionScreen({super.key, required this.onContinue});
+  const CompletionScreen({super.key, required this.onContinue, this.busy = false});
 
   final VoidCallback onContinue;
+
+  /// Her answers are being saved: spinner on the button, taps ignored.
+  final bool busy;
 
   @override
   Widget build(BuildContext context) {
@@ -37,13 +41,11 @@ class CompletionScreen extends StatelessWidget {
                   Text('Tailored specifically for your health journey', style: TextStyle(color: Color(0xFF666666))),
                 ],
               ),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  key: const Key('completion-enter-eve-button'),
-                  onPressed: onContinue,
-                  child: const Text('Enter EVE'),
-                ),
+              EveButton(
+                key: const Key('completion-enter-eve-button'),
+                label: 'Enter EVE',
+                busy: busy,
+                onPressed: onContinue,
               ),
             ],
           ),

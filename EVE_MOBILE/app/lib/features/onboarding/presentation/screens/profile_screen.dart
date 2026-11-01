@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:eve_app/features/mascot/eve_emotion.dart';
 import 'package:eve_app/features/onboarding/domain/onboarding_state.dart';
+import 'package:eve_app/features/onboarding/domain/onboarding_validation.dart';
 import 'package:eve_app/features/onboarding/presentation/widgets/onboarding_scaffold.dart';
 import 'package:eve_app/shared/widgets/eve_components.dart';
 
@@ -41,6 +42,7 @@ class ProfileScreen extends ConsumerWidget {
       primaryLabel: 'Next Step',
       onPrimaryPressed: onContinue,
       onBack: onBack,
+      primaryEnabled: canContinueFrom('profile', state),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -62,6 +64,7 @@ class ProfileScreen extends ConsumerWidget {
                   keyboardType: TextInputType.number,
                   textInputAction: TextInputAction.next,
                   initialValue: state.age,
+                  errorText: isBlankOrNumber(state.age) ? null : 'Enter a number',
                   onChanged: (v) => notifier.setField('age', v),
                 ),
               ),
@@ -73,6 +76,7 @@ class ProfileScreen extends ConsumerWidget {
                   keyboardType: TextInputType.number,
                   textInputAction: TextInputAction.next,
                   initialValue: state.height,
+                  errorText: isBlankOrNumber(state.height) ? null : 'Enter a number',
                   onChanged: (v) => notifier.setField('height', v),
                 ),
               ),
@@ -89,6 +93,7 @@ class ProfileScreen extends ConsumerWidget {
                   keyboardType: TextInputType.number,
                   textInputAction: TextInputAction.done,
                   initialValue: state.weight,
+                  errorText: isBlankOrNumber(state.weight) ? null : 'Enter a number',
                   onChanged: (v) => notifier.setField('weight', v),
                 ),
               ),

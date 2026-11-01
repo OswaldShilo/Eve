@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:eve_app/core/providers/appwrite_providers.dart';
 import 'package:eve_app/core/providers/repository_providers.dart';
 import 'package:eve_app/core/router/app_router.dart';
+import 'package:eve_app/features/onboarding/data/onboarding_repository.dart';
+import 'package:eve_app/features/onboarding/domain/onboarding_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -159,4 +163,65 @@ void main() {
     await _settle(tester);
     expect(find.text('No logs to summarize yet'), findsOneWidget);
   });
+
+  testWidgets('Android back on a survey screen returns to the previous screen', (tester) async {
+    await tester.pumpWidget(ProviderScope(child: MaterialApp.router(routerConfig: appRouter)));
+    appRouter.go('/onboarding/profile');
+    await _settle(tester);
+
+    final handled = await tester.binding.handlePopRoute();
+    await _settle(tester);
+
+    expect(handled, isTrue);
+    expect(appRouter.routerDelegate.currentConfiguration.uri.path, '/onboarding/auth');
+  });
+
+  testWidgets('Android back on Completion returns to the Theme screen', (tester) async {
+    await tester.pumpWidget(ProviderScope(child: MaterialApp.router(routerConfig: appRouter)));
+    appRouter.go('/onboarding/completion');
+    await _settle(tester);
+
+    await tester.binding.handlePopRoute();
+    await _settle(tester);
+
+    expect(appRouter.routerDelegate.currentConfiguration.uri.path, '/onboarding/theme');
+  });
+
+  testWidgets('Enter EVE shows a spinner while saving and saves only once on double tap', (tester) async {
+    final repo = _SlowOnboardingRepository();
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        onboardingRepositoryProvider.overrideWithValue(repo),
+        homeRepositoryProvider.overrideWithValue(FakeHomeRepository(const HomeDashboardDataFixture().data)),
+        currentUidProvider.overrideWith((ref) => 'u1'),
+      ],
+      child: MaterialApp.router(routerConfig: appRouter),
+    ));
+    appRouter.go('/onboarding/completion');
+    await _settle(tester);
+
+    await tester.tap(find.text('Enter EVE'));
+    await tester.pump();
+    expect(find.byKey(const Key('eve-button-busy')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('completion-enter-eve-button')));
+    await tester.pump();
+
+    repo.release.complete();
+    await _settle(tester);
+
+    expect(repo.calls, 1);
+    expect(appRouter.routerDelegate.currentConfiguration.uri.path, '/home');
+  });
+}
+
+class _SlowOnboardingRepository implements OnboardingRepository {
+  final release = Completer<void>();
+  int calls = 0;
+
+  @override
+  Future<String?> saveOnboarding(String uid, OnboardingState state) async {
+    calls++;
+    await release.future;
+    return null;
+  }
 }

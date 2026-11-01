@@ -17,4 +17,26 @@ void main() {
     await tester.tap(find.byKey(const Key('welcome-begin-setup-button')));
     expect(pressed, isTrue);
   });
+
+  testWidgets('the partner-join link sits below Begin Setup without overlapping it', (tester) async {
+    var begin = 0;
+    var join = 0;
+    await tester.pumpWidget(MaterialApp(
+      home: WelcomeScreen(onContinue: () => begin++, onJoinPartner: () => join++),
+    ));
+
+    final button = tester.getRect(find.byKey(const Key('welcome-begin-setup-button')));
+    final link = tester.getRect(find.byKey(const Key('welcome-partner-join')));
+    expect(link.top, greaterThanOrEqualTo(button.bottom));
+
+    await tester.tap(find.byKey(const Key('welcome-begin-setup-button')));
+    await tester.tap(find.byKey(const Key('welcome-partner-join')));
+    expect(begin, 1);
+    expect(join, 1);
+  });
+
+  testWidgets('no partner-join link without a handler', (tester) async {
+    await tester.pumpWidget(MaterialApp(home: WelcomeScreen(onContinue: () {})));
+    expect(find.byKey(const Key('welcome-partner-join')), findsNothing);
+  });
 }

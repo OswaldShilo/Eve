@@ -12,12 +12,19 @@ class AuthScreen extends StatelessWidget {
     required this.onBack,
     this.onGoogleSignIn,
     this.progressPercent = 10,
+    this.guestBusy = false,
+    this.googleBusy = false,
   });
 
   final VoidCallback onContinue;
   final VoidCallback onBack;
   final VoidCallback? onGoogleSignIn;
   final double progressPercent;
+
+  /// A guest / Google sign-in is in flight: show a spinner on that button
+  /// and ignore further taps on both.
+  final bool guestBusy;
+  final bool googleBusy;
 
   @override
   Widget build(BuildContext context) {
@@ -29,8 +36,9 @@ class AuthScreen extends StatelessWidget {
       title: 'Welcome to EVE',
       subtitle: 'Sign in to back up your health insights securely.',
       primaryLabel: 'Continue as Guest',
-      onPrimaryPressed: onContinue,
+      onPrimaryPressed: googleBusy ? () {} : onContinue,
       onBack: onBack,
+      primaryBusy: guestBusy,
       child: Padding(
         padding: const EdgeInsets.only(top: 12),
         child: EveButton(
@@ -38,7 +46,8 @@ class AuthScreen extends StatelessWidget {
           variant: EveButtonVariant.secondary,
           label: 'Sign in with Google',
           leading: const _GoogleMark(),
-          onPressed: onGoogleSignIn ?? onContinue,
+          busy: googleBusy,
+          onPressed: guestBusy ? () {} : (onGoogleSignIn ?? onContinue),
         ),
       ),
     );
