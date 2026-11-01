@@ -16,7 +16,9 @@ BoxDecoration eveOutlined({
   return BoxDecoration(
     color: color,
     shape: shape,
-    borderRadius: shape == BoxShape.circle ? null : BorderRadius.circular(radius),
+    borderRadius: shape == BoxShape.circle
+        ? null
+        : BorderRadius.circular(radius),
     border: Border.all(color: EveColors.outline, width: borderWidth),
     boxShadow: shadow <= 0
         ? null
@@ -146,7 +148,10 @@ class EveButton extends StatelessWidget {
               : Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (leading != null) ...[leading!, const SizedBox(width: 12)],
+                    if (leading != null) ...[
+                      leading!,
+                      const SizedBox(width: 12),
+                    ],
                     Flexible(
                       child: Text(
                         label,
@@ -154,7 +159,10 @@ class EveButton extends StatelessWidget {
                         textAlign: TextAlign.center,
                       ),
                     ),
-                    if (trailing != null) ...[const SizedBox(width: 8), trailing!],
+                    if (trailing != null) ...[
+                      const SizedBox(width: 8),
+                      trailing!,
+                    ],
                   ],
                 ),
         ),
@@ -301,24 +309,22 @@ class EveCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final bg = color ?? EveTokens.of(context).card;
     Widget box(double s) => Container(
-          padding: padding,
-          decoration: eveOutlined(
-            color: bg,
-            radius: radius,
-            borderWidth: borderWidth,
-            shadow: s,
-          ),
-          child: child,
-        );
-    if (onTap == null) {
-      return Padding(padding: EdgeInsets.only(bottom: shadow), child: box(shadow));
-    }
-    return _Pressable(
-      onTap: onTap,
-      shadow: shadow,
-      travel: 3,
-      builder: box,
+      padding: padding,
+      decoration: eveOutlined(
+        color: bg,
+        radius: radius,
+        borderWidth: borderWidth,
+        shadow: s,
+      ),
+      child: child,
     );
+    if (onTap == null) {
+      return Padding(
+        padding: EdgeInsets.only(bottom: shadow),
+        child: box(shadow),
+      );
+    }
+    return _Pressable(onTap: onTap, shadow: shadow, travel: 3, builder: box);
   }
 }
 
@@ -447,8 +453,8 @@ class EveChip extends StatelessWidget {
           child: Text(
             label,
             style: Theme.of(context).textTheme.labelMedium!.copyWith(
-                  color: selected ? Colors.white : tokens.ink,
-                ),
+              color: selected ? Colors.white : tokens.ink,
+            ),
           ),
         ),
       ),
@@ -635,6 +641,106 @@ class MascotGroundShadow extends StatelessWidget {
       decoration: const BoxDecoration(
         color: Color(0x242A000E), // rgba(42, 0, 14, 0.14)
         borderRadius: BorderRadius.all(Radius.elliptical(130, 18)),
+      ),
+    );
+  }
+}
+
+/// `.form-select` with an optional `.form-label`: an outlined dropdown.
+class EveSelectField<T> extends StatelessWidget {
+  const EveSelectField({
+    super.key,
+    required this.items,
+    required this.itemLabel,
+    required this.value,
+    required this.onChanged,
+    this.label,
+    this.hintText,
+    this.fieldKey,
+  });
+
+  final List<T> items;
+  final String Function(T) itemLabel;
+  final T? value;
+  final ValueChanged<T> onChanged;
+  final String? label;
+  final String? hintText;
+
+  /// Key placed on the inner [DropdownButtonFormField].
+  final Key? fieldKey;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = EveTokens.of(context);
+    final text = Theme.of(context).textTheme;
+    final style = text.bodyMedium!.copyWith(color: tokens.ink);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (label != null) ...[
+          Text(label!, style: text.labelLarge!.copyWith(color: tokens.ink)),
+          const SizedBox(height: 6),
+        ],
+        Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: Container(
+            decoration: eveOutlined(color: tokens.card, radius: 18, shadow: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: DropdownButtonFormField<T>(
+              key: fieldKey,
+              initialValue: value,
+              isExpanded: true,
+              style: style,
+              dropdownColor: tokens.card,
+              borderRadius: BorderRadius.circular(18),
+              icon: Icon(Icons.keyboard_arrow_down_rounded, color: tokens.ink),
+              hint: hintText == null
+                  ? null
+                  : Text(hintText!, style: style.copyWith(color: tokens.muted)),
+              decoration: const InputDecoration(
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(vertical: 12),
+              ),
+              items: items
+                  .map(
+                    (v) => DropdownMenuItem<T>(
+                      value: v,
+                      child: Text(
+                        itemLabel(v),
+                        overflow: TextOverflow.ellipsis,
+                        style: style,
+                      ),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (v) {
+                if (v != null) onChanged(v);
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// `.form-label`: the bold label above a group of inputs or chips.
+class EveFormLabel extends StatelessWidget {
+  const EveFormLabel(this.text, {super.key});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Text(
+        text,
+        style: Theme.of(
+          context,
+        ).textTheme.labelLarge!.copyWith(color: EveTokens.of(context).ink),
       ),
     );
   }

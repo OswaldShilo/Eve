@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:eve_app/features/mascot/eve_emotion.dart';
 import 'package:eve_app/features/onboarding/domain/onboarding_state.dart';
 import 'package:eve_app/features/onboarding/presentation/widgets/onboarding_scaffold.dart';
+import 'package:eve_app/shared/widgets/eve_components.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({
@@ -16,7 +17,13 @@ class ProfileScreen extends ConsumerWidget {
   final VoidCallback onBack;
   final double progressPercent;
 
-  static const _countries = ['India', 'United States', 'United Kingdom', 'Canada', 'Australia'];
+  static const _countries = [
+    'India',
+    'United States',
+    'United Kingdom',
+    'Canada',
+    'Australia',
+  ];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -26,66 +33,74 @@ class ProfileScreen extends ConsumerWidget {
     return OnboardingScaffold(
       progressPercent: progressPercent,
       emotion: EveEmotion.neutral,
-      guidanceText: 'Enter your basic profile details so EVE can personalize your tracking.',
+      guidanceText:
+          'Enter your basic profile details so EVE can personalize your tracking.',
       title: 'About You',
-      subtitle: 'Providing basic details helps EVE tailor your health predictions.',
+      subtitle:
+          'Providing basic details helps EVE tailor your health predictions.',
       primaryLabel: 'Next Step',
       onPrimaryPressed: onContinue,
       onBack: onBack,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          TextFormField(
-            key: const Key('profile-name-field'),
-            decoration: const InputDecoration(labelText: 'Name'),
+          EveTextField(
+            label: 'Name',
+            fieldKey: const Key('profile-name-field'),
             initialValue: state.name,
+            textInputAction: TextInputAction.next,
             onChanged: (v) => notifier.setField('name', v),
           ),
+          const SizedBox(height: 14),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: TextFormField(
-                  key: const Key('profile-age-field'),
-                  decoration: const InputDecoration(labelText: 'Age'),
+                child: EveTextField(
+                  label: 'Age',
+                  fieldKey: const Key('profile-age-field'),
                   keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.next,
                   initialValue: state.age,
                   onChanged: (v) => notifier.setField('age', v),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Expanded(
-                child: TextFormField(
-                  key: const Key('profile-height-field'),
-                  decoration: const InputDecoration(labelText: 'Height (cm)'),
+                child: EveTextField(
+                  label: 'Height (cm)',
+                  fieldKey: const Key('profile-height-field'),
                   keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.next,
                   initialValue: state.height,
                   onChanged: (v) => notifier.setField('height', v),
                 ),
               ),
             ],
           ),
+          const SizedBox(height: 14),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: TextFormField(
-                  key: const Key('profile-weight-field'),
-                  decoration: const InputDecoration(labelText: 'Weight (kg)'),
+                child: EveTextField(
+                  label: 'Weight (kg)',
+                  fieldKey: const Key('profile-weight-field'),
                   keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.done,
                   initialValue: state.weight,
                   onChanged: (v) => notifier.setField('weight', v),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Expanded(
-                child: DropdownButtonFormField<String>(
-                  key: const Key('profile-country-field'),
-                  decoration: const InputDecoration(labelText: 'Country'),
-                  initialValue: state.country.isEmpty ? null : state.country,
-                  items: _countries
-                      .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                      .toList(),
-                  onChanged: (v) {
-                    if (v != null) notifier.setField('country', v);
-                  },
+                child: EveSelectField<String>(
+                  label: 'Country',
+                  fieldKey: const Key('profile-country-field'),
+                  value: state.country.isEmpty ? null : state.country,
+                  items: _countries,
+                  itemLabel: (c) => c,
+                  onChanged: (v) => notifier.setField('country', v),
                 ),
               ),
             ],

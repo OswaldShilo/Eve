@@ -4,6 +4,7 @@ import 'package:eve_app/features/mascot/eve_emotion.dart';
 import 'package:eve_app/features/onboarding/domain/onboarding_state.dart';
 import 'package:eve_app/features/onboarding/presentation/widgets/onboarding_scaffold.dart';
 import 'package:eve_app/features/onboarding/presentation/widgets/option_list.dart';
+import 'package:eve_app/shared/widgets/eve_components.dart';
 
 class FoodScreen extends ConsumerWidget {
   const FoodScreen({
@@ -40,17 +41,17 @@ class FoodScreen extends ConsumerWidget {
       onPrimaryPressed: onContinue,
       onBack: onBack,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text('Food Allergies / Dietary Restrictions'),
-          TextFormField(
-            key: const Key('food-allergies-field'),
-            decoration: const InputDecoration(hintText: 'e.g. Peanuts, Gluten, Dairy'),
+          EveTextField(
+            label: 'Food Allergies / Dietary Restrictions',
+            fieldKey: const Key('food-allergies-field'),
+            hintText: 'e.g. Peanuts, Gluten, Dairy',
             initialValue: state.foodAllergies,
             onChanged: (v) => notifier.setField('foodAllergies', v),
           ),
-          const SizedBox(height: 6),
-          const Text('Preferred Cuisines'),
+          const SizedBox(height: 20),
+          const EveFormLabel('Preferred Cuisines'),
           OptionList(
             items: _cuisines,
             mode: OptionSelectionMode.multi,

@@ -4,6 +4,7 @@ import 'package:eve_app/features/mascot/eve_emotion.dart';
 import 'package:eve_app/features/onboarding/domain/onboarding_state.dart';
 import 'package:eve_app/features/onboarding/presentation/widgets/onboarding_scaffold.dart';
 import 'package:eve_app/features/onboarding/presentation/widgets/sub_chip_row.dart';
+import 'package:eve_app/shared/widgets/eve_components.dart';
 
 class PregnantMedsScreen extends ConsumerWidget {
   const PregnantMedsScreen({
@@ -25,31 +26,33 @@ class PregnantMedsScreen extends ConsumerWidget {
     return OnboardingScaffold(
       progressPercent: progressPercent,
       emotion: EveEmotion.caring,
-      guidanceText: 'Record your current medications and care routines for personalized safety.',
+      guidanceText:
+          'Record your current medications and care routines for personalized safety.',
       title: 'Medication & Care',
       primaryLabel: 'Next',
       onPrimaryPressed: onContinue,
       onBack: onBack,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text('Current Medications'),
-          TextFormField(
-            key: const Key('pregnant-meds-medications-field'),
-            decoration: const InputDecoration(hintText: 'e.g. Levothyroxine'),
+          EveTextField(
+            label: 'Current Medications',
+            fieldKey: const Key('pregnant-meds-medications-field'),
+            hintText: 'e.g. Levothyroxine',
+            textInputAction: TextInputAction.next,
             initialValue: state.medications,
             onChanged: (v) => notifier.setField('medications', v),
           ),
-          const SizedBox(height: 10),
-          const Text('Allergies'),
-          TextFormField(
-            key: const Key('pregnant-meds-allergies-field'),
-            decoration: const InputDecoration(hintText: 'e.g. Penicillin, Latex'),
+          const SizedBox(height: 14),
+          EveTextField(
+            label: 'Allergies',
+            fieldKey: const Key('pregnant-meds-allergies-field'),
+            hintText: 'e.g. Penicillin, Latex',
             initialValue: state.allergies,
             onChanged: (v) => notifier.setField('allergies', v),
           ),
-          const SizedBox(height: 10),
-          const Text('Taking Prenatal Vitamins?'),
+          const SizedBox(height: 14),
+          const EveFormLabel('Taking Prenatal Vitamins?'),
           SubChipRow(
             options: const ['Yes', 'No'],
             selected: state.prenatalVitamins,

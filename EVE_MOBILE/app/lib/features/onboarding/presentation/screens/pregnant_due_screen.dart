@@ -5,6 +5,7 @@ import 'package:eve_app/features/onboarding/domain/onboarding_state.dart';
 import 'package:eve_app/features/onboarding/presentation/widgets/onboarding_scaffold.dart';
 import 'package:eve_app/features/onboarding/presentation/widgets/option_list.dart';
 import 'package:eve_app/features/onboarding/presentation/widgets/sub_chip_row.dart';
+import 'package:eve_app/shared/widgets/eve_components.dart';
 
 class PregnantDueScreen extends ConsumerWidget {
   const PregnantDueScreen({
@@ -32,37 +33,41 @@ class PregnantDueScreen extends ConsumerWidget {
     return OnboardingScaffold(
       progressPercent: progressPercent,
       emotion: EveEmotion.neutral,
-      guidanceText: 'Enter your timeline details to calculate key pregnancy milestones.',
+      guidanceText:
+          'Enter your timeline details to calculate key pregnancy milestones.',
       title: 'Pregnancy Timeline',
       primaryLabel: 'Next',
       onPrimaryPressed: onContinue,
       onBack: onBack,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text('Calculation method'),
+          const EveFormLabel('Calculation method'),
           OptionList(
             items: _methodItems,
             mode: OptionSelectionMode.single,
-            selectedValues: state.dueMethod.isEmpty ? const {} : {state.dueMethod},
+            selectedValues: state.dueMethod.isEmpty
+                ? const {}
+                : {state.dueMethod},
             onToggle: (v) => notifier.setField('dueMethod', v),
           ),
           const SizedBox(height: 8),
-          const Text('Target Date'),
-          TextFormField(
-            key: const Key('pregnant-due-date-field'),
-            decoration: const InputDecoration(hintText: 'YYYY-MM-DD'),
+          EveTextField(
+            label: 'Target Date',
+            fieldKey: const Key('pregnant-due-date-field'),
+            hintText: 'YYYY-MM-DD',
             initialValue: state.dueDate,
             onChanged: (v) => notifier.setField('dueDate', v),
           ),
           const SizedBox(height: 8),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('High-risk pregnancy?'),
+                    const EveFormLabel('High-risk pregnancy?'),
                     SubChipRow(
                       options: const ['No', 'Yes'],
                       selected: state.highRisk,
@@ -75,7 +80,7 @@ class PregnantDueScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Pregnancy Type'),
+                    const EveFormLabel('Pregnancy Type'),
                     SubChipRow(
                       options: const ['Single', 'Twins'],
                       selected: state.pregnancyType,

@@ -5,6 +5,7 @@ import 'package:eve_app/features/onboarding/domain/onboarding_state.dart';
 import 'package:eve_app/features/onboarding/presentation/widgets/onboarding_scaffold.dart';
 import 'package:eve_app/features/onboarding/presentation/widgets/option_list.dart';
 import 'package:eve_app/features/onboarding/presentation/widgets/sub_chip_row.dart';
+import 'package:eve_app/shared/widgets/eve_components.dart';
 
 class CycleInfoScreen extends ConsumerWidget {
   const CycleInfoScreen({
@@ -28,8 +29,12 @@ class CycleInfoScreen extends ConsumerWidget {
 
   static const _periodLengths = ['3', '4', '5', '6', '7+', 'Not sure'];
   static const _periodLengthLabels = {
-    '3': '3 days', '4': '4 days', '5': '5 days', '6': '6 days',
-    '7+': '7+ days', 'Not sure': 'Not sure',
+    '3': '3 days',
+    '4': '4 days',
+    '5': '5 days',
+    '6': '6 days',
+    '7+': '7+ days',
+    'Not sure': 'Not sure',
   };
 
   @override
@@ -46,29 +51,28 @@ class CycleInfoScreen extends ConsumerWidget {
       onPrimaryPressed: onContinue,
       onBack: onBack,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text('Average cycle length'),
+          const EveFormLabel('Average cycle length'),
           OptionList(
             items: _cycleLengthItems,
             mode: OptionSelectionMode.single,
-            selectedValues: state.cycleLength.isEmpty ? const {} : {state.cycleLength},
+            selectedValues: state.cycleLength.isEmpty
+                ? const {}
+                : {state.cycleLength},
             onToggle: (v) => notifier.setField('cycleLength', v),
           ),
           const SizedBox(height: 10),
-          const Text('Average period length'),
-          DropdownButtonFormField<String>(
-            key: const Key('cycle-info-period-length-field'),
-            initialValue: state.periodLength.isEmpty ? null : state.periodLength,
-            items: _periodLengths
-                .map((p) => DropdownMenuItem(value: p, child: Text(_periodLengthLabels[p]!)))
-                .toList(),
-            onChanged: (v) {
-              if (v != null) notifier.setField('periodLength', v);
-            },
+          EveSelectField<String>(
+            label: 'Average period length',
+            fieldKey: const Key('cycle-info-period-length-field'),
+            value: state.periodLength.isEmpty ? null : state.periodLength,
+            items: _periodLengths,
+            itemLabel: (p) => _periodLengthLabels[p]!,
+            onChanged: (v) => notifier.setField('periodLength', v),
           ),
-          const SizedBox(height: 10),
-          const Text('Flow intensity'),
+          const SizedBox(height: 14),
+          const EveFormLabel('Flow intensity'),
           SubChipRow(
             options: const ['Light', 'Moderate', 'Heavy'],
             selected: state.flow,

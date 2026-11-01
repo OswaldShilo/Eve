@@ -5,17 +5,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 Widget _host(Widget child, {ThemeData? theme}) => MaterialApp(
-      theme: theme ?? EveTheme.defaultTheme(),
-      home: Scaffold(body: Center(child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: child,
-      ))),
-    );
+  theme: theme ?? EveTheme.defaultTheme(),
+  home: Scaffold(
+    body: Center(
+      child: Padding(padding: const EdgeInsets.all(16), child: child),
+    ),
+  ),
+);
 
 BoxDecoration _decorationOf(WidgetTester tester, Finder within) {
-  final container = tester.widgetList<Container>(
-    find.descendant(of: within, matching: find.byType(Container)),
-  ).firstWhere((c) => c.decoration is BoxDecoration);
+  final container = tester
+      .widgetList<Container>(
+        find.descendant(of: within, matching: find.byType(Container)),
+      )
+      .firstWhere((c) => c.decoration is BoxDecoration);
   return container.decoration! as BoxDecoration;
 }
 
@@ -41,44 +44,63 @@ void main() {
   group('EveButton', () {
     testWidgets('primary is ruby-filled and fires onPressed', (tester) async {
       var taps = 0;
-      await tester.pumpWidget(_host(
-        EveButton(key: const Key('b'), label: 'Next Step', onPressed: () => taps++),
-      ));
+      await tester.pumpWidget(
+        _host(
+          EveButton(
+            key: const Key('b'),
+            label: 'Next Step',
+            onPressed: () => taps++,
+          ),
+        ),
+      );
 
-      expect(_decorationOf(tester, find.byKey(const Key('b'))).color,
-          EveColors.rubyMain);
+      expect(
+        _decorationOf(tester, find.byKey(const Key('b'))).color,
+        EveColors.rubyMain,
+      );
       await tester.tap(find.text('Next Step'));
       expect(taps, 1);
     });
 
     testWidgets('secondary is white', (tester) async {
-      await tester.pumpWidget(_host(EveButton(
-        key: const Key('b'),
-        label: 'Continue with Google',
-        variant: EveButtonVariant.secondary,
-        onPressed: () {},
-      )));
-      expect(_decorationOf(tester, find.byKey(const Key('b'))).color,
-          EveColors.cardBg);
+      await tester.pumpWidget(
+        _host(
+          EveButton(
+            key: const Key('b'),
+            label: 'Continue with Google',
+            variant: EveButtonVariant.secondary,
+            onPressed: () {},
+          ),
+        ),
+      );
+      expect(
+        _decorationOf(tester, find.byKey(const Key('b'))).color,
+        EveColors.cardBg,
+      );
     });
 
     testWidgets('disabled (null onPressed) is dimmed', (tester) async {
-      await tester.pumpWidget(_host(
-        const EveButton(key: Key('b'), label: 'Next Step', onPressed: null),
-      ));
+      await tester.pumpWidget(
+        _host(
+          const EveButton(key: Key('b'), label: 'Next Step', onPressed: null),
+        ),
+      );
       final opacity = tester.widget<Opacity>(
-        find.descendant(of: find.byKey(const Key('b')), matching: find.byType(Opacity)),
+        find.descendant(
+          of: find.byKey(const Key('b')),
+          matching: find.byType(Opacity),
+        ),
       );
       expect(opacity.opacity, 0.5);
     });
 
     testWidgets('busy shows a spinner and ignores taps', (tester) async {
       var taps = 0;
-      await tester.pumpWidget(_host(EveButton(
-        label: 'Finish Setup',
-        busy: true,
-        onPressed: () => taps++,
-      )));
+      await tester.pumpWidget(
+        _host(
+          EveButton(label: 'Finish Setup', busy: true, onPressed: () => taps++),
+        ),
+      );
 
       expect(find.byKey(const Key('eve-button-busy')), findsOneWidget);
       expect(find.text('Finish Setup'), findsNothing);
@@ -86,21 +108,35 @@ void main() {
       expect(taps, 0);
     });
 
-    testWidgets('pressing moves the face down and shrinks the shadow',
-        (tester) async {
-      await tester.pumpWidget(_host(
-        EveButton(key: const Key('b'), label: 'Next Step', onPressed: () {}),
-      ));
-      final gesture =
-          await tester.startGesture(tester.getCenter(find.text('Next Step')));
+    testWidgets('pressing moves the face down and shrinks the shadow', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _host(
+          EveButton(key: const Key('b'), label: 'Next Step', onPressed: () {}),
+        ),
+      );
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.text('Next Step')),
+      );
       await tester.pump();
 
-      expect(_decorationOf(tester, find.byKey(const Key('b'))).boxShadow!.single.offset,
-          const Offset(0, 2));
+      expect(
+        _decorationOf(
+          tester,
+          find.byKey(const Key('b')),
+        ).boxShadow!.single.offset,
+        const Offset(0, 2),
+      );
       await gesture.up();
       await tester.pump();
-      expect(_decorationOf(tester, find.byKey(const Key('b'))).boxShadow!.single.offset,
-          const Offset(0, 6));
+      expect(
+        _decorationOf(
+          tester,
+          find.byKey(const Key('b')),
+        ).boxShadow!.single.offset,
+        const Offset(0, 6),
+      );
     });
   });
 
@@ -110,18 +146,21 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.arrow_back_rounded));
     expect(taps, 1);
-    final box = tester.getSize(find.ancestor(
-      of: find.byIcon(Icons.arrow_back_rounded),
-      matching: find.byType(Container),
-    ).first);
+    final box = tester.getSize(
+      find
+          .ancestor(
+            of: find.byIcon(Icons.arrow_back_rounded),
+            matching: find.byType(Container),
+          )
+          .first,
+    );
     expect(box, const Size(38, 38));
   });
 
   testWidgets('EveProgressBar fills proportionally', (tester) async {
-    await tester.pumpWidget(_host(const SizedBox(
-      width: 200,
-      child: EveProgressBar(percent: 50),
-    )));
+    await tester.pumpWidget(
+      _host(const SizedBox(width: 200, child: EveProgressBar(percent: 50))),
+    );
     await tester.pump(const Duration(milliseconds: 400));
 
     final fill = tester.widget<FractionallySizedBox>(
@@ -132,30 +171,50 @@ void main() {
 
   testWidgets('EveChip selected fills ruby with white text', (tester) async {
     var taps = 0;
-    await tester.pumpWidget(_host(Row(children: [
-      EveChip(key: const Key('on'), label: 'Light', selected: true, onTap: () => taps++),
-      const EveChip(key: Key('off'), label: 'Heavy'),
-    ])));
+    await tester.pumpWidget(
+      _host(
+        Row(
+          children: [
+            EveChip(
+              key: const Key('on'),
+              label: 'Light',
+              selected: true,
+              onTap: () => taps++,
+            ),
+            const EveChip(key: Key('off'), label: 'Heavy'),
+          ],
+        ),
+      ),
+    );
 
-    expect(_decorationOf(tester, find.byKey(const Key('on'))).color,
-        EveColors.rubyMain);
+    expect(
+      _decorationOf(tester, find.byKey(const Key('on'))).color,
+      EveColors.rubyMain,
+    );
     expect(tester.widget<Text>(find.text('Light')).style!.color, Colors.white);
-    expect(_decorationOf(tester, find.byKey(const Key('off'))).color,
-        EveColors.cardBg);
+    expect(
+      _decorationOf(tester, find.byKey(const Key('off'))).color,
+      EveColors.cardBg,
+    );
     await tester.tap(find.text('Light'));
     expect(taps, 1);
   });
 
-  testWidgets('EveToggleRow toggles from the row and the switch',
-      (tester) async {
+  testWidgets('EveToggleRow toggles from the row and the switch', (
+    tester,
+  ) async {
     var value = false;
-    await tester.pumpWidget(StatefulBuilder(
-      builder: (context, setState) => _host(EveToggleRow(
-        label: 'Only show what I approve',
-        value: value,
-        onChanged: (v) => setState(() => value = v),
-      )),
-    ));
+    await tester.pumpWidget(
+      StatefulBuilder(
+        builder: (context, setState) => _host(
+          EveToggleRow(
+            label: 'Only show what I approve',
+            value: value,
+            onChanged: (v) => setState(() => value = v),
+          ),
+        ),
+      ),
+    );
 
     await tester.tap(find.text('Only show what I approve'));
     await tester.pumpAndSettle();
@@ -165,14 +224,19 @@ void main() {
     expect(value, isFalse);
   });
 
-  testWidgets('EveTextField shows its label and reports changes',
-      (tester) async {
+  testWidgets('EveTextField shows its label and reports changes', (
+    tester,
+  ) async {
     String? latest;
-    await tester.pumpWidget(_host(EveTextField(
-      label: 'Name',
-      fieldKey: const Key('name'),
-      onChanged: (v) => latest = v,
-    )));
+    await tester.pumpWidget(
+      _host(
+        EveTextField(
+          label: 'Name',
+          fieldKey: const Key('name'),
+          onChanged: (v) => latest = v,
+        ),
+      ),
+    );
 
     expect(find.text('Name'), findsOneWidget);
     await tester.enterText(find.byKey(const Key('name')), 'Maya');
@@ -186,11 +250,15 @@ void main() {
   });
 
   testWidgets('components follow the dark theme card colour', (tester) async {
-    await tester.pumpWidget(_host(
-      const EveCard(key: Key('c'), child: Text('x')),
-      theme: EveTheme.dark(),
-    ));
-    expect(_decorationOf(tester, find.byKey(const Key('c'))).color,
-        EveColors.darkCard);
+    await tester.pumpWidget(
+      _host(
+        const EveCard(key: Key('c'), child: Text('x')),
+        theme: EveTheme.dark(),
+      ),
+    );
+    expect(
+      _decorationOf(tester, find.byKey(const Key('c'))).color,
+      EveColors.darkCard,
+    );
   });
 }

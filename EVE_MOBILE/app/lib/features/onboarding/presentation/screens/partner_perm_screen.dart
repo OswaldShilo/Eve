@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:eve_app/core/theme/eve_theme.dart';
 import 'package:eve_app/features/mascot/eve_emotion.dart';
 import 'package:eve_app/features/onboarding/domain/onboarding_state.dart';
 import 'package:eve_app/features/onboarding/presentation/widgets/onboarding_scaffold.dart';
 import 'package:eve_app/features/onboarding/presentation/widgets/option_list.dart';
+import 'package:eve_app/shared/widgets/eve_components.dart';
 
 class PartnerPermScreen extends ConsumerWidget {
   const PartnerPermScreen({
@@ -33,13 +35,14 @@ class PartnerPermScreen extends ConsumerWidget {
     return OnboardingScaffold(
       progressPercent: progressPercent,
       emotion: EveEmotion.caring,
-      guidanceText: 'Select which health updates your partner is permitted to view.',
+      guidanceText:
+          'Select which health updates your partner is permitted to view.',
       title: 'Partner Sharing Permissions',
       primaryLabel: 'Next',
       onPrimaryPressed: onContinue,
       onBack: onBack,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           OptionList(
             items: items,
@@ -47,24 +50,42 @@ class PartnerPermScreen extends ConsumerWidget {
             selectedValues: state.partnerPermissions.toSet(),
             onToggle: (v) => notifier.toggleListField('partnerPermissions', v),
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Only what I approve', style: TextStyle(fontWeight: FontWeight.w800)),
-                    Text('Requires manual approval before sharing updates'),
-                  ],
+          const SizedBox(height: 6),
+          EveCard(
+            color: EveTokens.of(context).soft,
+            radius: 20,
+            shadow: 5,
+            onTap: () => notifier.setField(
+              'onlyApproveMaster',
+              !state.onlyApproveMaster,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Only what I approve',
+                        style: Theme.of(context).textTheme.labelLarge,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Requires manual approval before sharing updates',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              Switch(
-                key: const Key('only-approve-toggle'),
-                value: state.onlyApproveMaster,
-                onChanged: (v) => notifier.setField('onlyApproveMaster', v),
-              ),
-            ],
+                const SizedBox(width: 12),
+                EveToggle(
+                  key: const Key('only-approve-toggle'),
+                  value: state.onlyApproveMaster,
+                  semanticLabel: 'Only what I approve',
+                  onChanged: (v) => notifier.setField('onlyApproveMaster', v),
+                ),
+              ],
+            ),
           ),
         ],
       ),

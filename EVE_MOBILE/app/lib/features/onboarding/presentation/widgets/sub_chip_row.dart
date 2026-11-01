@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:eve_app/shared/widgets/eve_components.dart';
 
+/// `.sub-choice-container` of `.sub-chip`s: a single-choice row of small
+/// outlined chips; wraps onto a new line when it does not fit.
 class SubChipRow extends StatelessWidget {
   const SubChipRow({
     super.key,
@@ -16,13 +19,13 @@ class SubChipRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Wrap(
       spacing: 8,
+      runSpacing: 6,
       children: options.map((opt) {
-        final isSelected = opt == selected;
-        return ChoiceChip(
+        return EveChip(
           key: Key('chip-$opt'),
-          label: Text(opt),
-          selected: isSelected,
-          onSelected: (_) => onSelect(opt),
+          label: opt,
+          selected: opt == selected,
+          onTap: () => onSelect(opt),
         );
       }).toList(),
     );
