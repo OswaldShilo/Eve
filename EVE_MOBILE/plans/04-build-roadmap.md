@@ -2271,7 +2271,7 @@ Entry point: in the `/onboarding/welcome` route builder, wrap `WelcomeScreen` so
       ),
 ```
 
-Add to `EVE_MOBILE/app/test/core/router/app_router_test.dart`:
+Also add `'/partner/join'` to `_expectedRoutePaths` in that test file (the route-set test asserts the exact set). Then add to `EVE_MOBILE/app/test/core/router/app_router_test.dart`:
 
 ```dart
   testWidgets('Welcome links partners to the join screen', (tester) async {

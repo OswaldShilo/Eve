@@ -3,10 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import 'package:eve_app/core/constants/appwrite_ids.dart';
 import 'package:eve_app/core/providers/appwrite_providers.dart';
 import 'package:eve_app/core/providers/repository_providers.dart';
 import 'package:eve_app/features/onboarding/presentation/widgets/partner_invite_code_dialog.dart';
+import 'package:eve_app/core/services/appwrite_service.dart';
 import 'package:eve_app/features/onboarding/domain/onboarding_progress.dart';
+import 'package:eve_app/features/partner/presentation/partner_join_screen.dart';
 import 'package:eve_app/features/onboarding/domain/onboarding_sequence.dart';
 import 'package:eve_app/features/onboarding/domain/onboarding_state.dart';
 import 'package:eve_app/features/onboarding/presentation/screens/ai_scope_screen.dart';
@@ -143,8 +146,22 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/onboarding/welcome',
       name: 'onboarding-welcome',
-      builder: (context, state) => WelcomeScreen(
-        onContinue: () => context.go('/onboarding/auth'),
+      builder: (context, state) => Stack(
+        children: [
+          WelcomeScreen(onContinue: () => context.go('/onboarding/auth')),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 8,
+            child: SafeArea(
+              child: TextButton(
+                key: const Key('welcome-partner-join'),
+                onPressed: () => context.go('/partner/join'),
+                child: const Text('Joining a partner? Enter an invite code'),
+              ),
+            ),
+          ),
+        ],
       ),
     ),
     ..._middleScreenBuilders.keys.map(_onboardingRoute),
@@ -267,6 +284,28 @@ final GoRouter appRouter = GoRouter(
               error: (_, __) => fallback,
             );
       }),
+    ),
+    GoRoute(
+      path: '/partner/join',
+      name: 'partner-join',
+      builder: (context, state) => Consumer(
+        builder: (context, ref, _) => PartnerJoinScreen(
+          onSubmit: (code) async {
+            final appwrite = ref.read(appwriteServiceProvider);
+            try {
+              if (await appwrite.currentUserId() == null) await appwrite.signInWithGoogle();
+              ref.read(currentUidProvider.notifier).state = await appwrite.currentUserId();
+              await appwrite.executeJson(AppwriteIds.fnPartnerInvites, {'action': 'acceptInvite', 'inviteCode': code});
+              if (context.mounted) context.go('/chat');
+              return null;
+            } on FunctionCallException catch (e) {
+              return e.message;
+            } catch (_) {
+              return 'Something went wrong. Please try again.';
+            }
+          },
+        ),
+      ),
     ),
   ],
 );

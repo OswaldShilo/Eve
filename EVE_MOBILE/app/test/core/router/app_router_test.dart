@@ -40,6 +40,7 @@ const _expectedRoutePaths = <String>{
   '/home',
   '/chat',
   '/log',
+  '/partner/join',
 };
 
 void main() {
@@ -134,5 +135,14 @@ void main() {
     await chat.sendMessage('u1', 'Hello from the test');
     await _settle(tester);
     expect(find.text('Hello from the test'), findsOneWidget);
+  });
+
+  testWidgets('Welcome links partners to the join screen', (tester) async {
+    await tester.pumpWidget(ProviderScope(child: MaterialApp.router(routerConfig: appRouter)));
+    appRouter.go('/onboarding/welcome');
+    await _settle(tester);
+    await tester.tap(find.byKey(const Key('welcome-partner-join')));
+    await _settle(tester);
+    expect(find.text('Join your partner'), findsOneWidget);
   });
 }
