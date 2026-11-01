@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:eve_app/core/providers/appwrite_providers.dart';
 import 'package:eve_app/features/onboarding/domain/onboarding_progress.dart';
 import 'package:eve_app/features/onboarding/domain/onboarding_sequence.dart';
 import 'package:eve_app/features/onboarding/domain/onboarding_state.dart';
@@ -39,7 +40,7 @@ typedef _MiddleScreenBuilder = Widget Function({
 
 final Map<String, _MiddleScreenBuilder> _middleScreenBuilders = {
   'auth': ({required onContinue, required onBack, required progressPercent}) =>
-      AuthScreen(onContinue: onContinue, onBack: onBack, progressPercent: progressPercent),
+      _AuthRoute(onContinue: onContinue, onBack: onBack, progressPercent: progressPercent),
   'profile': ({required onContinue, required onBack, required progressPercent}) =>
       ProfileScreen(onContinue: onContinue, onBack: onBack, progressPercent: progressPercent),
   'lifestage': ({required onContinue, required onBack, required progressPercent}) =>
@@ -173,3 +174,38 @@ final GoRouter appRouter = GoRouter(
     ),
   ],
 );
+
+/// Signs in (Google or anonymous guest) before advancing, and records the
+/// uid every repository call is keyed by.
+class _AuthRoute extends ConsumerWidget {
+  const _AuthRoute({required this.onContinue, required this.onBack, required this.progressPercent});
+
+  final VoidCallback onContinue;
+  final VoidCallback onBack;
+  final double progressPercent;
+
+  Future<void> _signIn(BuildContext context, WidgetRef ref, {required bool google}) async {
+    final appwrite = ref.read(appwriteServiceProvider);
+    try {
+      if (await appwrite.currentUserId() == null) {
+        google ? await appwrite.signInWithGoogle() : await appwrite.signInAsGuest();
+      }
+      ref.read(currentUidProvider.notifier).state = await appwrite.currentUserId();
+      onContinue();
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Sign-in did not complete. Please try again.')),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => AuthScreen(
+        progressPercent: progressPercent,
+        onBack: onBack,
+        onGoogleSignIn: () => _signIn(context, ref, google: true),
+        onContinue: () => _signIn(context, ref, google: false),
+      );
+}

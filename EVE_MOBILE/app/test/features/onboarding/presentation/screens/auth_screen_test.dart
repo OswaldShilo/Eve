@@ -26,4 +26,16 @@ void main() {
     await tester.tap(find.byKey(const Key('onboarding-back-button')));
     expect(backPressed, isTrue);
   });
+
+  testWidgets('AuthScreen routes the Google button to onGoogleSignIn when provided', (tester) async {
+    var google = 0;
+    var guest = 0;
+    await tester.pumpWidget(MaterialApp(
+      home: AuthScreen(onContinue: () => guest++, onBack: () {}, onGoogleSignIn: () => google++),
+    ));
+    await tester.tap(find.byKey(const Key('auth-google-button')));
+    await tester.tap(find.byKey(const Key('onboarding-primary-button')));
+    expect(google, 1);
+    expect(guest, 1);
+  });
 }

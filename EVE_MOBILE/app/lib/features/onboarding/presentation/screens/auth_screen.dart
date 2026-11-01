@@ -7,11 +7,13 @@ class AuthScreen extends StatelessWidget {
     super.key,
     required this.onContinue,
     required this.onBack,
+    this.onGoogleSignIn,
     this.progressPercent = 10,
   });
 
   final VoidCallback onContinue;
   final VoidCallback onBack;
+  final VoidCallback? onGoogleSignIn;
   final double progressPercent;
 
   @override
@@ -28,7 +30,7 @@ class AuthScreen extends StatelessWidget {
       child: Center(
         child: OutlinedButton.icon(
           key: const Key('auth-google-button'),
-          onPressed: onContinue,
+          onPressed: onGoogleSignIn ?? onContinue,
           icon: const Icon(Icons.g_mobiledata),
           label: const Text('Sign in with Google'),
         ),
