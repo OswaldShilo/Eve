@@ -945,6 +945,29 @@
       "entrypoint": "dist/notifications/src/main.js",
       "commands": "npm ci && npm run build",
       "path": "functions"
+    },
+    {
+      "$id": "chatSystemMessages",
+      "name": "chatSystemMessages",
+      "runtime": "node-22",
+      "specification": "s-0.5vcpu-512mb",
+      "execute": [],
+      "events": [
+        "tablesdb.eve.tables.symptom_logs.rows.*.create"
+      ],
+      "scopes": [
+        "rows.read",
+        "rows.write",
+        "messages.write",
+        "targets.read"
+      ],
+      "schedule": "",
+      "timeout": 30,
+      "enabled": true,
+      "logging": true,
+      "entrypoint": "dist/chatSystemMessages/src/main.js",
+      "commands": "npm ci && npm run build",
+      "path": "functions"
     }
   ]
 }
