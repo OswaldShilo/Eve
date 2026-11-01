@@ -2,24 +2,27 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Stand up the foundational Flutter app scaffolding — project init, canonical folder structure, theming, routing shell, core Riverpod state, the module-activation lookup, and a Firebase Auth/Firestore wrapper — that every other EVE_MOBILE plan assumes already exists.
+**Goal:** Stand up the foundational Flutter app scaffolding — project init, canonical folder structure, theming, routing shell, core Riverpod state, the module-activation lookup, and the Appwrite client wrapper plus repository interfaces — that every other EVE_MOBILE plan assumes already exists.
 
-**Architecture:** A layered Flutter app: `core/` holds cross-cutting singletons (theme, router, Firestore path constants, Firebase wrapper) with no feature-specific knowledge; `features/<name>/domain` holds pure Dart state/logic (Riverpod notifiers, lookup functions) with zero Flutter widget dependencies where possible; `features/<name>/presentation` holds widgets (out of scope here except placeholder route targets). Routing is a single flat `go_router` table of named routes, one per screen ID from the design spec, pointing at placeholder widgets until Plan 1 supplies the real screens.
+**Status (2026-11-01):** Tasks 1–7 are implemented in `EVE_MOBILE/app/` (commit `d422cf2`) and were written against Firebase. The backend has since moved to Appwrite (design-spec §2.1). Tasks 2, 3 and 7's `main.dart` bootstrap are superseded by **Task 8** (migration), and **Task 9** adds the repository interfaces. Tasks 1–7 are kept below as the record of what was built.
 
-**Tech Stack:** Flutter (Dart) + Riverpod (`flutter_riverpod`, `StateNotifierProvider`) + `go_router` + `google_fonts` + Firebase (`firebase_core`, `firebase_auth`, `cloud_firestore`) + `mocktail` for test doubles. Exact version pins are Plan 3's (`03-tech-stack.md`) responsibility — this plan uses caret-range floors only.
+**Architecture:** A layered Flutter app: `core/` holds cross-cutting singletons (theme, router, Appwrite IDs, `AppwriteService`, `AppEnv`) with no feature-specific knowledge; `features/<name>/domain` holds pure Dart state/logic (Riverpod notifiers, lookup functions) with zero Flutter widget dependencies where possible; `features/<name>/data` holds an abstract repository interface plus its Appwrite implementation, so widgets never import `package:appwrite`; `features/<name>/presentation` holds widgets (out of scope here except placeholder route targets). Routing is a single flat `go_router` table of named routes, one per screen ID from the design spec, pointing at placeholder widgets until Plan 1 supplies the real screens.
+
+**Tech Stack:** Flutter (Dart) + Riverpod (`flutter_riverpod`, `StateNotifierProvider`) + `go_router` + `google_fonts` + Appwrite (`appwrite` 28.x — Account, TablesDB, Functions, Realtime) + `mocktail` for test doubles. (Tasks 1–7 as originally built used `firebase_core`/`firebase_auth`/`cloud_firestore`; Task 8 removes them.) Exact version pins are Plan 3's (`03-tech-stack.md`) responsibility — this plan uses caret-range floors only.
 
 ## Global Constraints
 
 - Frontend is Flutter (Dart), single codebase, per design-spec.md §2.
 - State management is Riverpod, per design-spec.md §2. The onboarding state provider MUST be named `onboardingStateProvider` and MUST be a `StateNotifierProvider`, per design-spec.md §10.
-- Backend is Firebase (Auth, Firestore) for this plan's scope; Cloud Functions/Cloud Scheduler/`firebase_messaging` are out of scope here (Plan 3/7).
+- Backend is Appwrite (design-spec §2). No Firebase/GCP package may remain after Task 8. Server functions, schema and push are out of scope here (Plans 3/5/7).
 - The project folder structure MUST match design-spec.md §9 exactly — every plan depends on these exact paths to compose without cross-reading each other's full content.
-- Firestore path constants MUST match design-spec.md §10 exactly, character for character, including collection/document segment names.
+- Appwrite database/table/function IDs MUST match design-spec.md §10 exactly (`AppwriteIds`, Task 8).
+- Only `core/services/`, `core/providers/` and `features/*/data/appwrite_*_repository.dart` may import `package:appwrite` — everything else depends on the Task 9 interfaces.
 - `List<Module> activeModules(LifeStage stage)` MUST use that exact function name and signature — design-spec.md §10 fixes this as the cross-plan contract Plan 1's Home screen consumes.
 - Brand colors are fixed hex values (design-spec.md task brief): `--ruby-main: #FF2A6D`, `--ruby-dark: #2A000E`, `--ruby-blush: #FFA0B8`, `--ruby-soft: #FFF0F4`, `--partner-blue: #3D7BFF`, `--fertile-teal: #2EC4B6`, `--symptom-purple: #9B51E0`, `--appointment-orange: #FF9F1C`.
 - Fonts are Google Fonts: Fredoka for display text, Quicksand for body text, via the `google_fonts` package — never bundle static font assets for these.
 - No emojis anywhere in-product copy (design-spec.md §2). This plan produces no user-facing copy, but any label text added must stay emoji-free.
-- Out of scope for this plan (owned by other plans — do not implement here): the `EveMascot` widget (Plan 6), real onboarding/Home/Chat/Log screen widgets (Plan 1), `firestore.rules` (Plan 5), the AI proxy and any Cloud Functions (Plan 3/7), notification scheduling (Plan 3). This plan creates only the `app/` (Flutter client) folder subtree — `functions/`, `firestore.rules`, `firestore.indexes.json`, and `firebase.json` at the `EVE_MOBILE/` root are left for the plans that own them.
+- Out of scope for this plan (owned by other plans — do not implement here): the `EveMascot` widget (Plan 6), real onboarding/Home/Chat/Log screen widgets (Plan 1), the table schema and permissions (Plan 5), the AI proxy and all Appwrite Functions (Plans 3/7), notification dispatch (Plan 3). This plan creates only the `app/` (Flutter client) folder subtree — `functions/` and `appwrite.config.json` at the `EVE_MOBILE/` root are left for the plans that own them.
 
 ---
 
@@ -212,6 +215,8 @@ git commit -m "chore: scaffold Flutter app and canonical folder structure"
 
 ## Task 2: Firestore path constants
 
+> **Superseded by Task 8** (Appwrite migration): `firestore_paths.dart` and its test are deleted there and replaced by `appwrite_ids.dart`. Kept as the record of what was built.
+
 **Files:**
 - Create: `EVE_MOBILE/app/lib/core/constants/firestore_paths.dart`
 - Test: `EVE_MOBILE/app/test/core/constants/firestore_paths_test.dart`
@@ -388,6 +393,8 @@ git commit -m "feat: add canonical Firestore path constants"
 ---
 
 ## Task 3: FirebaseService (Auth + Firestore init wrapper)
+
+> **Superseded by Task 8**: `firebase_service.dart` and its test are deleted there and replaced by `appwrite_service.dart`. Kept as the record of what was built.
 
 **Files:**
 - Create: `EVE_MOBILE/app/lib/core/services/firebase_service.dart`
@@ -1409,6 +1416,8 @@ git commit -m "feat: add module-activation lookup (activeModules)"
 
 ## Task 7: App router and navigation shell
 
+> The `main.dart` written in Step 4 below (`await FirebaseService.initializeApp()`) is **superseded by Task 8 Step 9**. Everything else in this task stands.
+
 **Files:**
 - Create: `EVE_MOBILE/app/lib/core/router/app_router.dart`
 - Modify: `EVE_MOBILE/app/lib/app.dart`
@@ -1700,6 +1709,630 @@ git commit -m "feat: add go_router navigation shell and wire app.dart/main.dart"
 
 ---
 
+## Task 8: Migrate the client core from Firebase to Appwrite
+
+> Tasks 1–7 above are **already implemented** in `EVE_MOBILE/app/` (commit `d422cf2`) against Firebase. This task replaces the two Firebase-specific pieces (Tasks 2 and 3) and the bootstrap line Task 7 added to `main.dart`. Run it together with Plan 3 Task 4 (the pubspec swap) — roadmap M2.
+
+**Files:**
+- Delete: `EVE_MOBILE/app/lib/core/services/firebase_service.dart`
+- Delete: `EVE_MOBILE/app/test/core/services/firebase_service_test.dart`
+- Delete: `EVE_MOBILE/app/lib/core/constants/firestore_paths.dart`
+- Delete: `EVE_MOBILE/app/test/core/constants/firestore_paths_test.dart`
+- Create: `EVE_MOBILE/app/lib/core/config/app_env.dart`
+- Create: `EVE_MOBILE/app/lib/core/constants/appwrite_ids.dart`
+- Create: `EVE_MOBILE/app/lib/core/services/appwrite_service.dart`
+- Create: `EVE_MOBILE/app/lib/core/providers/appwrite_providers.dart`
+- Modify: `EVE_MOBILE/app/lib/main.dart`
+- Test: `EVE_MOBILE/app/test/core/constants/appwrite_ids_test.dart`
+- Test: `EVE_MOBILE/app/test/core/services/appwrite_service_test.dart`
+- Test: `EVE_MOBILE/app/test/core/providers/appwrite_providers_test.dart`
+
+**Interfaces:**
+- Consumes: `appwrite` 28.x (Plan 3 Task 4's pubspec), design-spec §10 IDs.
+- Produces: `AppEnv.endpoint`/`.projectId`/`.selfSigned`; `AppwriteIds.*`; `AppwriteService` (`client`, `account`, `tablesDb`, `functions`, `realtime`, `signInWithGoogle()`, `signInAsGuest()`, `currentUserId()`, `signOut()`, `executeJson(functionId, body)`); `FunctionCallException`; `appwriteServiceProvider`, `currentUidProvider` (`StateProvider<String?>`). These replace `FirestorePaths`, `FirebaseService` and `FirebaseService.initializeApp()` everywhere.
+
+- [ ] **Step 1: Confirm nothing else imports the Firebase files**
+
+```bash
+cd EVE_MOBILE/app
+grep -rn "firebase_service\|firestore_paths\|package:firebase\|package:cloud_firestore" lib test
+```
+
+Expected: hits only in the four files being deleted and `lib/main.dart`.
+
+- [ ] **Step 2: Delete the Firebase files**
+
+```bash
+git rm lib/core/services/firebase_service.dart test/core/services/firebase_service_test.dart lib/core/constants/firestore_paths.dart test/core/constants/firestore_paths_test.dart
+```
+
+- [ ] **Step 3: Write the failing tests**
+
+Create `EVE_MOBILE/app/test/core/constants/appwrite_ids_test.dart`:
+
+```dart
+import 'package:eve_app/core/constants/appwrite_ids.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  test('database, table and function IDs match design-spec §10', () {
+    expect(AppwriteIds.databaseId, 'eve');
+    expect(AppwriteIds.profiles, 'profiles');
+    expect(AppwriteIds.lifeStageProfiles, 'life_stage_profiles');
+    expect(AppwriteIds.symptomLogs, 'symptom_logs');
+    expect(AppwriteIds.preferences, 'preferences');
+    expect(AppwriteIds.partnerLinks, 'partner_links');
+    expect(AppwriteIds.partnerPermissions, 'partner_permissions');
+    expect(AppwriteIds.partnerViews, 'partner_views');
+    expect(AppwriteIds.partnerLookups, 'partner_lookups');
+    expect(AppwriteIds.chatMessages, 'chat_messages');
+    expect(AppwriteIds.fnPartnerInvites, 'partnerInvites');
+    expect(AppwriteIds.fnSendChatMessage, 'sendChatMessage');
+    expect(AppwriteIds.fnAiProxy, 'aiProxy');
+  });
+
+  test('chat realtime channel', () {
+    expect(AppwriteIds.chatMessagesChannel, 'tablesdb.eve.tables.chat_messages.rows');
+  });
+}
+```
+
+Create `EVE_MOBILE/app/test/core/services/appwrite_service_test.dart`:
+
+```dart
+import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/models.dart' as models;
+import 'package:eve_app/core/services/appwrite_service.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+
+class MockClient extends Mock implements Client {}
+
+class MockAccount extends Mock implements Account {}
+
+class MockTablesDB extends Mock implements TablesDB {}
+
+class MockFunctions extends Mock implements Functions {}
+
+class MockRealtime extends Mock implements Realtime {}
+
+class MockUser extends Mock implements models.User {}
+
+class MockExecution extends Mock implements models.Execution {}
+
+void main() {
+  late MockAccount account;
+  late MockFunctions functions;
+  late AppwriteService service;
+
+  setUp(() {
+    account = MockAccount();
+    functions = MockFunctions();
+    service = AppwriteService(
+      client: MockClient(),
+      account: account,
+      tablesDb: MockTablesDB(),
+      functions: functions,
+      realtime: MockRealtime(),
+    );
+  });
+
+  test('currentUserId returns the signed-in user id', () async {
+    final user = MockUser();
+    when(() => user.$id).thenReturn('u1');
+    when(() => account.get()).thenAnswer((_) async => user);
+    expect(await service.currentUserId(), 'u1');
+  });
+
+  test('currentUserId returns null when there is no session (401)', () async {
+    when(() => account.get()).thenThrow(AppwriteException('missing scope', 401));
+    expect(await service.currentUserId(), isNull);
+  });
+
+  test('executeJson sends a synchronous JSON execution and decodes the response', () async {
+    final execution = MockExecution();
+    when(() => execution.responseStatusCode).thenReturn(200);
+    when(() => execution.responseBody).thenReturn('{"inviteCode":"ABC234"}');
+    when(() => functions.createExecution(
+          functionId: any(named: 'functionId'),
+          body: any(named: 'body'),
+          xasync: any(named: 'xasync'),
+        )).thenAnswer((_) async => execution);
+
+    final result = await service.executeJson('partnerInvites', {'action': 'createInvite'});
+
+    expect(result, {'inviteCode': 'ABC234'});
+    verify(() => functions.createExecution(
+          functionId: 'partnerInvites',
+          body: '{"action":"createInvite"}',
+          xasync: false,
+        )).called(1);
+  });
+
+  test('executeJson throws FunctionCallException with the server message on 4xx/5xx', () async {
+    final execution = MockExecution();
+    when(() => execution.responseStatusCode).thenReturn(403);
+    when(() => execution.responseBody).thenReturn('{"error":"You are not part of this conversation."}');
+    when(() => functions.createExecution(
+          functionId: any(named: 'functionId'),
+          body: any(named: 'body'),
+          xasync: any(named: 'xasync'),
+        )).thenAnswer((_) async => execution);
+
+    expect(
+      () => service.executeJson('sendChatMessage', {}),
+      throwsA(isA<FunctionCallException>()
+          .having((e) => e.statusCode, 'statusCode', 403)
+          .having((e) => e.message, 'message', 'You are not part of this conversation.')),
+    );
+  });
+}
+```
+
+Create `EVE_MOBILE/app/test/core/providers/appwrite_providers_test.dart`:
+
+```dart
+import 'package:eve_app/core/providers/appwrite_providers.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  test('currentUidProvider defaults to null and can be set after sign-in', () {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    expect(container.read(currentUidProvider), isNull);
+    container.read(currentUidProvider.notifier).state = 'u1';
+    expect(container.read(currentUidProvider), 'u1');
+  });
+}
+```
+
+- [ ] **Step 4: Run to verify they fail**
+
+```bash
+flutter test test/core/constants/appwrite_ids_test.dart test/core/services/appwrite_service_test.dart test/core/providers/appwrite_providers_test.dart
+```
+
+Expected: FAIL — the three `lib/` files don't exist.
+
+- [ ] **Step 5: Implement `EVE_MOBILE/app/lib/core/config/app_env.dart`**
+
+```dart
+/// Build-time configuration, set with --dart-define (see app/README.md).
+/// Defaults target the local Docker Appwrite as seen from an Android
+/// emulator (10.0.2.2 is the host machine).
+class AppEnv {
+  AppEnv._();
+
+  static const String endpoint =
+      String.fromEnvironment('APPWRITE_ENDPOINT', defaultValue: 'http://10.0.2.2/v1');
+
+  static const String projectId =
+      String.fromEnvironment('APPWRITE_PROJECT_ID', defaultValue: 'eve-local');
+
+  /// Only for a self-hosted instance with a self-signed certificate.
+  static const bool selfSigned = bool.fromEnvironment('APPWRITE_SELF_SIGNED');
+}
+```
+
+- [ ] **Step 6: Implement `EVE_MOBILE/app/lib/core/constants/appwrite_ids.dart`**
+
+```dart
+/// Canonical Appwrite IDs — must match design-spec §10 and
+/// functions/shared/src/ids.ts exactly. Replaces FirestorePaths.
+class AppwriteIds {
+  AppwriteIds._();
+
+  static const String databaseId = 'eve';
+
+  static const String profiles = 'profiles';
+  static const String lifeStageProfiles = 'life_stage_profiles';
+  static const String symptomLogs = 'symptom_logs';
+  static const String preferences = 'preferences';
+  static const String partnerLinks = 'partner_links';
+  static const String partnerPermissions = 'partner_permissions';
+  static const String partnerViews = 'partner_views';
+  static const String partnerLookups = 'partner_lookups';
+  static const String chatMessages = 'chat_messages';
+
+  static const String fnPartnerInvites = 'partnerInvites';
+  static const String fnSendChatMessage = 'sendChatMessage';
+  static const String fnAiProxy = 'aiProxy';
+
+  /// Realtime channel for every chat row the subscriber can read.
+  static const String chatMessagesChannel = 'tablesdb.$databaseId.tables.$chatMessages.rows';
+}
+```
+
+- [ ] **Step 7: Implement `EVE_MOBILE/app/lib/core/services/appwrite_service.dart`**
+
+```dart
+import 'dart:convert';
+
+import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/enums.dart' as enums;
+
+import '../config/app_env.dart';
+
+/// Thrown when an Appwrite Function execution returns a 4xx/5xx status.
+class FunctionCallException implements Exception {
+  FunctionCallException(this.statusCode, this.message);
+
+  final int statusCode;
+  final String message;
+
+  @override
+  String toString() => 'FunctionCallException($statusCode): $message';
+}
+
+/// Thin, testable wrapper around the Appwrite SDK services the client uses.
+/// Every service can be injected so tests never touch the network. Only
+/// repositories (`features/*/data/appwrite_*_repository.dart`) and
+/// `core/services/` may use this class — widgets depend on repository
+/// interfaces instead (Task 9).
+class AppwriteService {
+  AppwriteService({
+    required this.client,
+    Account? account,
+    TablesDB? tablesDb,
+    Functions? functions,
+    Realtime? realtime,
+  })  : account = account ?? Account(client),
+        tablesDb = tablesDb ?? TablesDB(client),
+        functions = functions ?? Functions(client),
+        realtime = realtime ?? Realtime(client);
+
+  factory AppwriteService.fromEnv() {
+    final client = Client().setEndpoint(AppEnv.endpoint).setProject(AppEnv.projectId);
+    if (AppEnv.selfSigned) client.setSelfSigned();
+    return AppwriteService(client: client);
+  }
+
+  final Client client;
+  final Account account;
+  final TablesDB tablesDb;
+  final Functions functions;
+  final Realtime realtime;
+
+  /// Opens the Google consent screen; resolves once the session exists.
+  Future<void> signInWithGoogle() => account.createOAuth2Session(provider: enums.OAuthProvider.google);
+
+  /// "Continue as Guest": an anonymous Appwrite account (still a real user
+  /// id, so onUserCreate initializes her rows). Can be upgraded later.
+  Future<void> signInAsGuest() => account.createAnonymousSession();
+
+  /// The signed-in user's id, or null when there is no session.
+  Future<String?> currentUserId() async {
+    try {
+      return (await account.get()).$id;
+    } on AppwriteException catch (e) {
+      if (e.code == 401) return null;
+      rethrow;
+    }
+  }
+
+  Future<void> signOut() => account.deleteSession(sessionId: 'current');
+
+  /// Runs a function synchronously with a JSON body and returns its JSON
+  /// response. Caller identity reaches the function as x-appwrite-user-id.
+  Future<Map<String, dynamic>> executeJson(String functionId, Map<String, dynamic> body) async {
+    final execution = await functions.createExecution(
+      functionId: functionId,
+      body: jsonEncode(body),
+      xasync: false,
+    );
+    final decoded = execution.responseBody.isEmpty
+        ? <String, dynamic>{}
+        : jsonDecode(execution.responseBody) as Map<String, dynamic>;
+    if (execution.responseStatusCode >= 400) {
+      throw FunctionCallException(
+        execution.responseStatusCode,
+        (decoded['error'] as String?) ?? 'Request failed.',
+      );
+    }
+    return decoded;
+  }
+}
+```
+
+- [ ] **Step 8: Implement `EVE_MOBILE/app/lib/core/providers/appwrite_providers.dart`**
+
+```dart
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../services/appwrite_service.dart';
+
+/// Overridden in main.dart with the instance built from AppEnv, and in
+/// tests with an AppwriteService made of mocks.
+final appwriteServiceProvider = Provider<AppwriteService>((ref) => AppwriteService.fromEnv());
+
+/// The signed-in user's id. Seeded in main.dart from the existing session
+/// and set by the Auth screen after signInWithGoogle(); null when signed out.
+final currentUidProvider = StateProvider<String?>((ref) => null);
+```
+
+- [ ] **Step 9: Replace `EVE_MOBILE/app/lib/main.dart`**
+
+```dart
+import 'package:appwrite/appwrite.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'app.dart';
+import 'core/providers/appwrite_providers.dart';
+import 'core/services/appwrite_service.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final appwrite = AppwriteService.fromEnv();
+  String? uid;
+  try {
+    uid = await appwrite.currentUserId();
+  } on AppwriteException {
+    uid = null; // offline or server unreachable: start signed-out, retry at sign-in
+  }
+  runApp(ProviderScope(
+    overrides: [
+      appwriteServiceProvider.overrideWithValue(appwrite),
+      currentUidProvider.overrideWith((ref) => uid),
+    ],
+    child: const EveApp(),
+  ));
+}
+```
+
+- [ ] **Step 10: Run the whole suite and analyzer**
+
+```bash
+flutter test
+flutter analyze
+```
+
+Expected: every test passes (the 7 new ones plus all Task 4–7 tests); `flutter analyze` reports `No issues found!`; `grep -rn "firebase\|firestore" lib test pubspec.yaml` returns nothing.
+
+- [ ] **Step 11: Manual sign-in check (local Appwrite, Plan 3 Tasks 1–3 done)**
+
+Temporarily add to the `/onboarding/auth` placeholder a button calling `ref.read(appwriteServiceProvider).signInWithGoogle()` then `ref.read(currentUidProvider.notifier).state = await ref.read(appwriteServiceProvider).currentUserId()`, run on an emulator with the local `--dart-define`s, sign in. Expected: the Google consent screen opens in a browser tab, returns to the app, a user appears in Console → Auth, and the `onUserCreate` execution (Plan 5 Task 5, if deployed) creates her rows. Revert the scratch button — Plan 1's real Auth screen replaces it.
+
+- [ ] **Step 12: Commit (with Plan 3 Task 4's pubspec)**
+
+```bash
+git add -A lib/core test/core lib/main.dart pubspec.yaml pubspec.lock
+git commit -m "refactor(app): replace Firebase core with AppwriteService, AppwriteIds and AppEnv"
+```
+
+---
+
+## Task 9: Repository interfaces (UI never imports Appwrite)
+
+> Runs after Plan 5 Task 4 (the Dart models it references) — roadmap M14 Step 0.
+
+**Files:**
+- Create: `EVE_MOBILE/app/lib/features/onboarding/data/onboarding_repository.dart`
+- Create: `EVE_MOBILE/app/lib/features/home/data/home_repository.dart`
+- Create: `EVE_MOBILE/app/lib/features/chat/data/chat_repository.dart`
+- Create: `EVE_MOBILE/app/lib/features/log/data/log_repository.dart`
+- Create: `EVE_MOBILE/app/test/support/fake_repositories.dart`
+- Test: `EVE_MOBILE/app/test/support/fake_repositories_test.dart`
+- Delete: the `.gitkeep` files in `lib/features/{onboarding,home}/data/` once a real file exists there
+
+**Interfaces:**
+- Consumes: `OnboardingState` (Task 5), `ChatMessage`, `SymptomLog` (Plan 5 Task 4).
+- Produces: `OnboardingRepository`, `HomeDashboardData`, `HomeRepository`, `ChatRepository`, `LogRepository` (abstract, exact signatures from design-spec §10 "Data-access interface"), and in-memory fakes `FakeOnboardingRepository`, `FakeHomeRepository`, `FakeChatRepository`, `FakeLogRepository` that roadmap M14/M16/M19 widget and router tests reuse. The Appwrite implementations live beside each interface and are written in roadmap M14/M16.
+
+- [ ] **Step 1: Write the failing test**
+
+Create `EVE_MOBILE/app/test/support/fake_repositories_test.dart`:
+
+```dart
+import 'package:eve_app/features/onboarding/domain/onboarding_state.dart';
+import 'package:eve_app/shared/models/symptom_log.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+import 'fake_repositories.dart';
+
+void main() {
+  test('FakeOnboardingRepository records saves', () async {
+    final repo = FakeOnboardingRepository();
+    await repo.saveOnboarding('u1', const OnboardingState(name: 'Asha'));
+    expect(repo.saved.single.$1, 'u1');
+    expect(repo.saved.single.$2.name, 'Asha');
+  });
+
+  test('FakeChatRepository streams sent messages as her', () async {
+    final repo = FakeChatRepository();
+    final stream = repo.watchThread('u1');
+    await repo.sendMessage('u1', 'Hello');
+    final messages = await stream.firstWhere((m) => m.isNotEmpty);
+    expect(messages.single.senderRole, 'her');
+    expect(messages.single.messageText, 'Hello');
+  });
+
+  test('FakeLogRepository streams added logs', () async {
+    final repo = FakeLogRepository();
+    await repo.addLog('u1', SymptomLog(userId: 'u1', date: DateTime.utc(2026, 3, 14), mood: 'low'));
+    final logs = await repo.watchLogs('u1').first;
+    expect(logs.single.mood, 'low');
+  });
+
+  test('FakeHomeRepository returns its configured dashboard', () async {
+    final repo = FakeHomeRepository(const HomeDashboardDataFixture().data);
+    expect((await repo.loadDashboard('u1')).greetingName, 'Priya');
+  });
+}
+```
+
+- [ ] **Step 2: Run to verify it fails**
+
+Run: `flutter test test/support/fake_repositories_test.dart`
+Expected: FAIL — `fake_repositories.dart` doesn't exist.
+
+- [ ] **Step 3: Create the interfaces**
+
+`EVE_MOBILE/app/lib/features/onboarding/data/onboarding_repository.dart`:
+
+```dart
+import '../domain/onboarding_state.dart';
+
+/// Persists the completed onboarding survey. Implemented against Appwrite by
+/// AppwriteOnboardingRepository (roadmap M14).
+abstract class OnboardingRepository {
+  /// Returns the partner invite code when she chose to invite a partner,
+  /// otherwise null.
+  Future<String?> saveOnboarding(String uid, OnboardingState state);
+}
+```
+
+`EVE_MOBILE/app/lib/features/home/data/home_repository.dart`:
+
+```dart
+/// What the Home header needs. Real cycle-phase math is out of V0 scope;
+/// [phaseBadge] is a per-life-stage label.
+class HomeDashboardData {
+  const HomeDashboardData({required this.greetingName, required this.phaseBadge});
+
+  final String greetingName;
+  final String phaseBadge;
+}
+
+abstract class HomeRepository {
+  Future<HomeDashboardData> loadDashboard(String uid);
+}
+```
+
+`EVE_MOBILE/app/lib/features/chat/data/chat_repository.dart`:
+
+```dart
+import '../../../shared/models/chat_message.dart';
+
+/// One thread per couple, keyed by the primary user's uid. Sending goes
+/// through the sendChatMessage function — the client never writes rows.
+abstract class ChatRepository {
+  /// Her own uid when she is the primary user; the primary user's uid when
+  /// the signed-in user is a linked partner.
+  Future<String> threadIdFor(String uid);
+
+  Stream<List<ChatMessage>> watchThread(String threadUserId);
+
+  Future<void> sendMessage(String threadUserId, String text);
+}
+```
+
+`EVE_MOBILE/app/lib/features/log/data/log_repository.dart`:
+
+```dart
+import '../../../shared/models/symptom_log.dart';
+
+abstract class LogRepository {
+  /// Her logs, oldest first, updating live.
+  Stream<List<SymptomLog>> watchLogs(String uid);
+
+  Future<void> addLog(String uid, SymptomLog log);
+}
+```
+
+- [ ] **Step 4: Create the fakes**
+
+`EVE_MOBILE/app/test/support/fake_repositories.dart`:
+
+```dart
+import 'dart:async';
+
+import 'package:eve_app/features/chat/data/chat_repository.dart';
+import 'package:eve_app/features/home/data/home_repository.dart';
+import 'package:eve_app/features/log/data/log_repository.dart';
+import 'package:eve_app/features/onboarding/data/onboarding_repository.dart';
+import 'package:eve_app/features/onboarding/domain/onboarding_state.dart';
+import 'package:eve_app/shared/models/chat_message.dart';
+import 'package:eve_app/shared/models/symptom_log.dart';
+
+class FakeOnboardingRepository implements OnboardingRepository {
+  final List<(String, OnboardingState)> saved = [];
+
+  String? inviteCodeToReturn;
+
+  @override
+  Future<String?> saveOnboarding(String uid, OnboardingState state) async {
+    saved.add((uid, state));
+    return state.partnerInvite ? inviteCodeToReturn : null;
+  }
+}
+
+class HomeDashboardDataFixture {
+  const HomeDashboardDataFixture();
+
+  HomeDashboardData get data => const HomeDashboardData(greetingName: 'Priya', phaseBadge: 'Cycle Tracking Active');
+}
+
+class FakeHomeRepository implements HomeRepository {
+  FakeHomeRepository(this.data);
+
+  final HomeDashboardData data;
+
+  @override
+  Future<HomeDashboardData> loadDashboard(String uid) async => data;
+}
+
+class FakeChatRepository implements ChatRepository {
+  final _messages = <ChatMessage>[];
+  final _controller = StreamController<List<ChatMessage>>.broadcast();
+
+  @override
+  Future<String> threadIdFor(String uid) async => uid;
+
+  @override
+  Stream<List<ChatMessage>> watchThread(String threadUserId) async* {
+    yield List.unmodifiable(_messages);
+    yield* _controller.stream;
+  }
+
+  @override
+  Future<void> sendMessage(String threadUserId, String text) async {
+    _messages.add(ChatMessage(
+      threadUserId: threadUserId,
+      senderRole: 'her',
+      senderUserId: threadUserId,
+      messageText: text,
+      sentAt: DateTime.now().toUtc(),
+      type: 'text',
+    ));
+    _controller.add(List.unmodifiable(_messages));
+  }
+}
+
+class FakeLogRepository implements LogRepository {
+  final _logs = <SymptomLog>[];
+  final _controller = StreamController<List<SymptomLog>>.broadcast();
+
+  @override
+  Stream<List<SymptomLog>> watchLogs(String uid) async* {
+    yield List.unmodifiable(_logs);
+    yield* _controller.stream;
+  }
+
+  @override
+  Future<void> addLog(String uid, SymptomLog log) async {
+    _logs.add(log);
+    _controller.add(List.unmodifiable(_logs));
+  }
+}
+```
+
+- [ ] **Step 5: Run to verify it passes**
+
+Run: `flutter test test/support/fake_repositories_test.dart && flutter analyze`
+Expected: `All tests passed!` (4 tests); no analyzer issues.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add lib/features/onboarding/data lib/features/home/data lib/features/chat/data lib/features/log/data test/support
+git commit -m "feat(app): add repository interfaces and in-memory fakes"
+```
+
+---
+
 ## Self-Review
 
 **1. Spec coverage** — walking the task brief point by point:
@@ -1708,8 +2341,9 @@ git commit -m "feat: add go_router navigation shell and wire app.dart/main.dart"
 - Module-activation pure function `activeModules(LifeStage)` implementing the EVE2_PRD.md §5 table, with one test per life stage: Task 6.
 - `go_router` router with named routes for every screen ID in design-spec.md §5 (plus §7's Home/Chat/Log), wired to placeholder screens: Task 7.
 - `EveTheme` light/dark/default matching the 8 CSS custom properties and the Fredoka/Quicksand `google_fonts` pairing, widget-tested: Task 4.
-- `FirebaseService` Auth + Firestore init wrapper, with `firestore_paths.dart` constants matching design-spec.md §10 exactly: Tasks 2 and 3.
-- Boundaries respected: no `EveMascot` implementation, no real onboarding/Home/Chat/Log screens, no `firestore.rules`, no AI proxy/Cloud Functions, no notification scheduling — all explicitly called out in Global Constraints and left untouched by every task.
+- ~~`FirebaseService` + `firestore_paths.dart` (Tasks 2 and 3)~~ → `AppwriteService` + `AppwriteIds` + `AppEnv` + providers, with Firebase fully removed: Task 8.
+- Repository interfaces so UI never depends on Appwrite, plus reusable fakes: Task 9.
+- Boundaries respected: no `EveMascot` implementation, no real onboarding/Home/Chat/Log screens, no schema/permissions, no AI proxy/Appwrite Functions, no notification dispatch — all explicitly called out in Global Constraints and left untouched by every task.
 
 **2. Placeholder scan** — no "TBD"/"implement later"/"add appropriate handling" language anywhere; every step has complete, runnable code; every test has real assertions against real values (exact hex colors, exact Firestore path strings, exact module sets, exact route paths).
 
@@ -1719,4 +2353,5 @@ git commit -m "feat: add go_router navigation shell and wire app.dart/main.dart"
 - `activeModules` treats `partnerMode` as always present in the returned list for every life stage (matching the table's "Optional" marking as "not life-stage-gated"); actual partner-mode visibility given `partnerInvite` status is left to the consuming screen (Plan 1), not this pure function.
 - The distinction between the "default" and "light" theme modes is not specified beyond "light, dark, or default" in EVE2_PRD.md §4 — this plan treats `defaultTheme()` as the branded ruby-soft-background theme and `light()` as a neutral white-background variant of the same palette, both `Brightness.light`. Plan 1 should treat this as the concrete definition unless told otherwise.
 - `/onboarding/simplified-branch` is one shared route for the conceive/postpartum/perimenopause branches, per design-spec.md §5's own wording ("single screen-simplified-branch") — not three separate routes.
-- This plan scaffolds only `EVE_MOBILE/app/` (the Flutter client). `EVE_MOBILE/functions/`, `firestore.rules`, `firestore.indexes.json`, and `firebase.json` at the `EVE_MOBILE/` root are left for Plans 3, 5, and 7 to create, since design-spec.md's own plan boundaries (§3) assign Cloud Functions and security rules to those plans.
+- This plan scaffolds only `EVE_MOBILE/app/` (the Flutter client). `EVE_MOBILE/functions/` and `appwrite.config.json` are left for Plans 3, 5, and 7.
+- `currentUidProvider` is a `StateProvider<String?>` (seeded in `main.dart`, set by the Auth screen) rather than derived from the SDK, because Appwrite's `account.get()` is async — this keeps every consumer's read synchronous.
