@@ -925,6 +925,26 @@
       "entrypoint": "dist/sendChatMessage/src/main.js",
       "commands": "npm ci && npm run build",
       "path": "functions"
+    },
+    {
+      "$id": "notifications",
+      "name": "notifications",
+      "runtime": "node-22",
+      "specification": "s-0.5vcpu-512mb",
+      "execute": [],
+      "events": [],
+      "scopes": [
+        "rows.read",
+        "messages.write",
+        "targets.read"
+      ],
+      "schedule": "*/30 * * * *",
+      "timeout": 120,
+      "enabled": true,
+      "logging": true,
+      "entrypoint": "dist/notifications/src/main.js",
+      "commands": "npm ci && npm run build",
+      "path": "functions"
     }
   ]
 }

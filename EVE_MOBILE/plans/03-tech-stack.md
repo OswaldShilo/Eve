@@ -1374,7 +1374,7 @@ void main() {
     final push = MockPush();
     final subscription = MockPushSubscription();
     PushCallback? captured;
-    when(() => push.subscribe(null, any(), background: true, title: 'Eve')).thenAnswer((invocation) async {
+    when(() => push.subscribe(any(that: isNull), any(), background: any(named: 'background', that: isTrue), title: any(named: 'title', that: equals('Eve')))).thenAnswer((invocation) async {
       captured = invocation.positionalArguments[1] as PushCallback;
       return subscription;
     });
@@ -1394,7 +1394,7 @@ void main() {
   test('stop unsubscribes and closes the connection', () async {
     final push = MockPush();
     final subscription = MockPushSubscription();
-    when(() => push.subscribe(null, any(), background: true, title: 'Eve')).thenAnswer((_) async => subscription);
+    when(() => push.subscribe(any(that: isNull), any(), background: any(named: 'background', that: isTrue), title: any(named: 'title', that: equals('Eve')))).thenAnswer((_) async => subscription);
 
     final service = PushService(push);
     await service.start(onMessage: (_) {});

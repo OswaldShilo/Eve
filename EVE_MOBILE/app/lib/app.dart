@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/providers/appwrite_providers.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/eve_theme.dart';
 
@@ -13,6 +14,8 @@ class EveApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(pushLifecycleProvider);
+
     return MaterialApp.router(
       title: 'EVE',
       debugShowCheckedModeBanner: false,

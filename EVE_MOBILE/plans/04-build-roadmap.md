@@ -2074,16 +2074,21 @@ final pushServiceProvider = Provider<PushService>((ref) {
 });
 ```
 
-(imports `package:appwrite/appwrite.dart`, `../services/push_service.dart`), and in `EVE_MOBILE/app/lib/app.dart`'s `EveApp.build`, before returning `MaterialApp.router`:
+(imports `package:appwrite/appwrite.dart`, `../services/push_service.dart`), plus a lifecycle provider in the same file:
 
 ```dart
-    ref.listen<String?>(currentUidProvider, (previous, uid) {
-      final push = ref.read(pushServiceProvider);
-      uid == null ? push.stop() : push.start(onMessage: (_) {});
-    }, fireImmediately: true);
+/// Keeps push subscribed exactly while someone is signed in. Watched by
+/// EveApp, so it also runs for the uid seeded in main.dart (WidgetRef.listen
+/// has no fireImmediately in Riverpod 2).
+final pushLifecycleProvider = Provider<void>((ref) {
+  final push = ref.watch(pushServiceProvider);
+  ref.watch(currentUidProvider) == null ? push.stop() : push.start(onMessage: (_) {});
+});
 ```
 
-`app_test.dart` keeps passing because `currentUidProvider` is null there, so only `stop()` runs; override `pushServiceProvider` in that test with `PushService(MockPush())` (stubbing `close()`) if the analyzer flags the real `Push` construction.
+and in `EVE_MOBILE/app/lib/app.dart`'s `EveApp.build`, before returning `MaterialApp.router`: `ref.watch(pushLifecycleProvider);`. (The earlier draft used `ref.listen(..., fireImmediately: true)`, which does not compile: `WidgetRef.listen` has no `fireImmediately` parameter in Riverpod 2.)
+
+`app_test.dart` passes unchanged (verified): with `currentUidProvider` null only `stop()` runs.
 
 - [ ] **Step 2: Verify and commit**
 
