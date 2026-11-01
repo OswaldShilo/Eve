@@ -858,6 +858,76 @@
       "entrypoint": "dist/onUserCreate/src/main.js",
       "commands": "npm ci && npm run build",
       "path": "functions"
+    },
+    {
+      "$id": "partnerView",
+      "name": "partnerView",
+      "runtime": "node-22",
+      "specification": "s-0.5vcpu-512mb",
+      "execute": [],
+      "events": [
+        "tablesdb.eve.tables.symptom_logs.rows.*.create",
+        "tablesdb.eve.tables.symptom_logs.rows.*.update",
+        "tablesdb.eve.tables.symptom_logs.rows.*.upsert",
+        "tablesdb.eve.tables.symptom_logs.rows.*.delete",
+        "tablesdb.eve.tables.life_stage_profiles.rows.*.update",
+        "tablesdb.eve.tables.life_stage_profiles.rows.*.upsert",
+        "tablesdb.eve.tables.partner_permissions.rows.*.update",
+        "tablesdb.eve.tables.partner_permissions.rows.*.upsert"
+      ],
+      "scopes": [
+        "rows.read",
+        "rows.write"
+      ],
+      "schedule": "",
+      "timeout": 30,
+      "enabled": true,
+      "logging": true,
+      "entrypoint": "dist/partnerView/src/main.js",
+      "commands": "npm ci && npm run build",
+      "path": "functions"
+    },
+    {
+      "$id": "partnerInvites",
+      "name": "partnerInvites",
+      "runtime": "node-22",
+      "specification": "s-0.5vcpu-512mb",
+      "execute": [
+        "users"
+      ],
+      "events": [],
+      "scopes": [
+        "rows.read",
+        "rows.write"
+      ],
+      "schedule": "",
+      "timeout": 30,
+      "enabled": true,
+      "logging": true,
+      "entrypoint": "dist/partnerInvites/src/main.js",
+      "commands": "npm ci && npm run build",
+      "path": "functions"
+    },
+    {
+      "$id": "sendChatMessage",
+      "name": "sendChatMessage",
+      "runtime": "node-22",
+      "specification": "s-0.5vcpu-512mb",
+      "execute": [
+        "users"
+      ],
+      "events": [],
+      "scopes": [
+        "rows.read",
+        "rows.write"
+      ],
+      "schedule": "",
+      "timeout": 15,
+      "enabled": true,
+      "logging": true,
+      "entrypoint": "dist/sendChatMessage/src/main.js",
+      "commands": "npm ci && npm run build",
+      "path": "functions"
     }
   ]
 }
