@@ -7,6 +7,7 @@ import 'package:eve_app/core/constants/appwrite_ids.dart';
 import 'package:eve_app/core/providers/appwrite_providers.dart';
 import 'package:eve_app/core/providers/repository_providers.dart';
 import 'package:eve_app/features/onboarding/presentation/widgets/partner_invite_code_dialog.dart';
+import 'package:eve_app/core/services/ai_proxy_service.dart';
 import 'package:eve_app/core/services/appwrite_service.dart';
 import 'package:eve_app/features/onboarding/domain/onboarding_progress.dart';
 import 'package:eve_app/features/partner/presentation/partner_join_screen.dart';
@@ -37,6 +38,7 @@ import 'package:eve_app/features/chat/presentation/screens/chat_screen.dart';
 import 'package:eve_app/features/log/presentation/log_mapping.dart';
 import 'package:eve_app/features/log/presentation/widgets/quick_log_sheet.dart';
 import 'package:eve_app/shared/models/symptom_log.dart';
+import 'package:eve_app/features/home/presentation/screens/doctor_summary_screen.dart';
 import 'package:eve_app/features/home/presentation/screens/home_screen.dart';
 import 'package:eve_app/features/log/presentation/screens/log_screen.dart';
 
@@ -208,9 +210,14 @@ final GoRouter appRouter = GoRouter(
                 phaseBadge: data.phaseBadge,
                 onNavigateChat: () => context.go('/chat'),
                 onNavigateLog: () => context.go('/log'),
+                onNavigateDoctorSummary: () => context.go('/doctor-summary'),
               ),
               loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
-              error: (_, __) => HomeScreen(onNavigateChat: () => context.go('/chat'), onNavigateLog: () => context.go('/log')),
+              error: (_, __) => HomeScreen(
+                onNavigateChat: () => context.go('/chat'),
+                onNavigateLog: () => context.go('/log'),
+                onNavigateDoctorSummary: () => context.go('/doctor-summary'),
+              ),
             );
       }),
     ),
@@ -306,6 +313,22 @@ final GoRouter appRouter = GoRouter(
           },
         ),
       ),
+    ),
+    GoRoute(
+      path: '/doctor-summary',
+      name: 'doctor-summary',
+      builder: (context, state) => Consumer(builder: (context, ref, _) {
+        final uid = ref.watch(currentUidProvider);
+        if (uid == null) return const Scaffold(body: Center(child: Text('Please sign in to create a summary.')));
+        return ref.watch(logsProvider(uid)).when(
+              data: (logs) => DoctorSummaryScreen(
+                logs: [for (final log in logs) log.toRow()],
+                generateSummary: (_) => AiProxyService(ref.read(appwriteServiceProvider)).generateDoctorSummary(),
+              ),
+              loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+              error: (_, __) => const Scaffold(body: Center(child: Text('Your logs could not be loaded.'))),
+            );
+      }),
     ),
   ],
 );

@@ -2868,7 +2868,7 @@ Imports: `package:eve_app/core/services/ai_proxy_service.dart`, `package:eve_app
 
 - [ ] **Step 4: Router test**
 
-Add to `EVE_MOBILE/app/test/core/router/app_router_test.dart`:
+Add `'/doctor-summary'` to `_expectedRoutePaths` (the route-set test asserts the exact set), then add to `EVE_MOBILE/app/test/core/router/app_router_test.dart`:
 
 ```dart
   testWidgets('Doctor summary is disabled with an explanation when she has no logs', (tester) async {

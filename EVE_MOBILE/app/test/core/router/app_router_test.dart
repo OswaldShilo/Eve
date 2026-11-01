@@ -41,6 +41,7 @@ const _expectedRoutePaths = <String>{
   '/chat',
   '/log',
   '/partner/join',
+  '/doctor-summary',
 };
 
 void main() {
@@ -144,5 +145,18 @@ void main() {
     await tester.tap(find.byKey(const Key('welcome-partner-join')));
     await _settle(tester);
     expect(find.text('Join your partner'), findsOneWidget);
+  });
+
+  testWidgets('Doctor summary is disabled with an explanation when she has no logs', (tester) async {
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        currentUidProvider.overrideWith((ref) => 'u1'),
+        logRepositoryProvider.overrideWithValue(FakeLogRepository()),
+      ],
+      child: MaterialApp.router(routerConfig: appRouter),
+    ));
+    appRouter.go('/doctor-summary');
+    await _settle(tester);
+    expect(find.text('No logs to summarize yet'), findsOneWidget);
   });
 }

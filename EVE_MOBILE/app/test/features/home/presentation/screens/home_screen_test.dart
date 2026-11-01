@@ -48,4 +48,15 @@ void main() {
     await tester.tap(find.text('Log'));
     expect(logTapped, isTrue);
   });
+
+  testWidgets('HomeScreen shows a doctor summary entry point that invokes onNavigateDoctorSummary', (tester) async {
+    var tapped = false;
+
+    await tester.pumpWidget(MaterialApp(
+      home: HomeScreen(onNavigateDoctorSummary: () => tapped = true),
+    ));
+
+    await tester.tap(find.byKey(const Key('home-doctor-summary-button')));
+    expect(tapped, isTrue);
+  });
 }

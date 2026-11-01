@@ -36,6 +36,7 @@ class HomeScreen extends StatefulWidget {
     this.onNavigateHome,
     this.onNavigateChat,
     this.onNavigateLog,
+    this.onNavigateDoctorSummary,
   });
 
   final String greetingName;
@@ -44,6 +45,7 @@ class HomeScreen extends StatefulWidget {
   final VoidCallback? onNavigateHome;
   final VoidCallback? onNavigateChat;
   final VoidCallback? onNavigateLog;
+  final VoidCallback? onNavigateDoctorSummary;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -72,7 +74,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     const Text('Current status overview', style: TextStyle(color: Color(0xFF666666))),
                   ],
                 ),
-                Chip(label: Text(widget.phaseBadge)),
+                Row(
+                  children: [
+                    Chip(label: Text(widget.phaseBadge)),
+                    IconButton(
+                      key: const Key('home-doctor-summary-button'),
+                      icon: const Icon(Icons.summarize_outlined),
+                      tooltip: 'Doctor-Ready Summary',
+                      onPressed: widget.onNavigateDoctorSummary,
+                    ),
+                  ],
+                ),
               ],
             ),
             const SizedBox(height: 16),
