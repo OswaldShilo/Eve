@@ -1,0 +1,5 @@
+# Appwrite self-hosted data and CLI session
+.appwrite-local/appwrite/
+.appwrite/
+functions/node_modules/
+functions/dist/

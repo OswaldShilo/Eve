@@ -1,0 +1,14 @@
+{
+  "projectId": "eve-local",
+  "projectName": "EVE (local)",
+  "endpoint": "http://localhost/v1",
+  "tablesDB": [
+    {
+      "$id": "eve",
+      "name": "eve",
+      "enabled": true
+    }
+  ],
+  "tables": [],
+  "functions": []
+}
