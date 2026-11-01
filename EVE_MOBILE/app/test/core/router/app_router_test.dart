@@ -1,7 +1,16 @@
 import 'package:eve_app/core/router/app_router.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+
+/// `pumpAndSettle` never returns while an `EveMascot` is on screen (its idle
+/// float repeats forever), so advance a bounded amount of time instead —
+/// long enough for go_router's page transition to finish.
+Future<void> _settle(WidgetTester tester) async {
+  await tester.pump();
+  await tester.pump(const Duration(seconds: 1));
+}
 
 const _expectedRoutePaths = <String>{
   '/onboarding/welcome',
@@ -43,33 +52,34 @@ void main() {
     expect(paths, equals(_expectedRoutePaths));
   });
 
-  testWidgets('initial location renders the welcome placeholder',
-      (tester) async {
-    await tester.pumpWidget(MaterialApp.router(routerConfig: appRouter));
-    await tester.pumpAndSettle();
+  testWidgets('initial location renders the real Welcome screen', (tester) async {
+    await tester.pumpWidget(ProviderScope(child: MaterialApp.router(routerConfig: appRouter)));
+    await _settle(tester);
 
-    expect(find.text('onboarding-welcome'), findsOneWidget);
+    expect(find.text('Begin Setup'), findsOneWidget);
   });
 
-  testWidgets('navigating to /home renders the home placeholder',
-      (tester) async {
-    await tester.pumpWidget(MaterialApp.router(routerConfig: appRouter));
-    await tester.pumpAndSettle();
+  testWidgets('navigating to /home renders the real Home screen', (tester) async {
+    await tester.pumpWidget(ProviderScope(child: MaterialApp.router(routerConfig: appRouter)));
+    await _settle(tester);
 
     appRouter.go('/home');
-    await tester.pumpAndSettle();
+    await _settle(tester);
 
-    expect(find.text('home'), findsOneWidget);
+    expect(find.text('Welcome back, Maya'), findsOneWidget);
   });
 
-  testWidgets('navigating to /onboarding/lifestage renders that placeholder',
-      (tester) async {
-    await tester.pumpWidget(MaterialApp.router(routerConfig: appRouter));
-    await tester.pumpAndSettle();
+  testWidgets('completing the Life-Stage screen advances into the cycle branch', (tester) async {
+    await tester.pumpWidget(ProviderScope(child: MaterialApp.router(routerConfig: appRouter)));
+    await _settle(tester);
 
     appRouter.go('/onboarding/lifestage');
-    await tester.pumpAndSettle();
+    await _settle(tester);
+    await tester.tap(find.text('Tracking my cycle'));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('onboarding-primary-button')));
+    await _settle(tester);
 
-    expect(find.text('onboarding-lifestage'), findsOneWidget);
+    expect(find.text('Cycle Details'), findsOneWidget);
   });
 }
