@@ -836,5 +836,28 @@
       ]
     }
   ],
-  "functions": []
+  "functions": [
+    {
+      "$id": "onUserCreate",
+      "name": "onUserCreate",
+      "runtime": "node-22",
+      "specification": "s-0.5vcpu-512mb",
+      "execute": [],
+      "events": [
+        "users.*.create"
+      ],
+      "scopes": [
+        "users.read",
+        "rows.read",
+        "rows.write"
+      ],
+      "schedule": "",
+      "timeout": 30,
+      "enabled": true,
+      "logging": true,
+      "entrypoint": "dist/onUserCreate/src/main.js",
+      "commands": "npm ci && npm run build",
+      "path": "functions"
+    }
+  ]
 }

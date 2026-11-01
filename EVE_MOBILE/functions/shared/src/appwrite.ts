@@ -19,10 +19,13 @@ export interface FunctionContext {
  * Server client authenticated with the execution's dynamic API key
  * (`x-appwrite-key`), scoped to the function's configured `scopes`.
  * APPWRITE_FUNCTION_API_ENDPOINT / _PROJECT_ID are injected by the runtime.
+ * EVE_API_ENDPOINT overrides the endpoint: on self-hosted Docker the injected
+ * one is http://localhost/v1, which a runtime container cannot reach, so the
+ * local project sets it to http://host.docker.internal/v1. Unset on Cloud.
  */
 export function serverClient(context: FunctionContext): Client {
   return new Client()
-    .setEndpoint(process.env.APPWRITE_FUNCTION_API_ENDPOINT ?? '')
+    .setEndpoint(process.env.EVE_API_ENDPOINT || process.env.APPWRITE_FUNCTION_API_ENDPOINT || '')
     .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID ?? '')
     .setKey(context.req.headers['x-appwrite-key'] ?? '');
 }

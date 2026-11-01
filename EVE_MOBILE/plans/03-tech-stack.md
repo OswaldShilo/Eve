@@ -57,6 +57,12 @@ docker run -it --rm `
 
 Open `http://localhost:20080` and complete the wizard: HTTP port `80`, HTTPS port `443`, hostname `localhost`. Expected: `docker ps` lists the `appwrite` stack (appwrite, mariadb, redis, executor, realtime, …) and `http://localhost/console` loads.
 
+> **Verified on Windows 11 / Docker Desktop 29.9 (2026-11-01).** The web wizard can be skipped: run the same command without `-it`/`--publish` and with `--interactive=N --http-port=80 --https-port=443` appended. Two Windows-specific fixes were needed:
+> 1. Port **8883** (Traefik's MQTT entrypoint) is inside a Windows excluded port range (`netsh interface ipv4 show excludedportrange protocol=tcp`), so `docker compose up` fails with `bind: An attempt was made to access a socket in a way forbidden`. Append `_APP_MQTT_PORT=18883` to `appwrite/.env` and run `docker compose -f appwrite/docker-compose.yml up -d`. EVE does not use MQTT.
+> 2. Function runtimes receive `APPWRITE_FUNCTION_API_ENDPOINT=http://localhost/v1`, which a runtime container cannot reach (`TypeError: fetch failed`), and a function variable of the same name does **not** override it. `serverClient` therefore honours `EVE_API_ENDPOINT` first (Task 5); set it once as a **project** variable on the local project: Console → Settings → Global variables → `EVE_API_ENDPOINT` = `http://host.docker.internal/v1`. Do not set it on Cloud.
+>
+> The API key needs these scopes beyond the obvious ones for `appwrite push`: `collections.write`/`attributes.write`/`indexes.write` (legacy names the CLI still checks), `rules.read` (function push), and `project.write` (to create the global variable via API).
+
 - [ ] **Step 3: Create the project**
 
 In the console: sign up (local admin account), **Create project** → name `EVE (local)`, **Project ID `eve-local`**. Then **Overview → Integrations → API keys → Create API key** named `cli-local` with all scopes. Copy the secret.
