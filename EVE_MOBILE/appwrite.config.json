@@ -868,12 +868,9 @@
       "events": [
         "tablesdb.eve.tables.symptom_logs.rows.*.create",
         "tablesdb.eve.tables.symptom_logs.rows.*.update",
-        "tablesdb.eve.tables.symptom_logs.rows.*.upsert",
         "tablesdb.eve.tables.symptom_logs.rows.*.delete",
         "tablesdb.eve.tables.life_stage_profiles.rows.*.update",
-        "tablesdb.eve.tables.life_stage_profiles.rows.*.upsert",
-        "tablesdb.eve.tables.partner_permissions.rows.*.update",
-        "tablesdb.eve.tables.partner_permissions.rows.*.upsert"
+        "tablesdb.eve.tables.partner_permissions.rows.*.update"
       ],
       "scopes": [
         "rows.read",
