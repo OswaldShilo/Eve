@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import 'package:eve_app/core/providers/appwrite_providers.dart';
 import 'package:eve_app/core/providers/repository_providers.dart';
@@ -28,7 +29,11 @@ import 'package:eve_app/features/onboarding/presentation/screens/simplified_bran
 import 'package:eve_app/features/onboarding/presentation/screens/theme_screen.dart';
 import 'package:eve_app/features/onboarding/presentation/screens/welcome_screen.dart';
 import 'package:eve_app/features/onboarding/presentation/screens/workout_screen.dart';
+import 'package:eve_app/features/chat/presentation/chat_mapping.dart';
 import 'package:eve_app/features/chat/presentation/screens/chat_screen.dart';
+import 'package:eve_app/features/log/presentation/log_mapping.dart';
+import 'package:eve_app/features/log/presentation/widgets/quick_log_sheet.dart';
+import 'package:eve_app/shared/models/symptom_log.dart';
 import 'package:eve_app/features/home/presentation/screens/home_screen.dart';
 import 'package:eve_app/features/log/presentation/screens/log_screen.dart';
 
@@ -177,26 +182,91 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/home',
       name: 'home',
-      builder: (context, state) => HomeScreen(
-        onNavigateChat: () => context.go('/chat'),
-        onNavigateLog: () => context.go('/log'),
-      ),
+      builder: (context, state) => Consumer(builder: (context, ref, _) {
+        final uid = ref.watch(currentUidProvider);
+        if (uid == null) return const HomeScreen();
+        return ref.watch(homeDashboardProvider(uid)).when(
+              data: (data) => HomeScreen(
+                greetingName: data.greetingName,
+                phaseBadge: data.phaseBadge,
+                onNavigateChat: () => context.go('/chat'),
+                onNavigateLog: () => context.go('/log'),
+              ),
+              loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+              error: (_, __) => HomeScreen(onNavigateChat: () => context.go('/chat'), onNavigateLog: () => context.go('/log')),
+            );
+      }),
     ),
     GoRoute(
       path: '/chat',
       name: 'chat',
-      builder: (context, state) => ChatScreen(
-        onNavigateHome: () => context.go('/home'),
-        onNavigateLog: () => context.go('/log'),
-      ),
+      builder: (context, state) => Consumer(builder: (context, ref, _) {
+        final uid = ref.watch(currentUidProvider);
+        final fallback = ChatScreen(onNavigateHome: () => context.go('/home'), onNavigateLog: () => context.go('/log'));
+        if (uid == null) return fallback;
+        final threadId = ref.watch(chatThreadIdProvider(uid)).valueOrNull;
+        if (threadId == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        return ref.watch(chatMessagesProvider(threadId)).when(
+              data: (messages) => ChatScreen(
+                thread: messages.map(chatMessageDataFor).toList(),
+                onSendMessage: (text) async {
+                  try {
+                    await ref.read(chatRepositoryProvider).sendMessage(threadId, text);
+                  } catch (_) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Your message was not sent. Please try again.')),
+                      );
+                    }
+                  }
+                },
+                onNavigateHome: () => context.go('/home'),
+                onNavigateLog: () => context.go('/log'),
+              ),
+              loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+              error: (_, __) => fallback,
+            );
+      }),
     ),
     GoRoute(
       path: '/log',
       name: 'log',
-      builder: (context, state) => LogScreen(
-        onNavigateHome: () => context.go('/home'),
-        onNavigateChat: () => context.go('/chat'),
-      ),
+      builder: (context, state) => Consumer(builder: (context, ref, _) {
+        final uid = ref.watch(currentUidProvider);
+        final now = DateTime.now();
+        final fallback = LogScreen(onNavigateHome: () => context.go('/home'), onNavigateChat: () => context.go('/chat'));
+        if (uid == null) return fallback;
+        return ref.watch(logsProvider(uid)).when(
+              data: (logs) => LogScreen(
+                monthLabel: DateFormat('MMMM yyyy').format(now),
+                days: calendarDaysFor(logs, month: now),
+                onNavigateHome: () => context.go('/home'),
+                onNavigateChat: () => context.go('/chat'),
+                onNewEntry: () => showModalBottomSheet<void>(
+                  context: context,
+                  isScrollControlled: true,
+                  builder: (sheetContext) => QuickLogSheet(
+                    onSave: (result) async {
+                      await ref.read(logRepositoryProvider).addLog(
+                            uid,
+                            SymptomLog(
+                              userId: uid,
+                              date: DateTime.now().toUtc(),
+                              symptoms: result.symptoms,
+                              mood: result.mood,
+                              painLevel: result.painLevel,
+                              notes: result.notes,
+                            ),
+                          );
+                      if (sheetContext.mounted) Navigator.of(sheetContext).pop();
+                    },
+                  ),
+                ),
+              ),
+              loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+              error: (_, __) => fallback,
+            );
+      }),
     ),
   ],
 );

@@ -92,6 +92,7 @@ void main() {
     await tester.pumpWidget(ProviderScope(
       overrides: [
         onboardingRepositoryProvider.overrideWithValue(repo),
+        homeRepositoryProvider.overrideWithValue(FakeHomeRepository(const HomeDashboardDataFixture().data)),
         currentUidProvider.overrideWith((ref) => 'u1'),
       ],
       child: MaterialApp.router(routerConfig: appRouter),
@@ -104,5 +105,34 @@ void main() {
 
     expect(repo.saved.single.$1, 'u1');
     expect(appRouter.routerDelegate.currentConfiguration.uri.path, '/home');
+  });
+
+  testWidgets('Home shows the signed-in user name from the repository', (tester) async {
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        currentUidProvider.overrideWith((ref) => 'u1'),
+        homeRepositoryProvider.overrideWithValue(FakeHomeRepository(const HomeDashboardDataFixture().data)),
+      ],
+      child: MaterialApp.router(routerConfig: appRouter),
+    ));
+    appRouter.go('/home');
+    await _settle(tester);
+    expect(find.text('Welcome back, Priya'), findsOneWidget);
+  });
+
+  testWidgets('Chat sends through the repository and renders the new message', (tester) async {
+    final chat = FakeChatRepository();
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        currentUidProvider.overrideWith((ref) => 'u1'),
+        chatRepositoryProvider.overrideWithValue(chat),
+      ],
+      child: MaterialApp.router(routerConfig: appRouter),
+    ));
+    appRouter.go('/chat');
+    await _settle(tester);
+    await chat.sendMessage('u1', 'Hello from the test');
+    await _settle(tester);
+    expect(find.text('Hello from the test'), findsOneWidget);
   });
 }

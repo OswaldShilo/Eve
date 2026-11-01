@@ -1178,7 +1178,8 @@ void main() {
       controller: events,
     ));
     final page = MockRowList();
-    when(() => page.rows).thenReturn([row('a', {'userId': 'u1', 'n': 1})]);
+    final first = row('a', {'userId': 'u1', 'n': 1}); // built outside when(): mocktail forbids nested stubbing
+    when(() => page.rows).thenReturn([first]);
     when(() => tables.listRows(
           databaseId: any(named: 'databaseId'),
           tableId: any(named: 'tableId'),
@@ -1328,14 +1329,15 @@ void main() {
   late AppwriteHomeRepository repo;
 
   void stubRow(String tableId, Map<String, dynamic>? data) {
-    final call = when(() => tables.getRow(databaseId: 'eve', tableId: tableId, rowId: 'u1'));
     if (data == null) {
-      call.thenThrow(AppwriteException('Row not found', 404));
-    } else {
-      final row = MockRow();
-      when(() => row.data).thenReturn(data);
-      call.thenAnswer((_) async => row);
+      when(() => tables.getRow(databaseId: 'eve', tableId: tableId, rowId: 'u1'))
+          .thenThrow(AppwriteException('Row not found', 404));
+      return;
     }
+    // Stub the row before starting the getRow stub: mocktail forbids nested when().
+    final row = MockRow();
+    when(() => row.data).thenReturn(data);
+    when(() => tables.getRow(databaseId: 'eve', tableId: tableId, rowId: 'u1')).thenAnswer((_) async => row);
   }
 
   setUp(() {
@@ -1651,10 +1653,12 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   test('calendarDaysFor keeps the given month, one entry per day (latest wins), sorted', () {
     final days = calendarDaysFor([
-      SymptomLog(userId: 'u1', date: DateTime.utc(2026, 3, 14, 8), symptoms: const ['Cramps'], mood: 'low'),
-      SymptomLog(userId: 'u1', date: DateTime.utc(2026, 3, 2), mood: 'great', notes: 'Felt strong.'),
-      SymptomLog(userId: 'u1', date: DateTime.utc(2026, 3, 14, 20), mood: 'okay'),
-      SymptomLog(userId: 'u1', date: DateTime.utc(2026, 4, 1), mood: 'good'),
+      // Local times: calendar days are her local days, so UTC fixtures would
+      // shift across midnight in timezones far from UTC (e.g. IST).
+      SymptomLog(userId: 'u1', date: DateTime(2026, 3, 14, 8), symptoms: const ['Cramps'], mood: 'low'),
+      SymptomLog(userId: 'u1', date: DateTime(2026, 3, 2), mood: 'great', notes: 'Felt strong.'),
+      SymptomLog(userId: 'u1', date: DateTime(2026, 3, 14, 20), mood: 'okay'),
+      SymptomLog(userId: 'u1', date: DateTime(2026, 4, 1), mood: 'good'),
     ], month: DateTime(2026, 3));
 
     expect(days.map((d) => d.dayNumber), [2, 14]);
