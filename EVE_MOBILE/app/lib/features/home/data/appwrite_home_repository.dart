@@ -13,7 +13,11 @@ class AppwriteHomeRepository implements HomeRepository {
 
   Future<Map<String, dynamic>?> _row(String tableId, String uid) async {
     try {
-      final row = await _appwrite.tablesDb.getRow(databaseId: AppwriteIds.databaseId, tableId: tableId, rowId: uid);
+      final row = await _appwrite.tablesDb.getRow(
+        databaseId: AppwriteIds.databaseId,
+        tableId: tableId,
+        rowId: uid,
+      );
       return row.data;
     } on AppwriteException catch (e) {
       if (e.code == 404) return null; // onUserCreate not finished yet
@@ -26,8 +30,12 @@ class AppwriteHomeRepository implements HomeRepository {
     final profileData = await _row(AppwriteIds.profiles, uid);
     final lifeStageData = await _row(AppwriteIds.lifeStageProfiles, uid);
 
-    final name = profileData == null ? '' : UserProfile.fromRow(profileData).name;
-    final lifeStage = lifeStageData == null ? const EmptyLifeStageProfile() : LifeStageProfile.fromRow(lifeStageData);
+    final name = profileData == null
+        ? ''
+        : UserProfile.fromRow(profileData).name;
+    final lifeStage = lifeStageData == null
+        ? const EmptyLifeStageProfile()
+        : LifeStageProfile.fromRow(lifeStageData);
     final type = lifeStage.type;
     final phaseBadge = switch (type) {
       null => 'Welcome to EVE',

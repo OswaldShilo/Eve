@@ -4,10 +4,15 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
 class DoctorSummaryScreen extends StatefulWidget {
-  const DoctorSummaryScreen({super.key, required this.logs, required this.generateSummary});
+  const DoctorSummaryScreen({
+    super.key,
+    required this.logs,
+    required this.generateSummary,
+  });
 
   final List<Map<String, dynamic>> logs;
-  final Future<String> Function(List<Map<String, dynamic>> logs) generateSummary;
+  final Future<String> Function(List<Map<String, dynamic>> logs)
+  generateSummary;
 
   @override
   State<DoctorSummaryScreen> createState() => _DoctorSummaryScreenState();
@@ -29,7 +34,9 @@ class _DoctorSummaryScreenState extends State<DoctorSummaryScreen> {
       setState(() => _summary = summary);
     } catch (_) {
       if (!mounted) return;
-      setState(() => _error = 'Could not generate the summary. Please try again.');
+      setState(
+        () => _error = 'Could not generate the summary. Please try again.',
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -47,7 +54,13 @@ class _DoctorSummaryScreenState extends State<DoctorSummaryScreen> {
           child: pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text('EVE Doctor-Ready Summary', style: const pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
+              pw.Text(
+                'EVE Doctor-Ready Summary',
+                style: const pw.TextStyle(
+                  fontSize: 20,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
               pw.SizedBox(height: 16),
               pw.Text(summary),
             ],
@@ -56,7 +69,10 @@ class _DoctorSummaryScreenState extends State<DoctorSummaryScreen> {
       ),
     );
 
-    await Printing.sharePdf(bytes: await doc.save(), filename: 'eve-doctor-summary.pdf');
+    await Printing.sharePdf(
+      bytes: await doc.save(),
+      filename: 'eve-doctor-summary.pdf',
+    );
   }
 
   @override
@@ -72,13 +88,29 @@ class _DoctorSummaryScreenState extends State<DoctorSummaryScreen> {
               ElevatedButton(
                 key: const Key('generate-summary-button'),
                 onPressed: widget.logs.isEmpty ? null : _generate,
-                child: Text(widget.logs.isEmpty ? 'No logs to summarize yet' : 'Generate Summary'),
+                child: Text(
+                  widget.logs.isEmpty
+                      ? 'No logs to summarize yet'
+                      : 'Generate Summary',
+                ),
               ),
-            if (_loading) const Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator())),
+            if (_loading)
+              const Padding(
+                padding: EdgeInsets.all(24),
+                child: Center(child: CircularProgressIndicator()),
+              ),
             if (_error != null)
-              Text(_error!, key: const Key('summary-error-text'), style: const TextStyle(color: Colors.red)),
+              Text(
+                _error!,
+                key: const Key('summary-error-text'),
+                style: const TextStyle(color: Colors.red),
+              ),
             if (_summary != null) ...[
-              Expanded(child: SingleChildScrollView(child: Text(_summary!, key: const Key('summary-text')))),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Text(_summary!, key: const Key('summary-text')),
+                ),
+              ),
               const SizedBox(height: 12),
               ElevatedButton(
                 key: const Key('export-pdf-button'),

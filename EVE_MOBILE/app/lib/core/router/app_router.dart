@@ -39,7 +39,10 @@ import 'package:eve_app/features/log/presentation/log_mapping.dart';
 import 'package:eve_app/features/log/presentation/widgets/quick_log_sheet.dart';
 import 'package:eve_app/shared/models/symptom_log.dart';
 import 'package:eve_app/features/home/presentation/screens/doctor_summary_screen.dart';
+import 'package:eve_app/features/home/presentation/home_modules.dart';
 import 'package:eve_app/features/home/presentation/screens/home_screen.dart';
+import 'package:eve_app/shared/widgets/eve_bottom_nav.dart';
+import 'package:eve_app/shared/widgets/eve_status_view.dart';
 import 'package:eve_app/features/log/presentation/screens/log_screen.dart';
 
 /// Signature shared by every onboarding screen except the two bookends
@@ -167,25 +170,7 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/home',
       name: 'home',
-      builder: (context, state) => Consumer(builder: (context, ref, _) {
-        final uid = ref.watch(currentUidProvider);
-        if (uid == null) return const RedirectTo('/onboarding/welcome');
-        return ref.watch(homeDashboardProvider(uid)).when(
-              data: (data) => HomeScreen(
-                greetingName: data.greetingName,
-                phaseBadge: data.phaseBadge,
-                onNavigateChat: () => context.go('/chat'),
-                onNavigateLog: () => context.go('/log'),
-                onNavigateDoctorSummary: () => context.go('/doctor-summary'),
-              ),
-              loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
-              error: (_, __) => HomeScreen(
-                onNavigateChat: () => context.go('/chat'),
-                onNavigateLog: () => context.go('/log'),
-                onNavigateDoctorSummary: () => context.go('/doctor-summary'),
-              ),
-            );
-      }),
+      builder: (context, state) => const _HomeRoute(),
     ),
     GoRoute(
       path: '/chat',
@@ -472,4 +457,65 @@ class _RedirectToState extends State<RedirectTo> {
 
   @override
   Widget build(BuildContext context) => const StartupSplash();
+}
+
+/// Home on live data: her name and stage badge from the dashboard, the
+/// bento cards for her life stage ([moduleCardsFor]) and her real check-in
+/// count. Loading and error states replace the old demo-data fallback; the
+/// error state offers Retry.
+class _HomeRoute extends ConsumerWidget {
+  const _HomeRoute();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final uid = ref.watch(currentUidProvider);
+    if (uid == null) return const RedirectTo('/onboarding/welcome');
+
+    Widget shell(Widget body) => Scaffold(
+          body: SafeArea(child: body),
+          bottomNavigationBar: EveBottomNav(
+            currentTab: EveNavTab.home,
+            onHomeTap: () {},
+            onChatTap: () => context.go('/chat'),
+            onLogTap: () => context.go('/log'),
+          ),
+        );
+
+    return ref.watch(homeDashboardProvider(uid)).when(
+          data: (data) {
+            final logs = ref.watch(logsProvider(uid)).valueOrNull;
+            final now = DateTime.now();
+            final thisMonth = logs
+                ?.where((l) => l.date.toLocal().year == now.year && l.date.toLocal().month == now.month)
+                .length;
+            return HomeScreen(
+              greetingName: data.greetingName,
+              phaseBadge: data.phaseBadge,
+              heroStandardMessage: switch (thisMonth) {
+                null => 'Here is your status overview.',
+                0 => 'Log your first check-in from the Log tab.',
+                1 => 'You have logged 1 check-in this month.',
+                final n => 'You have logged $n check-ins this month.',
+              },
+              bentoCards: moduleCardsFor(
+                data.lifeStage,
+                logsThisMonth: thisMonth,
+                onOpenLog: () => context.go('/log'),
+                onOpenChat: () => context.go('/chat'),
+              ),
+              onNavigateChat: () => context.go('/chat'),
+              onNavigateLog: () => context.go('/log'),
+              onNavigateDoctorSummary: () => context.go('/doctor-summary'),
+            );
+          },
+          loading: () => shell(const EveStatusView.loading(message: 'Loading your dashboard…')),
+          error: (_, __) => shell(EveStatusView(
+            key: const Key('home-error'),
+            title: 'We could not load your dashboard',
+            message: 'Please check your connection and try again.',
+            actionLabel: 'Retry',
+            onAction: () => ref.invalidate(homeDashboardProvider(uid)),
+          )),
+        );
+  }
 }

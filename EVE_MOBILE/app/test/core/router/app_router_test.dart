@@ -106,6 +106,7 @@ void main() {
         overrides: [
           currentUidProvider.overrideWith((ref) => uid),
           if (dashboard != null) homeRepositoryProvider.overrideWithValue(FakeHomeRepository(dashboard)),
+          logRepositoryProvider.overrideWithValue(FakeLogRepository()),
           if (chat != null) chatRepositoryProvider.overrideWithValue(chat),
         ],
         child: MaterialApp.router(routerConfig: appRouter),
@@ -181,6 +182,8 @@ void main() {
       overrides: [
         onboardingRepositoryProvider.overrideWithValue(repo),
         homeRepositoryProvider.overrideWithValue(FakeHomeRepository(const HomeDashboardDataFixture().data)),
+        // Home also reads her logs for the check-in count.
+        logRepositoryProvider.overrideWithValue(FakeLogRepository()),
         currentUidProvider.overrideWith((ref) => 'u1'),
       ],
       child: MaterialApp.router(routerConfig: appRouter),
@@ -200,6 +203,8 @@ void main() {
       overrides: [
         currentUidProvider.overrideWith((ref) => 'u1'),
         homeRepositoryProvider.overrideWithValue(FakeHomeRepository(const HomeDashboardDataFixture().data)),
+        // Home also reads her logs for the check-in count.
+        logRepositoryProvider.overrideWithValue(FakeLogRepository()),
       ],
       child: MaterialApp.router(routerConfig: appRouter),
     ));
@@ -277,6 +282,8 @@ void main() {
       overrides: [
         onboardingRepositoryProvider.overrideWithValue(repo),
         homeRepositoryProvider.overrideWithValue(FakeHomeRepository(const HomeDashboardDataFixture().data)),
+        // Home also reads her logs for the check-in count.
+        logRepositoryProvider.overrideWithValue(FakeLogRepository()),
         currentUidProvider.overrideWith((ref) => 'u1'),
       ],
       child: MaterialApp.router(routerConfig: appRouter),
@@ -296,6 +303,56 @@ void main() {
     expect(repo.calls, 1);
     expect(appRouter.routerDelegate.currentConfiguration.uri.path, '/home');
   });
+
+  testWidgets('Home shows an error with Retry instead of demo data, and Retry reloads', (tester) async {
+    final home = _FlakyHomeRepository();
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        currentUidProvider.overrideWith((ref) => 'u1'),
+        homeRepositoryProvider.overrideWithValue(home),
+        logRepositoryProvider.overrideWithValue(FakeLogRepository()),
+      ],
+      child: MaterialApp.router(routerConfig: appRouter),
+    ));
+    appRouter.go('/home');
+    await _settle(tester);
+
+    expect(find.byKey(const Key('home-error')), findsOneWidget);
+    expect(find.text('Welcome back, Maya'), findsNothing);
+
+    home.fail = false;
+    await tester.tap(find.byKey(const Key('eve-status-action')));
+    await _settle(tester);
+
+    expect(find.text('Welcome back, Priya'), findsOneWidget);
+    expect(home.calls, 2);
+  });
+
+  testWidgets('Home renders the modules for her life stage', (tester) async {
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        currentUidProvider.overrideWith((ref) => 'u1'),
+        homeRepositoryProvider.overrideWithValue(FakeHomeRepository(
+          const HomeDashboardData(greetingName: 'Priya', phaseBadge: 'Pregnancy Tracking Active', lifeStage: 'pregnant'),
+        )),
+        logRepositoryProvider.overrideWithValue(FakeLogRepository()),
+      ],
+      child: MaterialApp.router(routerConfig: appRouter),
+    ));
+    appRouter.go('/home');
+    await _settle(tester);
+
+    await tester.scrollUntilVisible(
+      find.text('PREGNANCY MILESTONES'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.ensureVisible(find.text('PREGNANCY MILESTONES'));
+    await tester.pump();
+    expect(find.text('PREGNANCY MILESTONES'), findsOneWidget);
+    expect(find.text('NEXT CYCLE PHASE'), findsNothing);
+    expect(find.text('Log your first check-in from the Log tab.'), findsOneWidget);
+  });
 }
 
 class _SlowOnboardingRepository implements OnboardingRepository {
@@ -308,6 +365,7 @@ class _SlowOnboardingRepository implements OnboardingRepository {
     await release.future;
     return null;
   }
+
 }
 
 /// The signed-in user is a partner: her thread belongs to the primary user.
@@ -319,4 +377,16 @@ class _PartnerChatRepository extends FakeChatRepository {
 class _NeverHomeRepository implements HomeRepository {
   @override
   Future<HomeDashboardData> loadDashboard(String uid) => Completer<HomeDashboardData>().future;
+}
+
+class _FlakyHomeRepository implements HomeRepository {
+  bool fail = true;
+  int calls = 0;
+
+  @override
+  Future<HomeDashboardData> loadDashboard(String uid) async {
+    calls++;
+    if (fail) throw Exception('offline');
+    return const HomeDashboardDataFixture().data;
+  }
 }
