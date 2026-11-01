@@ -1,3 +1,5 @@
+import type { Db } from '../../shared/src/db.js';
+import { buildDoctorSummaryPrompt, DOCTOR_SUMMARY_SYSTEM_PROMPT, loadLogsForSummary } from './doctorSummary.js';
 import { AllProvidersFailedError, generateWithFallback, type AiProvider } from './providers.js';
 
 export const EVE_SYSTEM_PROMPT = [
@@ -10,6 +12,8 @@ export const EVE_SYSTEM_PROMPT = [
 export interface AiDeps {
   providers: AiProvider[];
   log?: (message: string) => void;
+  db?: Db;
+  now?: () => Date;
 }
 
 export interface AiResponse {
@@ -38,6 +42,17 @@ export async function handleAiRequest(deps: AiDeps, uid: string | null, body: Re
           deps.log,
         );
         return { status: 200, body: { reply: result.text, provider: result.provider } };
+      }
+      case 'doctorSummary': {
+        if (!deps.db) throw new Error('aiProxy: doctorSummary requires a Db');
+        const days = typeof body.days === 'number' && body.days > 0 && body.days <= 365 ? body.days : 90;
+        const logs = await loadLogsForSummary(deps.db, uid, days, (deps.now ?? (() => new Date()))());
+        const result = await generateWithFallback(
+          deps.providers,
+          { system: DOCTOR_SUMMARY_SYSTEM_PROMPT, user: buildDoctorSummaryPrompt(logs), maxOutputTokens: 1200 },
+          deps.log,
+        );
+        return { status: 200, body: { summary: result.text, provider: result.provider, logCount: logs.length } };
       }
       default:
         return { status: 400, body: { error: `Unknown feature "${body.feature}".` } };

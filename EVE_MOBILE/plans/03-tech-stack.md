@@ -490,7 +490,7 @@ git commit -m "feat(functions): scaffold TypeScript functions package with execu
 **Interfaces:**
 - Produces: `AiPrompt`, `AiResult`, `AiProvider`, `ProviderError`, `AllProvidersFailedError`, `geminiProvider(opts)`, `openRouterProvider(opts)`, `generateWithFallback(providers, prompt, log?)`, `providersFromEnv(env, fetchFn?)`. Task 7 and roadmap M19 call only `generateWithFallback`/`providersFromEnv`.
 
-**Fallback rule:** the next provider is tried when the current one times out, returns HTTP 429 or any other non-2xx, throws a network error, or returns empty text. Gemini gets 12 s, OpenRouter 15 s — together under Appwrite's 30 s synchronous-execution limit.
+**Fallback rule:** the next provider is tried when the current one times out, returns HTTP 429 or any other non-2xx, throws a network error, or returns empty text. Gemini gets 12 s, OpenRouter 15 s — together under Appwrite's 30 s synchronous-execution limit. (Verified on local Appwrite 2.6.2: a synchronous execution is cut off at 30 s with `408 Synchronous function execution timed out`, regardless of the function's own `timeout`; the 25 s probe completed, the 45 s one returned 408 at 30.1 s.)
 
 - [ ] **Step 1: Write the failing tests**
 
