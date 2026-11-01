@@ -146,6 +146,8 @@ void main() {
     await tester.pumpWidget(ProviderScope(child: MaterialApp.router(routerConfig: appRouter)));
     appRouter.go('/onboarding/welcome');
     await _settle(tester);
+    await tester.ensureVisible(find.byKey(const Key('welcome-partner-join')));
+    await tester.pump();
     await tester.tap(find.byKey(const Key('welcome-partner-join')));
     await _settle(tester);
     expect(find.text('Join your partner'), findsOneWidget);

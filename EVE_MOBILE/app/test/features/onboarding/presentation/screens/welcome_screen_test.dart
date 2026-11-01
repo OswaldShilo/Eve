@@ -11,7 +11,8 @@ void main() {
 
     expect(find.text('Welcome to EVE. Let us personalize your health and cycle tracking experience.'), findsOneWidget);
     expect(find.text('EVE'), findsOneWidget);
-    expect(find.text('Cycle & Wellness Companion'), findsOneWidget);
+    // .brand-sub is text-transform: uppercase in the mock.
+    expect(find.text('CYCLE & WELLNESS COMPANION'), findsOneWidget);
     expect(find.text('Begin Setup'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('welcome-begin-setup-button')));
@@ -25,6 +26,10 @@ void main() {
       home: WelcomeScreen(onContinue: () => begin++, onJoinPartner: () => join++),
     ));
 
+    // On the 600px-tall test surface the link sits just below the fold;
+    // the screen scrolls to it.
+    await tester.ensureVisible(find.byKey(const Key('welcome-partner-join')));
+    await tester.pump();
     final button = tester.getRect(find.byKey(const Key('welcome-begin-setup-button')));
     final link = tester.getRect(find.byKey(const Key('welcome-partner-join')));
     expect(link.top, greaterThanOrEqualTo(button.bottom));

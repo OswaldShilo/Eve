@@ -1,6 +1,7 @@
 import 'package:eve_app/core/theme/eve_theme.dart';
 import 'package:eve_app/features/onboarding/presentation/screens/ai_scope_screen.dart';
 import 'package:eve_app/features/onboarding/presentation/screens/auth_screen.dart';
+import 'package:eve_app/features/onboarding/presentation/screens/completion_screen.dart';
 import 'package:eve_app/features/onboarding/presentation/screens/cycle_goals_screen.dart';
 import 'package:eve_app/features/onboarding/presentation/screens/cycle_info_screen.dart';
 import 'package:eve_app/features/onboarding/presentation/screens/cycle_symptoms_screen.dart';
@@ -16,6 +17,7 @@ import 'package:eve_app/features/onboarding/presentation/screens/pregnant_sympto
 import 'package:eve_app/features/onboarding/presentation/screens/profile_screen.dart';
 import 'package:eve_app/features/onboarding/presentation/screens/simplified_branch_screen.dart';
 import 'package:eve_app/features/onboarding/presentation/screens/theme_screen.dart';
+import 'package:eve_app/features/onboarding/presentation/screens/welcome_screen.dart';
 import 'package:eve_app/features/onboarding/presentation/screens/workout_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,9 +26,9 @@ import 'package:google_fonts/google_fonts.dart';
 
 void _noop() {}
 
-/// Every survey-style onboarding screen, built standalone. Welcome and
-/// Completion are added with their own layout work (UX step 5).
+/// Every onboarding screen, built standalone.
 final Map<String, Widget Function()> _screens = {
+  'welcome': () => const WelcomeScreen(onContinue: _noop, onJoinPartner: _noop),
   'auth': () => const AuthScreen(onContinue: _noop, onBack: _noop),
   'profile': () => const ProfileScreen(onContinue: _noop, onBack: _noop),
   'lifestage': () => const LifeStageScreen(onContinue: _noop, onBack: _noop),
@@ -52,6 +54,7 @@ final Map<String, Widget Function()> _screens = {
   'partner-perm': () =>
       const PartnerPermScreen(onContinue: _noop, onBack: _noop),
   'theme': () => const ThemeScreen(onContinue: _noop, onBack: _noop),
+  'completion': () => const CompletionScreen(onContinue: _noop),
 };
 
 Future<void> _pumpAt(
