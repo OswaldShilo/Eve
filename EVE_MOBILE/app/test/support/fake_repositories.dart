@@ -23,7 +23,8 @@ class FakeOnboardingRepository implements OnboardingRepository {
 class HomeDashboardDataFixture {
   const HomeDashboardDataFixture();
 
-  HomeDashboardData get data => const HomeDashboardData(greetingName: 'Priya', phaseBadge: 'Cycle Tracking Active');
+  HomeDashboardData get data =>
+      const HomeDashboardData(greetingName: 'Priya', phaseBadge: 'Cycle Tracking Active', lifeStage: 'cycle');
 }
 
 class FakeHomeRepository implements HomeRepository {

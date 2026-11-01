@@ -143,8 +143,13 @@ GoRoute _onboardingRoute(String screenId) {
 }
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/onboarding/welcome',
+  initialLocation: '/',
   routes: [
+    GoRoute(
+      path: '/',
+      name: 'startup',
+      builder: (context, state) => const _StartupRoute(),
+    ),
     GoRoute(
       path: '/onboarding/welcome',
       name: 'onboarding-welcome',
@@ -164,7 +169,7 @@ final GoRouter appRouter = GoRouter(
       name: 'home',
       builder: (context, state) => Consumer(builder: (context, ref, _) {
         final uid = ref.watch(currentUidProvider);
-        if (uid == null) return const HomeScreen();
+        if (uid == null) return const RedirectTo('/onboarding/welcome');
         return ref.watch(homeDashboardProvider(uid)).when(
               data: (data) => HomeScreen(
                 greetingName: data.greetingName,
@@ -188,7 +193,7 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => Consumer(builder: (context, ref, _) {
         final uid = ref.watch(currentUidProvider);
         final fallback = ChatScreen(onNavigateHome: () => context.go('/home'), onNavigateLog: () => context.go('/log'));
-        if (uid == null) return fallback;
+        if (uid == null) return const RedirectTo('/onboarding/welcome');
         final threadId = ref.watch(chatThreadIdProvider(uid)).valueOrNull;
         if (threadId == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
         return ref.watch(chatMessagesProvider(threadId)).when(
@@ -220,7 +225,7 @@ final GoRouter appRouter = GoRouter(
         final uid = ref.watch(currentUidProvider);
         final now = DateTime.now();
         final fallback = LogScreen(onNavigateHome: () => context.go('/home'), onNavigateChat: () => context.go('/chat'));
-        if (uid == null) return fallback;
+        if (uid == null) return const RedirectTo('/onboarding/welcome');
         return ref.watch(logsProvider(uid)).when(
               data: (logs) => LogScreen(
                 monthLabel: DateFormat('MMMM yyyy').format(now),
@@ -280,7 +285,7 @@ final GoRouter appRouter = GoRouter(
       name: 'doctor-summary',
       builder: (context, state) => Consumer(builder: (context, ref, _) {
         final uid = ref.watch(currentUidProvider);
-        if (uid == null) return const Scaffold(body: Center(child: Text('Please sign in to create a summary.')));
+        if (uid == null) return const RedirectTo('/onboarding/welcome');
         return ref.watch(logsProvider(uid)).when(
               data: (logs) => DoctorSummaryScreen(
                 logs: [for (final log in logs) log.toRow()],
@@ -315,6 +320,7 @@ class _CompletionRouteState extends ConsumerState<_CompletionRoute> {
       setState(() => _saving = true);
       try {
         inviteCode = await ref.read(onboardingRepositoryProvider).saveOnboarding(uid, ref.read(onboardingStateProvider));
+        ref.invalidate(homeDashboardProvider(uid));
       } catch (_) {
         if (mounted) {
           setState(() => _saving = false);
@@ -393,4 +399,77 @@ class _AuthRouteState extends ConsumerState<_AuthRoute> {
         onGoogleSignIn: () => _signIn(google: true),
         onContinue: () => _signIn(google: false),
       );
+}
+
+/// Where the app opens: signed-out people start onboarding at Welcome; a
+/// signed-in woman who finished onboarding goes straight to Home; a linked
+/// partner (whose chat thread belongs to someone else) goes to Chat; a
+/// signed-in account that never finished onboarding starts again at Welcome
+/// (onboarding answers are only kept in memory until Completion saves them).
+class _StartupRoute extends ConsumerWidget {
+  const _StartupRoute();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final uid = ref.watch(currentUidProvider);
+    if (uid == null) return const RedirectTo('/onboarding/welcome');
+    final dashboard = ref.watch(homeDashboardProvider(uid));
+    return dashboard.when(
+      data: (data) {
+        if (data.onboardingComplete) return const RedirectTo('/home');
+        return ref.watch(chatThreadIdProvider(uid)).when(
+              data: (threadId) => RedirectTo(threadId == uid ? '/onboarding/welcome' : '/chat'),
+              loading: () => const StartupSplash(),
+              error: (_, __) => const RedirectTo('/onboarding/welcome'),
+            );
+      },
+      loading: () => const StartupSplash(),
+      // Home shows its own error state with Retry.
+      error: (_, __) => const RedirectTo('/home'),
+    );
+  }
+}
+
+/// Shown while the startup gate looks up her session.
+class StartupSplash extends StatelessWidget {
+  const StartupSplash({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(
+        child: SizedBox(
+          key: Key('startup-splash'),
+          width: 36,
+          height: 36,
+          child: CircularProgressIndicator(strokeWidth: 3.5),
+        ),
+      ),
+    );
+  }
+}
+
+/// Replaces the current location with [location] right after the first
+/// frame (go_router forbids navigating during build). Shows the splash
+/// meanwhile.
+class RedirectTo extends StatefulWidget {
+  const RedirectTo(this.location, {super.key});
+
+  final String location;
+
+  @override
+  State<RedirectTo> createState() => _RedirectToState();
+}
+
+class _RedirectToState extends State<RedirectTo> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.go(widget.location);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => const StartupSplash();
 }

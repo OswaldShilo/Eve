@@ -35,6 +35,10 @@ class AppwriteHomeRepository implements HomeRepository {
       'cycle' => 'Cycle Tracking Active',
       _ => '${type[0].toUpperCase()}${type.substring(1)} Tracking Active',
     };
-    return HomeDashboardData(greetingName: name.isEmpty ? 'there' : name, phaseBadge: phaseBadge);
+    return HomeDashboardData(
+      greetingName: name.isEmpty ? 'there' : name,
+      phaseBadge: phaseBadge,
+      lifeStage: type,
+    );
   }
 }

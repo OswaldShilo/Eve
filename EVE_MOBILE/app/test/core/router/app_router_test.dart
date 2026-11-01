@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:eve_app/core/providers/appwrite_providers.dart';
 import 'package:eve_app/core/providers/repository_providers.dart';
 import 'package:eve_app/core/router/app_router.dart';
+import 'package:eve_app/features/chat/data/chat_repository.dart';
+import 'package:eve_app/features/home/data/home_repository.dart';
 import 'package:eve_app/features/onboarding/data/onboarding_repository.dart';
 import 'package:eve_app/features/onboarding/domain/onboarding_state.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +23,7 @@ Future<void> _settle(WidgetTester tester) async {
 }
 
 const _expectedRoutePaths = <String>{
+  '/',
   '/onboarding/welcome',
   '/onboarding/auth',
   '/onboarding/profile',
@@ -69,14 +72,93 @@ void main() {
     expect(find.text('Begin Setup'), findsOneWidget);
   });
 
-  testWidgets('navigating to /home renders the real Home screen', (tester) async {
+  testWidgets('signed out, /home redirects to Welcome instead of showing demo data', (tester) async {
     await tester.pumpWidget(ProviderScope(child: MaterialApp.router(routerConfig: appRouter)));
     await _settle(tester);
 
     appRouter.go('/home');
     await _settle(tester);
+    await _settle(tester);
 
-    expect(find.text('Welcome back, Maya'), findsOneWidget);
+    expect(appRouter.routerDelegate.currentConfiguration.uri.path, '/onboarding/welcome');
+    expect(find.text('Welcome back, Maya'), findsNothing);
+  });
+
+  for (final path in ['/chat', '/log', '/doctor-summary']) {
+    testWidgets('signed out, $path redirects to Welcome', (tester) async {
+      await tester.pumpWidget(ProviderScope(child: MaterialApp.router(routerConfig: appRouter)));
+      appRouter.go(path);
+      await _settle(tester);
+      await _settle(tester);
+
+      expect(appRouter.routerDelegate.currentConfiguration.uri.path, '/onboarding/welcome');
+    });
+  }
+
+  group('startup gate (/)', () {
+    Future<String> openAt(
+      WidgetTester tester, {
+      String? uid,
+      HomeDashboardData? dashboard,
+      ChatRepository? chat,
+    }) async {
+      await tester.pumpWidget(ProviderScope(
+        overrides: [
+          currentUidProvider.overrideWith((ref) => uid),
+          if (dashboard != null) homeRepositoryProvider.overrideWithValue(FakeHomeRepository(dashboard)),
+          if (chat != null) chatRepositoryProvider.overrideWithValue(chat),
+        ],
+        child: MaterialApp.router(routerConfig: appRouter),
+      ));
+      appRouter.go('/');
+      await _settle(tester);
+      await _settle(tester);
+      return appRouter.routerDelegate.currentConfiguration.uri.path;
+    }
+
+    testWidgets('signed out opens Welcome', (tester) async {
+      expect(await openAt(tester), '/onboarding/welcome');
+    });
+
+    testWidgets('a returning, onboarded user opens Home', (tester) async {
+      final path = await openAt(tester, uid: 'u1', dashboard: const HomeDashboardDataFixture().data);
+      expect(path, '/home');
+      expect(find.text('Welcome back, Priya'), findsOneWidget);
+    });
+
+    testWidgets('a signed-in account that never finished onboarding opens Welcome', (tester) async {
+      final path = await openAt(
+        tester,
+        uid: 'u1',
+        dashboard: const HomeDashboardData(greetingName: 'there', phaseBadge: 'Welcome to EVE'),
+        chat: FakeChatRepository(),
+      );
+      expect(path, '/onboarding/welcome');
+    });
+
+    testWidgets('a linked partner opens the shared Chat', (tester) async {
+      final path = await openAt(
+        tester,
+        uid: 'partner1',
+        dashboard: const HomeDashboardData(greetingName: 'there', phaseBadge: 'Welcome to EVE'),
+        chat: _PartnerChatRepository(),
+      );
+      expect(path, '/chat');
+    });
+
+    testWidgets('shows a splash while the session is looked up', (tester) async {
+      await tester.pumpWidget(ProviderScope(
+        overrides: [
+          currentUidProvider.overrideWith((ref) => 'u1'),
+          homeRepositoryProvider.overrideWithValue(_NeverHomeRepository()),
+        ],
+        child: MaterialApp.router(routerConfig: appRouter),
+      ));
+      appRouter.go('/');
+      await _settle(tester);
+      expect(find.byKey(const Key('startup-splash')), findsOneWidget);
+      expect(appRouter.routerDelegate.currentConfiguration.uri.path, '/');
+    });
   });
 
   testWidgets('completing the Life-Stage screen advances into the cycle branch', (tester) async {
@@ -226,4 +308,15 @@ class _SlowOnboardingRepository implements OnboardingRepository {
     await release.future;
     return null;
   }
+}
+
+/// The signed-in user is a partner: her thread belongs to the primary user.
+class _PartnerChatRepository extends FakeChatRepository {
+  @override
+  Future<String> threadIdFor(String uid) async => 'primary-user';
+}
+
+class _NeverHomeRepository implements HomeRepository {
+  @override
+  Future<HomeDashboardData> loadDashboard(String uid) => Completer<HomeDashboardData>().future;
 }

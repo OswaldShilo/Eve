@@ -40,6 +40,8 @@ void main() {
     final data = await repo.loadDashboard('u1');
     expect(data.greetingName, 'Priya');
     expect(data.phaseBadge, 'Menopause Tracking Active');
+    expect(data.lifeStage, 'menopause');
+    expect(data.onboardingComplete, isTrue);
   });
 
   test('falls back to a generic greeting and badge when rows are missing or empty', () async {
@@ -48,5 +50,7 @@ void main() {
     final data = await repo.loadDashboard('u1');
     expect(data.greetingName, 'there');
     expect(data.phaseBadge, 'Welcome to EVE');
+    expect(data.lifeStage, isNull);
+    expect(data.onboardingComplete, isFalse);
   });
 }
