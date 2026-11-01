@@ -353,6 +353,45 @@ void main() {
     expect(find.text('NEXT CYCLE PHASE'), findsNothing);
     expect(find.text('Log your first check-in from the Log tab.'), findsOneWidget);
   });
+
+  testWidgets('Chat shows an error with Retry when the thread cannot be found', (tester) async {
+    final chat = _FlakyThreadChatRepository();
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        currentUidProvider.overrideWith((ref) => 'u1'),
+        chatRepositoryProvider.overrideWithValue(chat),
+      ],
+      child: MaterialApp.router(routerConfig: appRouter),
+    ));
+    appRouter.go('/chat');
+    await _settle(tester);
+
+    expect(find.byKey(const Key('chat-error')), findsOneWidget);
+    expect(find.text('Ryan'), findsNothing);
+
+    chat.fail = false;
+    await tester.tap(find.byKey(const Key('eve-status-action')));
+    await _settle(tester);
+    await _settle(tester);
+    expect(find.byKey(const Key('chat-empty')), findsOneWidget);
+  });
+
+  testWidgets('Chat never shows the demo partner name on live data', (tester) async {
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        currentUidProvider.overrideWith((ref) => 'u1'),
+        chatRepositoryProvider.overrideWithValue(FakeChatRepository()),
+      ],
+      child: MaterialApp.router(routerConfig: appRouter),
+    ));
+    appRouter.go('/chat');
+    // Thread lookup, then the message stream, each resolve on a later frame.
+    await _settle(tester);
+    await _settle(tester);
+
+    expect(find.text('Ryan'), findsNothing);
+    expect(find.text('Your partner'), findsOneWidget);
+  });
 }
 
 class _SlowOnboardingRepository implements OnboardingRepository {
@@ -388,5 +427,15 @@ class _FlakyHomeRepository implements HomeRepository {
     calls++;
     if (fail) throw Exception('offline');
     return const HomeDashboardDataFixture().data;
+  }
+}
+
+class _FlakyThreadChatRepository extends FakeChatRepository {
+  bool fail = true;
+
+  @override
+  Future<String> threadIdFor(String uid) async {
+    if (fail) throw Exception('offline');
+    return uid;
   }
 }

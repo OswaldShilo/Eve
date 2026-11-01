@@ -175,33 +175,7 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/chat',
       name: 'chat',
-      builder: (context, state) => Consumer(builder: (context, ref, _) {
-        final uid = ref.watch(currentUidProvider);
-        final fallback = ChatScreen(onNavigateHome: () => context.go('/home'), onNavigateLog: () => context.go('/log'));
-        if (uid == null) return const RedirectTo('/onboarding/welcome');
-        final threadId = ref.watch(chatThreadIdProvider(uid)).valueOrNull;
-        if (threadId == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
-        return ref.watch(chatMessagesProvider(threadId)).when(
-              data: (messages) => ChatScreen(
-                thread: messages.map(chatMessageDataFor).toList(),
-                onSendMessage: (text) async {
-                  try {
-                    await ref.read(chatRepositoryProvider).sendMessage(threadId, text);
-                  } catch (_) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Your message was not sent. Please try again.')),
-                      );
-                    }
-                  }
-                },
-                onNavigateHome: () => context.go('/home'),
-                onNavigateLog: () => context.go('/log'),
-              ),
-              loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
-              error: (_, __) => fallback,
-            );
-      }),
+      builder: (context, state) => const _ChatRoute(),
     ),
     GoRoute(
       path: '/log',
@@ -516,6 +490,65 @@ class _HomeRoute extends ConsumerWidget {
             actionLabel: 'Retry',
             onAction: () => ref.invalidate(homeDashboardProvider(uid)),
           )),
+        );
+  }
+}
+
+/// Chat on live data. Looks up whose thread this is (hers, or the primary
+/// user's when a linked partner is signed in), streams it, and sends through
+/// the repository. Loading and error states (with Retry) replace the old
+/// endless spinner / demo-thread fallback. A failed send throws back into
+/// ChatScreen, which keeps the typed text and shows a message.
+class _ChatRoute extends ConsumerWidget {
+  const _ChatRoute();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final uid = ref.watch(currentUidProvider);
+    if (uid == null) return const RedirectTo('/onboarding/welcome');
+
+    Widget shell(Widget body) => Scaffold(
+          body: SafeArea(child: body),
+          bottomNavigationBar: EveBottomNav(
+            currentTab: EveNavTab.chat,
+            onHomeTap: () => context.go('/home'),
+            onChatTap: () {},
+            onLogTap: () => context.go('/log'),
+          ),
+        );
+
+    Widget error(VoidCallback retry) => shell(EveStatusView(
+          key: const Key('chat-error'),
+          title: 'We could not load your chat',
+          message: 'Please check your connection and try again.',
+          actionLabel: 'Retry',
+          onAction: retry,
+        ));
+
+    return ref.watch(chatThreadIdProvider(uid)).when(
+          loading: () => shell(const EveStatusView.loading(message: 'Opening your chat…')),
+          error: (_, __) => error(() => ref.invalidate(chatThreadIdProvider(uid))),
+          data: (threadId) {
+            final viewerIsPartner = threadId != uid;
+            // Her saved partner name is not readable from the client; show
+            // the relationship she chose when known, never a made-up name.
+            final relation = ref.watch(onboardingStateProvider.select((s) => s.partnerRelation));
+            final partnerName = viewerIsPartner || relation.isEmpty ? 'Your partner' : relation;
+            return ref.watch(chatMessagesProvider(threadId)).when(
+                  loading: () => shell(const EveStatusView.loading(message: 'Opening your chat…')),
+                  error: (_, __) => error(() => ref.invalidate(chatMessagesProvider(threadId))),
+                  data: (messages) => ChatScreen(
+                    partnerName: partnerName,
+                    partnerStatus: 'Partner chat with Eve',
+                    thread: [
+                      for (final m in messages) chatMessageDataFor(m, viewerIsPartner: viewerIsPartner),
+                    ],
+                    onSendMessage: (text) => ref.read(chatRepositoryProvider).sendMessage(threadId, text),
+                    onNavigateHome: () => context.go('/home'),
+                    onNavigateLog: () => context.go('/log'),
+                  ),
+                );
+          },
         );
   }
 }
