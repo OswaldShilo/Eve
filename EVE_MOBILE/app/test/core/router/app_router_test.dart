@@ -1,8 +1,12 @@
+import 'package:eve_app/core/providers/appwrite_providers.dart';
+import 'package:eve_app/core/providers/repository_providers.dart';
 import 'package:eve_app/core/router/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../support/fake_repositories.dart';
 
 /// `pumpAndSettle` never returns while an `EveMascot` is on screen (its idle
 /// float repeats forever), so advance a bounded amount of time instead —
@@ -81,5 +85,24 @@ void main() {
     await _settle(tester);
 
     expect(find.text('Cycle Details'), findsOneWidget);
+  });
+
+  testWidgets('Completion saves onboarding through the repository and goes Home', (tester) async {
+    final repo = FakeOnboardingRepository();
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        onboardingRepositoryProvider.overrideWithValue(repo),
+        currentUidProvider.overrideWith((ref) => 'u1'),
+      ],
+      child: MaterialApp.router(routerConfig: appRouter),
+    ));
+    appRouter.go('/onboarding/completion');
+    await _settle(tester);
+
+    await tester.tap(find.text('Enter EVE'));
+    await _settle(tester);
+
+    expect(repo.saved.single.$1, 'u1');
+    expect(appRouter.routerDelegate.currentConfiguration.uri.path, '/home');
   });
 }

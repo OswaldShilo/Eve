@@ -846,13 +846,17 @@ void main() {
     );
 
     expect(code, 'ABC234');
-    expect(updatedTables(), ['profiles', 'life_stage_profiles', 'preferences', 'partner_permissions']);
-    final permissionsData = verify(() => tables.updateRow(
+    // One verify capturing tableId and data together: mocktail marks calls as
+    // verified, so a second verify over the same calls would match nothing.
+    final captured = verify(() => tables.updateRow(
           databaseId: 'eve',
-          tableId: 'partner_permissions',
+          tableId: captureAny(named: 'tableId'),
           rowId: 'u1',
           data: captureAny(named: 'data'),
-        )).captured.single as Map;
+        )).captured;
+    final tablesInOrder = [for (var i = 0; i < captured.length; i += 2) captured[i] as String];
+    expect(tablesInOrder, ['profiles', 'life_stage_profiles', 'preferences', 'partner_permissions']);
+    final permissionsData = captured[tablesInOrder.indexOf('partner_permissions') * 2 + 1] as Map;
     expect(permissionsData['approvedCategories'], ['moodUpdates']);
     verify(() => appwrite.executeJson('partnerInvites', {'action': 'createInvite', 'relationshipType': 'husband'})).called(1);
   });

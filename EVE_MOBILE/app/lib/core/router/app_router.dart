@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:eve_app/core/providers/appwrite_providers.dart';
+import 'package:eve_app/core/providers/repository_providers.dart';
+import 'package:eve_app/features/onboarding/presentation/widgets/partner_invite_code_dialog.dart';
 import 'package:eve_app/features/onboarding/domain/onboarding_progress.dart';
 import 'package:eve_app/features/onboarding/domain/onboarding_sequence.dart';
 import 'package:eve_app/features/onboarding/domain/onboarding_state.dart';
@@ -144,8 +146,32 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/onboarding/completion',
       name: 'onboarding-completion',
-      builder: (context, state) => CompletionScreen(
-        onContinue: () => context.go('/home'),
+      builder: (context, state) => Consumer(
+        builder: (context, ref, _) => CompletionScreen(
+          onContinue: () async {
+            final uid = ref.read(currentUidProvider);
+            String? inviteCode;
+            if (uid != null) {
+              try {
+                inviteCode = await ref
+                    .read(onboardingRepositoryProvider)
+                    .saveOnboarding(uid, ref.read(onboardingStateProvider));
+              } catch (_) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text('We could not save your answers. Please check your connection and try again.'),
+                  ));
+                }
+                return;
+              }
+            }
+            if (!context.mounted) return;
+            if (inviteCode != null) {
+              await showDialog<void>(context: context, builder: (_) => PartnerInviteCodeDialog(code: inviteCode!));
+            }
+            if (context.mounted) context.go('/home');
+          },
+        ),
       ),
     ),
     GoRoute(
