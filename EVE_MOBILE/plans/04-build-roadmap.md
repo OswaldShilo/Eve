@@ -2696,7 +2696,7 @@ class _DoctorSummaryScreenState extends State<DoctorSummaryScreen> {
           child: pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text('EVE Doctor-Ready Summary', style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
+              pw.Text('EVE Doctor-Ready Summary', style: const pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
               pw.SizedBox(height: 16),
               pw.Text(summary),
             ],
