@@ -5,7 +5,7 @@
 **Goal:** Implement the server-side Appwrite Functions that are the actual technical enforcement of EVE's Partner Mode consent model: the `partner_views` projection, the invite/accept link flow, the `sendChatMessage` function that makes chat sender identity unforgeable, and Eve's system-authored chat nudges.
 
 **Architecture:** Four Appwrite Functions in the shared `functions/` package, all talking to storage through Plan 5's `Db` port (unit-tested against `MemoryDb`):
-- `partnerView` — event-triggered on every create/update/upsert/delete of `symptom_logs`, `life_stage_profiles` and `partner_permissions`. It **fully recomputes** `partner_views/<uid>` from source rows (never patches), so out-of-order or duplicated events converge on the same result.
+- `partnerView` — event-triggered on every create/update/delete of `symptom_logs`, `life_stage_profiles` and `partner_permissions`. It **fully recomputes** `partner_views/<uid>` from source rows (never patches), so out-of-order or duplicated events converge on the same result.
 - `partnerInvites` — executed by the client. `createInvite` (her) writes a pending `partner_links` row with a short code; `acceptInvite` (partner) links the two accounts, writes `partner_lookups/<partnerUid>`, re-grants read on her `partner_views` row and existing chat rows to the partner.
 - `sendChatMessage` — executed by the client; the **only** way a human chat message is written. The function decides `senderRole` from the caller's identity; the client never sends it.
 - `chatSystemMessages` — event-triggered on `symptom_logs` create. When a qualifying log arrives and she has approved the matching category for an accepted partner, writes a `type: 'system'` message with the deterministic row ID `sys-<logId>` (so a redelivered event cannot duplicate it) and pushes a notification to the partner.
@@ -481,6 +481,8 @@ export default async (context: FunctionContext) => {
 
 - [ ] **Step 5: Register — append to `functions` in `EVE_MOBILE/appwrite.config.json`**
 
+(Verified on Appwrite 2.6.2: there is no `rows.*.upsert` event — the server rejects it with `Event is not valid`; an upsert fires `create` or `update`.)
+
 ```json
     {
       "$id": "partnerView",
@@ -491,12 +493,9 @@ export default async (context: FunctionContext) => {
       "events": [
         "tablesdb.eve.tables.symptom_logs.rows.*.create",
         "tablesdb.eve.tables.symptom_logs.rows.*.update",
-        "tablesdb.eve.tables.symptom_logs.rows.*.upsert",
         "tablesdb.eve.tables.symptom_logs.rows.*.delete",
         "tablesdb.eve.tables.life_stage_profiles.rows.*.update",
-        "tablesdb.eve.tables.life_stage_profiles.rows.*.upsert",
-        "tablesdb.eve.tables.partner_permissions.rows.*.update",
-        "tablesdb.eve.tables.partner_permissions.rows.*.upsert"
+        "tablesdb.eve.tables.partner_permissions.rows.*.update"
       ],
       "scopes": ["rows.read", "rows.write"],
       "schedule": "",

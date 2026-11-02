@@ -1,0 +1,993 @@
+{
+  "projectId": "eve-local",
+  "projectName": "EVE (local)",
+  "endpoint": "http://localhost/v1",
+  "tablesDB": [
+    {
+      "$id": "eve",
+      "name": "eve",
+      "enabled": true
+    }
+  ],
+  "tables": [
+    {
+      "$id": "profiles",
+      "$permissions": [],
+      "databaseId": "eve",
+      "name": "profiles",
+      "enabled": true,
+      "rowSecurity": true,
+      "columns": [
+        {
+          "key": "name",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 120,
+          "default": "",
+          "encrypt": false
+        },
+        {
+          "key": "age",
+          "type": "integer",
+          "required": false,
+          "array": false,
+          "default": null,
+          "min": 0,
+          "max": 130
+        },
+        {
+          "key": "height",
+          "type": "double",
+          "required": false,
+          "array": false,
+          "default": null,
+          "min": 0,
+          "max": 300
+        },
+        {
+          "key": "weight",
+          "type": "double",
+          "required": false,
+          "array": false,
+          "default": null,
+          "min": 0,
+          "max": 500
+        },
+        {
+          "key": "country",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 80,
+          "default": null,
+          "encrypt": false
+        },
+        {
+          "key": "lifeStage",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "default": null,
+          "format": "enum",
+          "elements": [
+            "cycle",
+            "conceive",
+            "pregnant",
+            "postpartum",
+            "menopause"
+          ]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "$id": "life_stage_profiles",
+      "$permissions": [],
+      "databaseId": "eve",
+      "name": "life_stage_profiles",
+      "enabled": true,
+      "rowSecurity": true,
+      "columns": [
+        {
+          "key": "type",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "default": null,
+          "format": "enum",
+          "elements": [
+            "cycle",
+            "conceive",
+            "pregnant",
+            "postpartum",
+            "menopause"
+          ]
+        },
+        {
+          "key": "cycleLength",
+          "type": "integer",
+          "required": false,
+          "array": false,
+          "default": null,
+          "min": 10,
+          "max": 90
+        },
+        {
+          "key": "periodLength",
+          "type": "integer",
+          "required": false,
+          "array": false,
+          "default": null,
+          "min": 1,
+          "max": 20
+        },
+        {
+          "key": "flow",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 40,
+          "default": null,
+          "encrypt": false
+        },
+        {
+          "key": "cycleSymptoms",
+          "type": "string",
+          "required": false,
+          "array": true,
+          "size": 64,
+          "default": null,
+          "encrypt": false
+        },
+        {
+          "key": "cycleGoals",
+          "type": "string",
+          "required": false,
+          "array": true,
+          "size": 64,
+          "default": null,
+          "encrypt": false
+        },
+        {
+          "key": "nutritionDiet",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 40,
+          "default": null,
+          "encrypt": false
+        },
+        {
+          "key": "dueDate",
+          "type": "datetime",
+          "required": false,
+          "array": false,
+          "default": null,
+          "format": ""
+        },
+        {
+          "key": "dueMethod",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 60,
+          "default": null,
+          "encrypt": false
+        },
+        {
+          "key": "highRisk",
+          "type": "boolean",
+          "required": false,
+          "array": false,
+          "default": null
+        },
+        {
+          "key": "pregnancyType",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 40,
+          "default": null,
+          "encrypt": false
+        },
+        {
+          "key": "medications",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 500,
+          "default": null,
+          "encrypt": false
+        },
+        {
+          "key": "allergies",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 500,
+          "default": null,
+          "encrypt": false
+        },
+        {
+          "key": "prenatalVitamins",
+          "type": "boolean",
+          "required": false,
+          "array": false,
+          "default": null
+        },
+        {
+          "key": "pregnantSymptoms",
+          "type": "string",
+          "required": false,
+          "array": true,
+          "size": 64,
+          "default": null,
+          "encrypt": false
+        },
+        {
+          "key": "currentWeek",
+          "type": "integer",
+          "required": false,
+          "array": false,
+          "default": null,
+          "min": 0,
+          "max": 45
+        },
+        {
+          "key": "nextAppointmentLabel",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 120,
+          "default": null,
+          "encrypt": false
+        },
+        {
+          "key": "nextAppointmentAt",
+          "type": "datetime",
+          "required": false,
+          "array": false,
+          "default": null,
+          "format": ""
+        },
+        {
+          "key": "latestMilestone",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 120,
+          "default": null,
+          "encrypt": false
+        },
+        {
+          "key": "simplifiedSymptoms",
+          "type": "string",
+          "required": false,
+          "array": true,
+          "size": 64,
+          "default": null,
+          "encrypt": false
+        },
+        {
+          "key": "simplifiedGoals",
+          "type": "string",
+          "required": false,
+          "array": true,
+          "size": 64,
+          "default": null,
+          "encrypt": false
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "$id": "symptom_logs",
+      "$permissions": [
+        "create(\"users\")"
+      ],
+      "databaseId": "eve",
+      "name": "symptom_logs",
+      "enabled": true,
+      "rowSecurity": true,
+      "columns": [
+        {
+          "key": "userId",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 36,
+          "default": null,
+          "encrypt": false
+        },
+        {
+          "key": "date",
+          "type": "datetime",
+          "required": true,
+          "array": false,
+          "default": null,
+          "format": ""
+        },
+        {
+          "key": "symptoms",
+          "type": "string",
+          "required": false,
+          "array": true,
+          "size": 64,
+          "default": null,
+          "encrypt": false
+        },
+        {
+          "key": "mood",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "default": null,
+          "format": "enum",
+          "elements": [
+            "great",
+            "good",
+            "okay",
+            "low",
+            "difficult"
+          ]
+        },
+        {
+          "key": "painLevel",
+          "type": "integer",
+          "required": false,
+          "array": false,
+          "default": null,
+          "min": 0,
+          "max": 10
+        },
+        {
+          "key": "notes",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 2000,
+          "default": "",
+          "encrypt": false
+        }
+      ],
+      "indexes": [
+        {
+          "key": "idx_user_date",
+          "type": "key",
+          "status": "available",
+          "columns": [
+            "userId",
+            "date"
+          ],
+          "orders": [
+            "ASC",
+            "DESC"
+          ]
+        }
+      ]
+    },
+    {
+      "$id": "preferences",
+      "$permissions": [],
+      "databaseId": "eve",
+      "name": "preferences",
+      "enabled": true,
+      "rowSecurity": true,
+      "columns": [
+        {
+          "key": "selectedGoals",
+          "type": "string",
+          "required": false,
+          "array": true,
+          "size": 64,
+          "default": null,
+          "encrypt": false
+        },
+        {
+          "key": "dietType",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 40,
+          "default": null,
+          "encrypt": false
+        },
+        {
+          "key": "foodAllergies",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 500,
+          "default": "",
+          "encrypt": false
+        },
+        {
+          "key": "cuisines",
+          "type": "string",
+          "required": false,
+          "array": true,
+          "size": 64,
+          "default": null,
+          "encrypt": false
+        },
+        {
+          "key": "workoutPreference",
+          "type": "string",
+          "required": false,
+          "array": true,
+          "size": 64,
+          "default": null,
+          "encrypt": false
+        },
+        {
+          "key": "enabledReminders",
+          "type": "string",
+          "required": false,
+          "array": true,
+          "default": null,
+          "format": "enum",
+          "elements": [
+            "morning",
+            "medicine",
+            "workout",
+            "water",
+            "sleep",
+            "cycle",
+            "appointment",
+            "mood",
+            "daily_tip"
+          ]
+        },
+        {
+          "key": "enabledHelpAreas",
+          "type": "string",
+          "required": false,
+          "array": true,
+          "default": null,
+          "format": "enum",
+          "elements": [
+            "healthQuestions",
+            "nutrition",
+            "workouts",
+            "mentalWellbeing",
+            "medicationReminders",
+            "doctorPrep"
+          ]
+        },
+        {
+          "key": "selectedTheme",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "default": "default",
+          "format": "enum",
+          "elements": [
+            "light",
+            "dark",
+            "default"
+          ]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "$id": "partner_links",
+      "$permissions": [],
+      "databaseId": "eve",
+      "name": "partner_links",
+      "enabled": true,
+      "rowSecurity": true,
+      "columns": [
+        {
+          "key": "partnerUserId",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 36,
+          "default": null,
+          "encrypt": false
+        },
+        {
+          "key": "relationshipType",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 40,
+          "default": null,
+          "encrypt": false
+        },
+        {
+          "key": "inviteStatus",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "default": "none",
+          "format": "enum",
+          "elements": [
+            "none",
+            "pending",
+            "accepted",
+            "declined"
+          ]
+        },
+        {
+          "key": "inviteCode",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 8,
+          "default": null,
+          "encrypt": false
+        },
+        {
+          "key": "invitedAt",
+          "type": "datetime",
+          "required": false,
+          "array": false,
+          "default": null,
+          "format": ""
+        },
+        {
+          "key": "linkedAt",
+          "type": "datetime",
+          "required": false,
+          "array": false,
+          "default": null,
+          "format": ""
+        }
+      ],
+      "indexes": [
+        {
+          "key": "idx_invite_code",
+          "type": "key",
+          "status": "available",
+          "columns": [
+            "inviteCode"
+          ],
+          "orders": [
+            "ASC"
+          ]
+        }
+      ]
+    },
+    {
+      "$id": "partner_permissions",
+      "$permissions": [],
+      "databaseId": "eve",
+      "name": "partner_permissions",
+      "enabled": true,
+      "rowSecurity": true,
+      "columns": [
+        {
+          "key": "approvedCategories",
+          "type": "string",
+          "required": false,
+          "array": true,
+          "default": null,
+          "format": "enum",
+          "elements": [
+            "appointmentReminders",
+            "pregnancyMilestones",
+            "supportSuggestions",
+            "moodUpdates"
+          ]
+        },
+        {
+          "key": "onlyApproveMode",
+          "type": "boolean",
+          "required": false,
+          "array": false,
+          "default": true
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "$id": "partner_views",
+      "$permissions": [],
+      "databaseId": "eve",
+      "name": "partner_views",
+      "enabled": true,
+      "rowSecurity": true,
+      "columns": [
+        {
+          "key": "primaryUserId",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 36,
+          "default": null,
+          "encrypt": false
+        },
+        {
+          "key": "approvedCategories",
+          "type": "string",
+          "required": false,
+          "array": true,
+          "default": null,
+          "format": "enum",
+          "elements": [
+            "appointmentReminders",
+            "pregnancyMilestones",
+            "supportSuggestions",
+            "moodUpdates"
+          ]
+        },
+        {
+          "key": "upcomingAppointmentLabel",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 120,
+          "default": null,
+          "encrypt": false
+        },
+        {
+          "key": "upcomingAppointmentAt",
+          "type": "datetime",
+          "required": false,
+          "array": false,
+          "default": null,
+          "format": ""
+        },
+        {
+          "key": "pregnancyCurrentWeek",
+          "type": "integer",
+          "required": false,
+          "array": false,
+          "default": null,
+          "min": 0,
+          "max": 45
+        },
+        {
+          "key": "pregnancyLatestMilestone",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 120,
+          "default": null,
+          "encrypt": false
+        },
+        {
+          "key": "supportSuggested",
+          "type": "boolean",
+          "required": false,
+          "array": false,
+          "default": null
+        },
+        {
+          "key": "supportReason",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "default": null,
+          "format": "enum",
+          "elements": [
+            "highPain",
+            "multipleSymptoms"
+          ]
+        },
+        {
+          "key": "recentMoodTrend",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "default": null,
+          "format": "enum",
+          "elements": [
+            "low",
+            "neutral",
+            "positive"
+          ]
+        },
+        {
+          "key": "recomputedAt",
+          "type": "datetime",
+          "required": false,
+          "array": false,
+          "default": null,
+          "format": ""
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "$id": "partner_lookups",
+      "$permissions": [],
+      "databaseId": "eve",
+      "name": "partner_lookups",
+      "enabled": true,
+      "rowSecurity": true,
+      "columns": [
+        {
+          "key": "primaryUserId",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 36,
+          "default": null,
+          "encrypt": false
+        },
+        {
+          "key": "relationshipType",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 40,
+          "default": null,
+          "encrypt": false
+        },
+        {
+          "key": "linkedAt",
+          "type": "datetime",
+          "required": true,
+          "array": false,
+          "default": null,
+          "format": ""
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "$id": "chat_messages",
+      "$permissions": [],
+      "databaseId": "eve",
+      "name": "chat_messages",
+      "enabled": true,
+      "rowSecurity": true,
+      "columns": [
+        {
+          "key": "threadUserId",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 36,
+          "default": null,
+          "encrypt": false
+        },
+        {
+          "key": "senderRole",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "default": null,
+          "format": "enum",
+          "elements": [
+            "her",
+            "partner",
+            "system"
+          ]
+        },
+        {
+          "key": "senderUserId",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 36,
+          "default": null,
+          "encrypt": false
+        },
+        {
+          "key": "messageText",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "size": 2000,
+          "default": null,
+          "encrypt": false
+        },
+        {
+          "key": "sentAt",
+          "type": "datetime",
+          "required": true,
+          "array": false,
+          "default": null,
+          "format": ""
+        },
+        {
+          "key": "type",
+          "type": "string",
+          "required": true,
+          "array": false,
+          "default": null,
+          "format": "enum",
+          "elements": [
+            "text",
+            "system"
+          ]
+        },
+        {
+          "key": "category",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "default": null,
+          "format": "enum",
+          "elements": [
+            "supportSuggestion",
+            "moodUpdate"
+          ]
+        },
+        {
+          "key": "sourceLogId",
+          "type": "string",
+          "required": false,
+          "array": false,
+          "size": 36,
+          "default": null,
+          "encrypt": false
+        }
+      ],
+      "indexes": [
+        {
+          "key": "idx_thread_sent",
+          "type": "key",
+          "status": "available",
+          "columns": [
+            "threadUserId",
+            "sentAt"
+          ],
+          "orders": [
+            "ASC",
+            "ASC"
+          ]
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "$id": "onUserCreate",
+      "name": "onUserCreate",
+      "runtime": "node-22",
+      "specification": "s-0.5vcpu-512mb",
+      "execute": [],
+      "events": [
+        "users.*.create"
+      ],
+      "scopes": [
+        "users.read",
+        "rows.read",
+        "rows.write"
+      ],
+      "schedule": "",
+      "timeout": 30,
+      "enabled": true,
+      "logging": true,
+      "entrypoint": "dist/onUserCreate/src/main.js",
+      "commands": "npm ci && npm run build",
+      "path": "functions"
+    },
+    {
+      "$id": "partnerView",
+      "name": "partnerView",
+      "runtime": "node-22",
+      "specification": "s-0.5vcpu-512mb",
+      "execute": [],
+      "events": [
+        "tablesdb.eve.tables.symptom_logs.rows.*.create",
+        "tablesdb.eve.tables.symptom_logs.rows.*.update",
+        "tablesdb.eve.tables.symptom_logs.rows.*.delete",
+        "tablesdb.eve.tables.life_stage_profiles.rows.*.update",
+        "tablesdb.eve.tables.partner_permissions.rows.*.update"
+      ],
+      "scopes": [
+        "rows.read",
+        "rows.write"
+      ],
+      "schedule": "",
+      "timeout": 30,
+      "enabled": true,
+      "logging": true,
+      "entrypoint": "dist/partnerView/src/main.js",
+      "commands": "npm ci && npm run build",
+      "path": "functions"
+    },
+    {
+      "$id": "partnerInvites",
+      "name": "partnerInvites",
+      "runtime": "node-22",
+      "specification": "s-0.5vcpu-512mb",
+      "execute": [
+        "users"
+      ],
+      "events": [],
+      "scopes": [
+        "rows.read",
+        "rows.write"
+      ],
+      "schedule": "",
+      "timeout": 30,
+      "enabled": true,
+      "logging": true,
+      "entrypoint": "dist/partnerInvites/src/main.js",
+      "commands": "npm ci && npm run build",
+      "path": "functions"
+    },
+    {
+      "$id": "sendChatMessage",
+      "name": "sendChatMessage",
+      "runtime": "node-22",
+      "specification": "s-0.5vcpu-512mb",
+      "execute": [
+        "users"
+      ],
+      "events": [],
+      "scopes": [
+        "rows.read",
+        "rows.write"
+      ],
+      "schedule": "",
+      "timeout": 15,
+      "enabled": true,
+      "logging": true,
+      "entrypoint": "dist/sendChatMessage/src/main.js",
+      "commands": "npm ci && npm run build",
+      "path": "functions"
+    },
+    {
+      "$id": "notifications",
+      "name": "notifications",
+      "runtime": "node-22",
+      "specification": "s-0.5vcpu-512mb",
+      "execute": [],
+      "events": [],
+      "scopes": [
+        "rows.read",
+        "messages.write",
+        "targets.read"
+      ],
+      "schedule": "*/30 * * * *",
+      "timeout": 120,
+      "enabled": true,
+      "logging": true,
+      "entrypoint": "dist/notifications/src/main.js",
+      "commands": "npm ci && npm run build",
+      "path": "functions"
+    },
+    {
+      "$id": "chatSystemMessages",
+      "name": "chatSystemMessages",
+      "runtime": "node-22",
+      "specification": "s-0.5vcpu-512mb",
+      "execute": [],
+      "events": [
+        "tablesdb.eve.tables.symptom_logs.rows.*.create"
+      ],
+      "scopes": [
+        "rows.read",
+        "rows.write",
+        "messages.write",
+        "targets.read"
+      ],
+      "schedule": "",
+      "timeout": 30,
+      "enabled": true,
+      "logging": true,
+      "entrypoint": "dist/chatSystemMessages/src/main.js",
+      "commands": "npm ci && npm run build",
+      "path": "functions"
+    },
+    {
+      "$id": "aiProxy",
+      "name": "aiProxy",
+      "runtime": "node-22",
+      "specification": "s-0.5vcpu-512mb",
+      "execute": [
+        "users"
+      ],
+      "events": [],
+      "scopes": [
+        "rows.read"
+      ],
+      "schedule": "",
+      "timeout": 30,
+      "enabled": true,
+      "logging": true,
+      "entrypoint": "dist/aiProxy/src/main.js",
+      "commands": "npm ci && npm run build",
+      "path": "functions"
+    }
+  ]
+}

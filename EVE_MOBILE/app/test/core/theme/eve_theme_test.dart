@@ -40,13 +40,17 @@ void main() {
       return resolved;
     }
 
-    testWidgets('defaultTheme is light, ruby-branded, on a soft background',
+    testWidgets(
+        'defaultTheme is light, ruby-branded, on the mock --bg-light background',
         (tester) async {
       final theme = await resolve(EveTheme.defaultTheme(), tester);
 
       expect(theme.brightness, Brightness.light);
       expect(theme.colorScheme.primary, EveColors.rubyMain);
-      expect(theme.scaffoldBackgroundColor, EveColors.rubySoft);
+      // mockv4 `--bg-light` is #FFF8FA; cards are white (`--card-bg`).
+      expect(theme.scaffoldBackgroundColor, const Color(0xFFFFF8FA));
+      expect(theme.extension<EveTokens>()!.card, Colors.white);
+      expect(theme.extension<EveTokens>()!.soft, EveColors.rubySoft);
     });
 
     testWidgets('light is a plain light theme on a white background',
@@ -58,13 +62,55 @@ void main() {
       expect(theme.scaffoldBackgroundColor, Colors.white);
     });
 
-    testWidgets('dark uses ruby-dark as the background with the same accent',
+    testWidgets('dark uses the mock body.dark-theme palette, same accent',
         (tester) async {
       final theme = await resolve(EveTheme.dark(), tester);
+      final tokens = theme.extension<EveTokens>()!;
 
       expect(theme.brightness, Brightness.dark);
       expect(theme.colorScheme.primary, EveColors.rubyMain);
-      expect(theme.scaffoldBackgroundColor, EveColors.rubyDark);
+      expect(theme.scaffoldBackgroundColor, const Color(0xFF1A050D));
+      expect(tokens.card, const Color(0xFF2A0916));
+      expect(tokens.soft, const Color(0xFF380C1E));
+      expect(tokens.ink, const Color(0xFFFFF0F4));
+      // Outline stays the literal #2A000E in every theme, as in the mock.
+      expect(tokens.outline, const Color(0xFF2A000E));
+    });
+
+    test('forChoice maps the Theme screen values', () {
+      expect(EveTheme.forChoice('Dark').brightness, Brightness.dark);
+      expect(EveTheme.forChoice('Light').scaffoldBackgroundColor, Colors.white);
+      expect(EveTheme.forChoice('Default').scaffoldBackgroundColor,
+          EveColors.bgLight);
+      expect(EveTheme.forChoice('').scaffoldBackgroundColor, EveColors.bgLight);
+    });
+
+    test('text theme uses Fredoka for display/headline/title and Quicksand '
+        'for body/label, with no unset slots', () {
+      final t = EveTheme.defaultTheme().textTheme;
+      for (final s in [
+        t.displayLarge,
+        t.headlineMedium,
+        t.headlineSmall,
+        t.titleLarge,
+        t.titleMedium,
+        t.titleSmall,
+      ]) {
+        expect(s!.fontFamily, contains('Fredoka'));
+      }
+      for (final s in [
+        t.bodyLarge,
+        t.bodyMedium,
+        t.bodySmall,
+        t.labelLarge,
+        t.labelMedium,
+        t.labelSmall,
+      ]) {
+        expect(s!.fontFamily, contains('Quicksand'));
+        expect(s.fontWeight!.value, greaterThanOrEqualTo(600));
+      }
+      // `.survey-title` 1.45rem
+      expect(t.headlineMedium!.fontSize, closeTo(23.2, 0.01));
     });
   });
 }

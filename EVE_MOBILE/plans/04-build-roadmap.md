@@ -846,13 +846,17 @@ void main() {
     );
 
     expect(code, 'ABC234');
-    expect(updatedTables(), ['profiles', 'life_stage_profiles', 'preferences', 'partner_permissions']);
-    final permissionsData = verify(() => tables.updateRow(
+    // One verify capturing tableId and data together: mocktail marks calls as
+    // verified, so a second verify over the same calls would match nothing.
+    final captured = verify(() => tables.updateRow(
           databaseId: 'eve',
-          tableId: 'partner_permissions',
+          tableId: captureAny(named: 'tableId'),
           rowId: 'u1',
           data: captureAny(named: 'data'),
-        )).captured.single as Map;
+        )).captured;
+    final tablesInOrder = [for (var i = 0; i < captured.length; i += 2) captured[i] as String];
+    expect(tablesInOrder, ['profiles', 'life_stage_profiles', 'preferences', 'partner_permissions']);
+    final permissionsData = captured[tablesInOrder.indexOf('partner_permissions') * 2 + 1] as Map;
     expect(permissionsData['approvedCategories'], ['moodUpdates']);
     verify(() => appwrite.executeJson('partnerInvites', {'action': 'createInvite', 'relationshipType': 'husband'})).called(1);
   });
@@ -1174,7 +1178,8 @@ void main() {
       controller: events,
     ));
     final page = MockRowList();
-    when(() => page.rows).thenReturn([row('a', {'userId': 'u1', 'n': 1})]);
+    final first = row('a', {'userId': 'u1', 'n': 1}); // built outside when(): mocktail forbids nested stubbing
+    when(() => page.rows).thenReturn([first]);
     when(() => tables.listRows(
           databaseId: any(named: 'databaseId'),
           tableId: any(named: 'tableId'),
@@ -1324,14 +1329,15 @@ void main() {
   late AppwriteHomeRepository repo;
 
   void stubRow(String tableId, Map<String, dynamic>? data) {
-    final call = when(() => tables.getRow(databaseId: 'eve', tableId: tableId, rowId: 'u1'));
     if (data == null) {
-      call.thenThrow(AppwriteException('Row not found', 404));
-    } else {
-      final row = MockRow();
-      when(() => row.data).thenReturn(data);
-      call.thenAnswer((_) async => row);
+      when(() => tables.getRow(databaseId: 'eve', tableId: tableId, rowId: 'u1'))
+          .thenThrow(AppwriteException('Row not found', 404));
+      return;
     }
+    // Stub the row before starting the getRow stub: mocktail forbids nested when().
+    final row = MockRow();
+    when(() => row.data).thenReturn(data);
+    when(() => tables.getRow(databaseId: 'eve', tableId: tableId, rowId: 'u1')).thenAnswer((_) async => row);
   }
 
   setUp(() {
@@ -1647,10 +1653,12 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   test('calendarDaysFor keeps the given month, one entry per day (latest wins), sorted', () {
     final days = calendarDaysFor([
-      SymptomLog(userId: 'u1', date: DateTime.utc(2026, 3, 14, 8), symptoms: const ['Cramps'], mood: 'low'),
-      SymptomLog(userId: 'u1', date: DateTime.utc(2026, 3, 2), mood: 'great', notes: 'Felt strong.'),
-      SymptomLog(userId: 'u1', date: DateTime.utc(2026, 3, 14, 20), mood: 'okay'),
-      SymptomLog(userId: 'u1', date: DateTime.utc(2026, 4, 1), mood: 'good'),
+      // Local times: calendar days are her local days, so UTC fixtures would
+      // shift across midnight in timezones far from UTC (e.g. IST).
+      SymptomLog(userId: 'u1', date: DateTime(2026, 3, 14, 8), symptoms: const ['Cramps'], mood: 'low'),
+      SymptomLog(userId: 'u1', date: DateTime(2026, 3, 2), mood: 'great', notes: 'Felt strong.'),
+      SymptomLog(userId: 'u1', date: DateTime(2026, 3, 14, 20), mood: 'okay'),
+      SymptomLog(userId: 'u1', date: DateTime(2026, 4, 1), mood: 'good'),
     ], month: DateTime(2026, 3));
 
     expect(days.map((d) => d.dayNumber), [2, 14]);
@@ -2066,16 +2074,21 @@ final pushServiceProvider = Provider<PushService>((ref) {
 });
 ```
 
-(imports `package:appwrite/appwrite.dart`, `../services/push_service.dart`), and in `EVE_MOBILE/app/lib/app.dart`'s `EveApp.build`, before returning `MaterialApp.router`:
+(imports `package:appwrite/appwrite.dart`, `../services/push_service.dart`), plus a lifecycle provider in the same file:
 
 ```dart
-    ref.listen<String?>(currentUidProvider, (previous, uid) {
-      final push = ref.read(pushServiceProvider);
-      uid == null ? push.stop() : push.start(onMessage: (_) {});
-    }, fireImmediately: true);
+/// Keeps push subscribed exactly while someone is signed in. Watched by
+/// EveApp, so it also runs for the uid seeded in main.dart (WidgetRef.listen
+/// has no fireImmediately in Riverpod 2).
+final pushLifecycleProvider = Provider<void>((ref) {
+  final push = ref.watch(pushServiceProvider);
+  ref.watch(currentUidProvider) == null ? push.stop() : push.start(onMessage: (_) {});
+});
 ```
 
-`app_test.dart` keeps passing because `currentUidProvider` is null there, so only `stop()` runs; override `pushServiceProvider` in that test with `PushService(MockPush())` (stubbing `close()`) if the analyzer flags the real `Push` construction.
+and in `EVE_MOBILE/app/lib/app.dart`'s `EveApp.build`, before returning `MaterialApp.router`: `ref.watch(pushLifecycleProvider);`. (The earlier draft used `ref.listen(..., fireImmediately: true)`, which does not compile: `WidgetRef.listen` has no `fireImmediately` parameter in Riverpod 2.)
+
+`app_test.dart` passes unchanged (verified): with `currentUidProvider` null only `stop()` runs.
 
 - [ ] **Step 2: Verify and commit**
 
@@ -2258,7 +2271,7 @@ Entry point: in the `/onboarding/welcome` route builder, wrap `WelcomeScreen` so
       ),
 ```
 
-Add to `EVE_MOBILE/app/test/core/router/app_router_test.dart`:
+Also add `'/partner/join'` to `_expectedRoutePaths` in that test file (the route-set test asserts the exact set). Then add to `EVE_MOBILE/app/test/core/router/app_router_test.dart`:
 
 ```dart
   testWidgets('Welcome links partners to the join screen', (tester) async {
@@ -2683,7 +2696,7 @@ class _DoctorSummaryScreenState extends State<DoctorSummaryScreen> {
           child: pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text('EVE Doctor-Ready Summary', style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
+              pw.Text('EVE Doctor-Ready Summary', style: const pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
               pw.SizedBox(height: 16),
               pw.Text(summary),
             ],
@@ -2855,7 +2868,7 @@ Imports: `package:eve_app/core/services/ai_proxy_service.dart`, `package:eve_app
 
 - [ ] **Step 4: Router test**
 
-Add to `EVE_MOBILE/app/test/core/router/app_router_test.dart`:
+Add `'/doctor-summary'` to `_expectedRoutePaths` (the route-set test asserts the exact set), then add to `EVE_MOBILE/app/test/core/router/app_router_test.dart`:
 
 ```dart
   testWidgets('Doctor summary is disabled with an explanation when she has no logs', (tester) async {

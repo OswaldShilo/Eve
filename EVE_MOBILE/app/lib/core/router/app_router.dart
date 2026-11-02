@@ -1,78 +1,598 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-/// Temporary placeholder for every route this app declares. Plan 1
-/// (`plans/01-core-workflow.md`) replaces each of these `builder:`
-/// callbacks with the real screen widget for that route.
-class RouteLabelScreen extends StatelessWidget {
-  const RouteLabelScreen({required this.label, super.key});
+import 'package:eve_app/core/constants/appwrite_ids.dart';
+import 'package:eve_app/core/theme/eve_theme.dart';
+import 'package:eve_app/core/providers/appwrite_providers.dart';
+import 'package:eve_app/core/providers/repository_providers.dart';
+import 'package:eve_app/features/onboarding/presentation/widgets/partner_invite_code_dialog.dart';
+import 'package:eve_app/core/services/ai_proxy_service.dart';
+import 'package:eve_app/core/services/appwrite_service.dart';
+import 'package:eve_app/features/onboarding/domain/onboarding_progress.dart';
+import 'package:eve_app/features/partner/presentation/partner_join_screen.dart';
+import 'package:eve_app/features/onboarding/domain/onboarding_sequence.dart';
+import 'package:eve_app/features/onboarding/domain/onboarding_state.dart';
+import 'package:eve_app/features/onboarding/presentation/screens/ai_scope_screen.dart';
+import 'package:eve_app/features/onboarding/presentation/screens/auth_screen.dart';
+import 'package:eve_app/features/onboarding/presentation/screens/completion_screen.dart';
+import 'package:eve_app/features/onboarding/presentation/screens/cycle_goals_screen.dart';
+import 'package:eve_app/features/onboarding/presentation/screens/cycle_info_screen.dart';
+import 'package:eve_app/features/onboarding/presentation/screens/cycle_symptoms_screen.dart';
+import 'package:eve_app/features/onboarding/presentation/screens/food_screen.dart';
+import 'package:eve_app/features/onboarding/presentation/screens/lifestage_screen.dart';
+import 'package:eve_app/features/onboarding/presentation/screens/notifications_screen.dart';
+import 'package:eve_app/features/onboarding/presentation/screens/partner_ask_screen.dart';
+import 'package:eve_app/features/onboarding/presentation/screens/partner_perm_screen.dart';
+import 'package:eve_app/features/onboarding/presentation/screens/partner_rel_screen.dart';
+import 'package:eve_app/features/onboarding/presentation/screens/pregnant_due_screen.dart';
+import 'package:eve_app/features/onboarding/presentation/screens/pregnant_meds_screen.dart';
+import 'package:eve_app/features/onboarding/presentation/screens/pregnant_symptoms_screen.dart';
+import 'package:eve_app/features/onboarding/presentation/screens/profile_screen.dart';
+import 'package:eve_app/features/onboarding/presentation/screens/simplified_branch_screen.dart';
+import 'package:eve_app/features/onboarding/presentation/screens/theme_screen.dart';
+import 'package:eve_app/features/onboarding/presentation/screens/welcome_screen.dart';
+import 'package:eve_app/features/onboarding/presentation/screens/workout_screen.dart';
+import 'package:eve_app/features/chat/presentation/chat_mapping.dart';
+import 'package:eve_app/features/chat/presentation/screens/chat_screen.dart';
+import 'package:eve_app/features/log/presentation/log_mapping.dart';
+import 'package:eve_app/features/log/presentation/widgets/quick_log_sheet.dart';
+import 'package:eve_app/shared/models/symptom_log.dart';
+import 'package:eve_app/features/home/presentation/screens/doctor_summary_screen.dart';
+import 'package:eve_app/features/home/presentation/home_modules.dart';
+import 'package:eve_app/features/home/presentation/screens/home_screen.dart';
+import 'package:eve_app/shared/widgets/eve_bottom_nav.dart';
+import 'package:eve_app/shared/widgets/eve_status_view.dart';
+import 'package:eve_app/features/log/presentation/screens/log_screen.dart';
 
-  final String label;
+/// Signature shared by every onboarding screen except the two bookends
+/// (Welcome, Completion) — confirmed identical across Plan 1 Tasks 3–20.
+typedef _MiddleScreenBuilder = Widget Function({
+  required VoidCallback onContinue,
+  required VoidCallback onBack,
+  required double progressPercent,
+});
+
+final Map<String, _MiddleScreenBuilder> _middleScreenBuilders = {
+  'auth': ({required onContinue, required onBack, required progressPercent}) =>
+      _AuthRoute(onContinue: onContinue, onBack: onBack, progressPercent: progressPercent),
+  'profile': ({required onContinue, required onBack, required progressPercent}) =>
+      ProfileScreen(onContinue: onContinue, onBack: onBack, progressPercent: progressPercent),
+  'lifestage': ({required onContinue, required onBack, required progressPercent}) =>
+      LifeStageScreen(onContinue: onContinue, onBack: onBack, progressPercent: progressPercent),
+  'cycle-info': ({required onContinue, required onBack, required progressPercent}) =>
+      CycleInfoScreen(onContinue: onContinue, onBack: onBack, progressPercent: progressPercent),
+  'cycle-symptoms': ({required onContinue, required onBack, required progressPercent}) =>
+      CycleSymptomsScreen(onContinue: onContinue, onBack: onBack, progressPercent: progressPercent),
+  'cycle-goals': ({required onContinue, required onBack, required progressPercent}) =>
+      CycleGoalsScreen(onContinue: onContinue, onBack: onBack, progressPercent: progressPercent),
+  'pregnant-due': ({required onContinue, required onBack, required progressPercent}) =>
+      PregnantDueScreen(onContinue: onContinue, onBack: onBack, progressPercent: progressPercent),
+  'pregnant-meds': ({required onContinue, required onBack, required progressPercent}) =>
+      PregnantMedsScreen(onContinue: onContinue, onBack: onBack, progressPercent: progressPercent),
+  'pregnant-symptoms': ({required onContinue, required onBack, required progressPercent}) =>
+      PregnantSymptomsScreen(onContinue: onContinue, onBack: onBack, progressPercent: progressPercent),
+  'simplified-branch': ({required onContinue, required onBack, required progressPercent}) =>
+      SimplifiedBranchScreen(onContinue: onContinue, onBack: onBack, progressPercent: progressPercent),
+  'food': ({required onContinue, required onBack, required progressPercent}) =>
+      FoodScreen(onContinue: onContinue, onBack: onBack, progressPercent: progressPercent),
+  'workout': ({required onContinue, required onBack, required progressPercent}) =>
+      WorkoutScreen(onContinue: onContinue, onBack: onBack, progressPercent: progressPercent),
+  'notifications': ({required onContinue, required onBack, required progressPercent}) =>
+      NotificationsScreen(onContinue: onContinue, onBack: onBack, progressPercent: progressPercent),
+  'ai-scope': ({required onContinue, required onBack, required progressPercent}) =>
+      AiScopeScreen(onContinue: onContinue, onBack: onBack, progressPercent: progressPercent),
+  'partner-ask': ({required onContinue, required onBack, required progressPercent}) =>
+      PartnerAskScreen(onContinue: onContinue, onBack: onBack, progressPercent: progressPercent),
+  'partner-rel': ({required onContinue, required onBack, required progressPercent}) =>
+      PartnerRelScreen(onContinue: onContinue, onBack: onBack, progressPercent: progressPercent),
+  'partner-perm': ({required onContinue, required onBack, required progressPercent}) =>
+      PartnerPermScreen(onContinue: onContinue, onBack: onBack, progressPercent: progressPercent),
+  'theme': ({required onContinue, required onBack, required progressPercent}) =>
+      ThemeScreen(onContinue: onContinue, onBack: onBack, progressPercent: progressPercent),
+};
+
+/// Resolves one onboarding screen id to a live widget, computing its
+/// position in the branch-aware sequence (Plan 1 Task 25) and progress
+/// percent (Plan 1 Task 26) fresh on every build from the current
+/// [onboardingStateProvider] value.
+class _OnboardingFlowRoute extends ConsumerWidget {
+  const _OnboardingFlowRoute({required this.screenId});
+
+  final String screenId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(onboardingStateProvider);
+    final sequence = onboardingSequence(state);
+    final currentIndex = sequence.indexOf(screenId);
+
+    void goToScreen(String id) => context.go(routeForScreen(id));
+
+    void goNext() {
+      if (currentIndex == -1 || currentIndex >= sequence.length - 1) {
+        context.go('/home');
+        return;
+      }
+      goToScreen(sequence[currentIndex + 1]);
+    }
+
+    void goBack() {
+      if (currentIndex <= 0) {
+        context.go('/onboarding/welcome');
+        return;
+      }
+      goToScreen(sequence[currentIndex - 1]);
+    }
+
+    final progressPercent = currentIndex == -1
+        ? 10.0
+        : onboardingProgressPercent(currentIndex: currentIndex, totalScreens: sequence.length);
+
+    final builder = _middleScreenBuilders[screenId];
+    if (builder == null) {
+      throw StateError('No screen builder registered for onboarding screen "$screenId".');
+    }
+    return builder(onContinue: goNext, onBack: goBack, progressPercent: progressPercent);
+  }
+}
+
+GoRoute _onboardingRoute(String screenId) {
+  return GoRoute(
+    path: '/onboarding/$screenId',
+    name: 'onboarding-$screenId',
+    builder: (context, state) => _OnboardingFlowRoute(screenId: screenId),
+  );
+}
+
+final GoRouter appRouter = GoRouter(
+  initialLocation: '/',
+  routes: [
+    GoRoute(
+      path: '/',
+      name: 'startup',
+      builder: (context, state) => const _StartupRoute(),
+    ),
+    GoRoute(
+      path: '/onboarding/welcome',
+      name: 'onboarding-welcome',
+      builder: (context, state) => WelcomeScreen(
+        onContinue: () => context.go('/onboarding/auth'),
+        onJoinPartner: () => context.go('/partner/join'),
+      ),
+    ),
+    ..._middleScreenBuilders.keys.map(_onboardingRoute),
+    GoRoute(
+      path: '/onboarding/completion',
+      name: 'onboarding-completion',
+      builder: (context, state) => const _CompletionRoute(),
+    ),
+    GoRoute(
+      path: '/home',
+      name: 'home',
+      builder: (context, state) => const _HomeRoute(),
+    ),
+    GoRoute(
+      path: '/chat',
+      name: 'chat',
+      builder: (context, state) => const _ChatRoute(),
+    ),
+    GoRoute(
+      path: '/log',
+      name: 'log',
+      builder: (context, state) => const _LogRoute(),
+    ),
+    GoRoute(
+      path: '/partner/join',
+      name: 'partner-join',
+      builder: (context, state) => Consumer(
+        builder: (context, ref, _) => PartnerJoinScreen(
+          onSubmit: (code) async {
+            final appwrite = ref.read(appwriteServiceProvider);
+            try {
+              if (await appwrite.currentUserId() == null) await appwrite.signInWithGoogle();
+              ref.read(currentUidProvider.notifier).state = await appwrite.currentUserId();
+              await appwrite.executeJson(AppwriteIds.fnPartnerInvites, {'action': 'acceptInvite', 'inviteCode': code});
+              if (context.mounted) context.go('/chat');
+              return null;
+            } on FunctionCallException catch (e) {
+              return e.message;
+            } catch (_) {
+              return 'Something went wrong. Please try again.';
+            }
+          },
+        ),
+      ),
+    ),
+    GoRoute(
+      path: '/doctor-summary',
+      name: 'doctor-summary',
+      builder: (context, state) => Consumer(builder: (context, ref, _) {
+        final uid = ref.watch(currentUidProvider);
+        if (uid == null) return const RedirectTo('/onboarding/welcome');
+        return ref.watch(logsProvider(uid)).when(
+              data: (logs) => DoctorSummaryScreen(
+                logs: [for (final log in logs) log.toRow()],
+                generateSummary: (_) => AiProxyService(ref.read(appwriteServiceProvider)).generateDoctorSummary(),
+              ),
+              loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+              error: (_, __) => const Scaffold(body: Center(child: Text('Your logs could not be loaded.'))),
+            );
+      }),
+    ),
+  ],
+);
+
+/// Saves her answers on "Enter EVE" (busy while saving), shows the partner
+/// invite code when she invited one, then opens Home. System back returns to
+/// the last survey screen.
+class _CompletionRoute extends ConsumerStatefulWidget {
+  const _CompletionRoute();
+
+  @override
+  ConsumerState<_CompletionRoute> createState() => _CompletionRouteState();
+}
+
+class _CompletionRouteState extends ConsumerState<_CompletionRoute> {
+  bool _saving = false;
+
+  Future<void> _finish() async {
+    if (_saving) return;
+    final uid = ref.read(currentUidProvider);
+    String? inviteCode;
+    if (uid != null) {
+      setState(() => _saving = true);
+      try {
+        inviteCode = await ref.read(onboardingRepositoryProvider).saveOnboarding(uid, ref.read(onboardingStateProvider));
+        ref.invalidate(homeDashboardProvider(uid));
+      } catch (_) {
+        if (mounted) {
+          setState(() => _saving = false);
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('We could not save your answers. Please check your connection and try again.'),
+          ));
+        }
+        return;
+      }
+    }
+    if (!mounted) return;
+    if (inviteCode != null) {
+      await showDialog<void>(context: context, builder: (_) => PartnerInviteCodeDialog(code: inviteCode!));
+    }
+    if (mounted) context.go('/home');
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    final sequence = onboardingSequence(ref.watch(onboardingStateProvider));
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop || _saving) return;
+        context.go(routeForScreen(sequence[sequence.length - 2]));
+      },
+      child: CompletionScreen(busy: _saving, onContinue: _finish),
+    );
+  }
+}
+
+/// Signs in (Google or anonymous guest) before advancing, and records the
+/// uid every repository call is keyed by. The tapped button shows a spinner
+/// and further taps are ignored until sign-in finishes.
+class _AuthRoute extends ConsumerStatefulWidget {
+  const _AuthRoute({required this.onContinue, required this.onBack, required this.progressPercent});
+
+  final VoidCallback onContinue;
+  final VoidCallback onBack;
+  final double progressPercent;
+
+  @override
+  ConsumerState<_AuthRoute> createState() => _AuthRouteState();
+}
+
+class _AuthRouteState extends ConsumerState<_AuthRoute> {
+  bool? _busyGoogle; // null = idle
+
+  Future<void> _signIn({required bool google}) async {
+    if (_busyGoogle != null) return;
+    setState(() => _busyGoogle = google);
+    final appwrite = ref.read(appwriteServiceProvider);
+    try {
+      if (await appwrite.currentUserId() == null) {
+        google ? await appwrite.signInWithGoogle() : await appwrite.signInAsGuest();
+      }
+      ref.read(currentUidProvider.notifier).state = await appwrite.currentUserId();
+      if (mounted) setState(() => _busyGoogle = null);
+      widget.onContinue();
+    } catch (_) {
+      if (mounted) {
+        setState(() => _busyGoogle = null);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Sign-in did not complete. Please try again.')),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => AuthScreen(
+        progressPercent: widget.progressPercent,
+        onBack: widget.onBack,
+        guestBusy: _busyGoogle == false,
+        googleBusy: _busyGoogle == true,
+        onGoogleSignIn: () => _signIn(google: true),
+        onContinue: () => _signIn(google: false),
+      );
+}
+
+/// Where the app opens: signed-out people start onboarding at Welcome; a
+/// signed-in woman who finished onboarding goes straight to Home; a linked
+/// partner (whose chat thread belongs to someone else) goes to Chat; a
+/// signed-in account that never finished onboarding starts again at Welcome
+/// (onboarding answers are only kept in memory until Completion saves them).
+class _StartupRoute extends ConsumerWidget {
+  const _StartupRoute();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final uid = ref.watch(currentUidProvider);
+    if (uid == null) return const RedirectTo('/onboarding/welcome');
+    final dashboard = ref.watch(homeDashboardProvider(uid));
+    return dashboard.when(
+      data: (data) {
+        if (data.onboardingComplete) return const RedirectTo('/home');
+        return ref.watch(chatThreadIdProvider(uid)).when(
+              data: (threadId) => RedirectTo(threadId == uid ? '/onboarding/welcome' : '/chat'),
+              loading: () => const StartupSplash(),
+              error: (_, __) => const RedirectTo('/onboarding/welcome'),
+            );
+      },
+      loading: () => const StartupSplash(),
+      // Home shows its own error state with Retry.
+      error: (_, __) => const RedirectTo('/home'),
+    );
+  }
+}
+
+/// Shown while the startup gate looks up her session.
+class StartupSplash extends StatelessWidget {
+  const StartupSplash({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
       body: Center(
-        child: Text(label, key: const Key('routeLabel')),
+        child: SizedBox(
+          key: Key('startup-splash'),
+          width: 36,
+          height: 36,
+          child: CircularProgressIndicator(strokeWidth: 3.5),
+        ),
       ),
     );
   }
 }
 
-GoRoute _placeholderRoute(String path, String name) {
-  return GoRoute(
-    path: path,
-    name: name,
-    builder: (context, state) => RouteLabelScreen(label: name),
-  );
+/// Replaces the current location with [location] right after the first
+/// frame (go_router forbids navigating during build). Shows the splash
+/// meanwhile.
+class RedirectTo extends StatefulWidget {
+  const RedirectTo(this.location, {super.key});
+
+  final String location;
+
+  @override
+  State<RedirectTo> createState() => _RedirectToState();
 }
 
-/// The app-wide route table. Every screen ID from
-/// plans/00-design-spec.md §5 (the onboarding sequence) and §7
-/// (Home/Chat/Log) has a named route here.
-/// `/onboarding/simplified-branch` is intentionally a single shared route
-/// for the conceive/postpartum/perimenopause branches; the screen reads
-/// `lifeStage` off `onboardingStateProvider` to vary its copy.
-final GoRouter appRouter = GoRouter(
-  initialLocation: '/onboarding/welcome',
-  routes: [
-    _placeholderRoute('/onboarding/welcome', 'onboarding-welcome'),
-    _placeholderRoute('/onboarding/auth', 'onboarding-auth'),
-    _placeholderRoute('/onboarding/profile', 'onboarding-profile'),
-    _placeholderRoute('/onboarding/lifestage', 'onboarding-lifestage'),
-    _placeholderRoute('/onboarding/cycle-info', 'onboarding-cycle-info'),
-    _placeholderRoute(
-      '/onboarding/cycle-symptoms',
-      'onboarding-cycle-symptoms',
-    ),
-    _placeholderRoute('/onboarding/cycle-goals', 'onboarding-cycle-goals'),
-    _placeholderRoute('/onboarding/pregnant-due', 'onboarding-pregnant-due'),
-    _placeholderRoute(
-      '/onboarding/pregnant-meds',
-      'onboarding-pregnant-meds',
-    ),
-    _placeholderRoute(
-      '/onboarding/pregnant-symptoms',
-      'onboarding-pregnant-symptoms',
-    ),
-    _placeholderRoute(
-      '/onboarding/simplified-branch',
-      'onboarding-simplified-branch',
-    ),
-    _placeholderRoute('/onboarding/food', 'onboarding-food'),
-    _placeholderRoute('/onboarding/workout', 'onboarding-workout'),
-    _placeholderRoute(
-      '/onboarding/notifications',
-      'onboarding-notifications',
-    ),
-    _placeholderRoute('/onboarding/ai-scope', 'onboarding-ai-scope'),
-    _placeholderRoute('/onboarding/partner-ask', 'onboarding-partner-ask'),
-    _placeholderRoute('/onboarding/partner-rel', 'onboarding-partner-rel'),
-    _placeholderRoute('/onboarding/partner-perm', 'onboarding-partner-perm'),
-    _placeholderRoute('/onboarding/theme', 'onboarding-theme'),
-    _placeholderRoute('/onboarding/completion', 'onboarding-completion'),
-    _placeholderRoute('/home', 'home'),
-    _placeholderRoute('/chat', 'chat'),
-    _placeholderRoute('/log', 'log'),
-  ],
-);
+class _RedirectToState extends State<RedirectTo> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.go(widget.location);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => const StartupSplash();
+}
+
+/// Home on live data: her name and stage badge from the dashboard, the
+/// bento cards for her life stage ([moduleCardsFor]) and her real check-in
+/// count. Loading and error states replace the old demo-data fallback; the
+/// error state offers Retry.
+class _HomeRoute extends ConsumerWidget {
+  const _HomeRoute();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final uid = ref.watch(currentUidProvider);
+    if (uid == null) return const RedirectTo('/onboarding/welcome');
+
+    Widget shell(Widget body) => Scaffold(
+          body: SafeArea(child: body),
+          bottomNavigationBar: EveBottomNav(
+            currentTab: EveNavTab.home,
+            onHomeTap: () {},
+            onChatTap: () => context.go('/chat'),
+            onLogTap: () => context.go('/log'),
+          ),
+        );
+
+    return ref.watch(homeDashboardProvider(uid)).when(
+          data: (data) {
+            final logs = ref.watch(logsProvider(uid)).valueOrNull;
+            final now = DateTime.now();
+            final thisMonth = logs
+                ?.where((l) => l.date.toLocal().year == now.year && l.date.toLocal().month == now.month)
+                .length;
+            return HomeScreen(
+              greetingName: data.greetingName,
+              phaseBadge: data.phaseBadge,
+              heroStandardMessage: switch (thisMonth) {
+                null => 'Here is your status overview.',
+                0 => 'Log your first check-in from the Log tab.',
+                1 => 'You have logged 1 check-in this month.',
+                final n => 'You have logged $n check-ins this month.',
+              },
+              bentoCards: moduleCardsFor(
+                data.lifeStage,
+                logsThisMonth: thisMonth,
+                onOpenLog: () => context.go('/log'),
+                onOpenChat: () => context.go('/chat'),
+              ),
+              onNavigateChat: () => context.go('/chat'),
+              onNavigateLog: () => context.go('/log'),
+              onNavigateDoctorSummary: () => context.go('/doctor-summary'),
+            );
+          },
+          loading: () => shell(const EveStatusView.loading(message: 'Loading your dashboard…')),
+          error: (_, __) => shell(EveStatusView(
+            key: const Key('home-error'),
+            title: 'We could not load your dashboard',
+            message: 'Please check your connection and try again.',
+            actionLabel: 'Retry',
+            onAction: () => ref.invalidate(homeDashboardProvider(uid)),
+          )),
+        );
+  }
+}
+
+/// Chat on live data. Looks up whose thread this is (hers, or the primary
+/// user's when a linked partner is signed in), streams it, and sends through
+/// the repository. Loading and error states (with Retry) replace the old
+/// endless spinner / demo-thread fallback. A failed send throws back into
+/// ChatScreen, which keeps the typed text and shows a message.
+class _ChatRoute extends ConsumerWidget {
+  const _ChatRoute();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final uid = ref.watch(currentUidProvider);
+    if (uid == null) return const RedirectTo('/onboarding/welcome');
+
+    Widget shell(Widget body) => Scaffold(
+          body: SafeArea(child: body),
+          bottomNavigationBar: EveBottomNav(
+            currentTab: EveNavTab.chat,
+            onHomeTap: () => context.go('/home'),
+            onChatTap: () {},
+            onLogTap: () => context.go('/log'),
+          ),
+        );
+
+    Widget error(VoidCallback retry) => shell(EveStatusView(
+          key: const Key('chat-error'),
+          title: 'We could not load your chat',
+          message: 'Please check your connection and try again.',
+          actionLabel: 'Retry',
+          onAction: retry,
+        ));
+
+    return ref.watch(chatThreadIdProvider(uid)).when(
+          loading: () => shell(const EveStatusView.loading(message: 'Opening your chat…')),
+          error: (_, __) => error(() => ref.invalidate(chatThreadIdProvider(uid))),
+          data: (threadId) {
+            final viewerIsPartner = threadId != uid;
+            // Her saved partner name is not readable from the client; show
+            // the relationship she chose when known, never a made-up name.
+            final relation = ref.watch(onboardingStateProvider.select((s) => s.partnerRelation));
+            final partnerName = viewerIsPartner || relation.isEmpty ? 'Your partner' : relation;
+            return ref.watch(chatMessagesProvider(threadId)).when(
+                  loading: () => shell(const EveStatusView.loading(message: 'Opening your chat…')),
+                  error: (_, __) => error(() => ref.invalidate(chatMessagesProvider(threadId))),
+                  data: (messages) => ChatScreen(
+                    partnerName: partnerName,
+                    partnerStatus: 'Partner chat with Eve',
+                    thread: [
+                      for (final m in messages) chatMessageDataFor(m, viewerIsPartner: viewerIsPartner),
+                    ],
+                    onSendMessage: (text) => ref.read(chatRepositoryProvider).sendMessage(threadId, text),
+                    onNavigateHome: () => context.go('/home'),
+                    onNavigateLog: () => context.go('/log'),
+                  ),
+                );
+          },
+        );
+  }
+}
+
+/// Log on live data: the month she is looking at (arrows move it), her logs
+/// for that month on the calendar, and the quick-log sheet. Loading and error
+/// (Retry) states replace the old demo fallback. A failed save throws back
+/// into the sheet, which keeps the entry open with a message.
+class _LogRoute extends ConsumerStatefulWidget {
+  const _LogRoute();
+
+  @override
+  ConsumerState<_LogRoute> createState() => _LogRouteState();
+}
+
+class _LogRouteState extends ConsumerState<_LogRoute> {
+  late DateTime _month = DateTime(DateTime.now().year, DateTime.now().month);
+
+  void _shiftMonth(int delta) => setState(() => _month = DateTime(_month.year, _month.month + delta));
+
+  Future<void> _openQuickLog(String uid) => showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: EveTokens.of(context).card,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          side: BorderSide(color: EveColors.outline, width: 3.5),
+        ),
+        builder: (sheetContext) => QuickLogSheet(
+          onSave: (result) async {
+            await ref.read(logRepositoryProvider).addLog(
+                  uid,
+                  SymptomLog(
+                    userId: uid,
+                    date: DateTime.now().toUtc(),
+                    symptoms: result.symptoms,
+                    mood: result.mood,
+                    painLevel: result.painLevel,
+                    notes: result.notes,
+                  ),
+                );
+            if (sheetContext.mounted) Navigator.of(sheetContext).pop();
+          },
+        ),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    final uid = ref.watch(currentUidProvider);
+    if (uid == null) return const RedirectTo('/onboarding/welcome');
+
+    Widget shell(Widget body) => Scaffold(
+          body: SafeArea(child: body),
+          bottomNavigationBar: EveBottomNav(
+            currentTab: EveNavTab.log,
+            onHomeTap: () => context.go('/home'),
+            onChatTap: () => context.go('/chat'),
+            onLogTap: () {},
+          ),
+        );
+
+    return ref.watch(logsProvider(uid)).when(
+          data: (logs) => LogScreen(
+            month: _month,
+            days: calendarDaysFor(logs, month: _month),
+            onPreviousMonth: () => _shiftMonth(-1),
+            onNextMonth: () => _shiftMonth(1),
+            onNavigateHome: () => context.go('/home'),
+            onNavigateChat: () => context.go('/chat'),
+            onNewEntry: () => _openQuickLog(uid),
+          ),
+          loading: () => shell(const EveStatusView.loading(message: 'Loading your calendar…')),
+          error: (_, __) => shell(EveStatusView(
+            key: const Key('log-error'),
+            title: 'We could not load your logs',
+            message: 'Please check your connection and try again.',
+            actionLabel: 'Retry',
+            onAction: () => ref.invalidate(logsProvider(uid)),
+          )),
+        );
+  }
+}

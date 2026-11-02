@@ -57,6 +57,12 @@ docker run -it --rm `
 
 Open `http://localhost:20080` and complete the wizard: HTTP port `80`, HTTPS port `443`, hostname `localhost`. Expected: `docker ps` lists the `appwrite` stack (appwrite, mariadb, redis, executor, realtime, …) and `http://localhost/console` loads.
 
+> **Verified on Windows 11 / Docker Desktop 29.9 (2026-11-01).** The web wizard can be skipped: run the same command without `-it`/`--publish` and with `--interactive=N --http-port=80 --https-port=443` appended. Two Windows-specific fixes were needed:
+> 1. Port **8883** (Traefik's MQTT entrypoint) is inside a Windows excluded port range (`netsh interface ipv4 show excludedportrange protocol=tcp`), so `docker compose up` fails with `bind: An attempt was made to access a socket in a way forbidden`. Append `_APP_MQTT_PORT=18883` to `appwrite/.env` and run `docker compose -f appwrite/docker-compose.yml up -d`. EVE does not use MQTT.
+> 2. Function runtimes receive `APPWRITE_FUNCTION_API_ENDPOINT=http://localhost/v1`, which a runtime container cannot reach (`TypeError: fetch failed`), and a function variable of the same name does **not** override it. `serverClient` therefore honours `EVE_API_ENDPOINT` first (Task 5); set it once as a **project** variable on the local project: Console → Settings → Global variables → `EVE_API_ENDPOINT` = `http://host.docker.internal/v1`. Do not set it on Cloud.
+>
+> The API key needs these scopes beyond the obvious ones for `appwrite push`: `collections.write`/`attributes.write`/`indexes.write` (legacy names the CLI still checks), `rules.read` (function push), and `project.write` (to create the global variable via API).
+
 - [ ] **Step 3: Create the project**
 
 In the console: sign up (local admin account), **Create project** → name `EVE (local)`, **Project ID `eve-local`**. Then **Overview → Integrations → API keys → Create API key** named `cli-local` with all scopes. Copy the secret.
@@ -484,7 +490,7 @@ git commit -m "feat(functions): scaffold TypeScript functions package with execu
 **Interfaces:**
 - Produces: `AiPrompt`, `AiResult`, `AiProvider`, `ProviderError`, `AllProvidersFailedError`, `geminiProvider(opts)`, `openRouterProvider(opts)`, `generateWithFallback(providers, prompt, log?)`, `providersFromEnv(env, fetchFn?)`. Task 7 and roadmap M19 call only `generateWithFallback`/`providersFromEnv`.
 
-**Fallback rule:** the next provider is tried when the current one times out, returns HTTP 429 or any other non-2xx, throws a network error, or returns empty text. Gemini gets 12 s, OpenRouter 15 s — together under Appwrite's 30 s synchronous-execution limit.
+**Fallback rule:** the next provider is tried when the current one times out, returns HTTP 429 or any other non-2xx, throws a network error, or returns empty text. Gemini gets 12 s, OpenRouter 15 s — together under Appwrite's 30 s synchronous-execution limit. (Verified on local Appwrite 2.6.2: a synchronous execution is cut off at 30 s with `408 Synchronous function execution timed out`, regardless of the function's own `timeout`; the 25 s probe completed, the 45 s one returned 408 at 30.1 s.)
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -1368,7 +1374,7 @@ void main() {
     final push = MockPush();
     final subscription = MockPushSubscription();
     PushCallback? captured;
-    when(() => push.subscribe(null, any(), background: true, title: 'Eve')).thenAnswer((invocation) async {
+    when(() => push.subscribe(any(that: isNull), any(), background: any(named: 'background', that: isTrue), title: any(named: 'title', that: equals('Eve')))).thenAnswer((invocation) async {
       captured = invocation.positionalArguments[1] as PushCallback;
       return subscription;
     });
@@ -1388,7 +1394,7 @@ void main() {
   test('stop unsubscribes and closes the connection', () async {
     final push = MockPush();
     final subscription = MockPushSubscription();
-    when(() => push.subscribe(null, any(), background: true, title: 'Eve')).thenAnswer((_) async => subscription);
+    when(() => push.subscribe(any(that: isNull), any(), background: any(named: 'background', that: isTrue), title: any(named: 'title', that: equals('Eve')))).thenAnswer((_) async => subscription);
 
     final service = PushService(push);
     await service.start(onMessage: (_) {});
