@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import 'package:eve_app/core/constants/appwrite_ids.dart';
+import 'package:eve_app/core/theme/eve_theme.dart';
 import 'package:eve_app/core/providers/appwrite_providers.dart';
 import 'package:eve_app/core/providers/repository_providers.dart';
 import 'package:eve_app/features/onboarding/presentation/widgets/partner_invite_code_dialog.dart';
@@ -180,42 +180,7 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/log',
       name: 'log',
-      builder: (context, state) => Consumer(builder: (context, ref, _) {
-        final uid = ref.watch(currentUidProvider);
-        final now = DateTime.now();
-        final fallback = LogScreen(onNavigateHome: () => context.go('/home'), onNavigateChat: () => context.go('/chat'));
-        if (uid == null) return const RedirectTo('/onboarding/welcome');
-        return ref.watch(logsProvider(uid)).when(
-              data: (logs) => LogScreen(
-                monthLabel: DateFormat('MMMM yyyy').format(now),
-                days: calendarDaysFor(logs, month: now),
-                onNavigateHome: () => context.go('/home'),
-                onNavigateChat: () => context.go('/chat'),
-                onNewEntry: () => showModalBottomSheet<void>(
-                  context: context,
-                  isScrollControlled: true,
-                  builder: (sheetContext) => QuickLogSheet(
-                    onSave: (result) async {
-                      await ref.read(logRepositoryProvider).addLog(
-                            uid,
-                            SymptomLog(
-                              userId: uid,
-                              date: DateTime.now().toUtc(),
-                              symptoms: result.symptoms,
-                              mood: result.mood,
-                              painLevel: result.painLevel,
-                              notes: result.notes,
-                            ),
-                          );
-                      if (sheetContext.mounted) Navigator.of(sheetContext).pop();
-                    },
-                  ),
-                ),
-              ),
-              loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
-              error: (_, __) => fallback,
-            );
-      }),
+      builder: (context, state) => const _LogRoute(),
     ),
     GoRoute(
       path: '/partner/join',
@@ -549,6 +514,85 @@ class _ChatRoute extends ConsumerWidget {
                   ),
                 );
           },
+        );
+  }
+}
+
+/// Log on live data: the month she is looking at (arrows move it), her logs
+/// for that month on the calendar, and the quick-log sheet. Loading and error
+/// (Retry) states replace the old demo fallback. A failed save throws back
+/// into the sheet, which keeps the entry open with a message.
+class _LogRoute extends ConsumerStatefulWidget {
+  const _LogRoute();
+
+  @override
+  ConsumerState<_LogRoute> createState() => _LogRouteState();
+}
+
+class _LogRouteState extends ConsumerState<_LogRoute> {
+  late DateTime _month = DateTime(DateTime.now().year, DateTime.now().month);
+
+  void _shiftMonth(int delta) => setState(() => _month = DateTime(_month.year, _month.month + delta));
+
+  Future<void> _openQuickLog(String uid) => showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: EveTokens.of(context).card,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          side: BorderSide(color: EveColors.outline, width: 3.5),
+        ),
+        builder: (sheetContext) => QuickLogSheet(
+          onSave: (result) async {
+            await ref.read(logRepositoryProvider).addLog(
+                  uid,
+                  SymptomLog(
+                    userId: uid,
+                    date: DateTime.now().toUtc(),
+                    symptoms: result.symptoms,
+                    mood: result.mood,
+                    painLevel: result.painLevel,
+                    notes: result.notes,
+                  ),
+                );
+            if (sheetContext.mounted) Navigator.of(sheetContext).pop();
+          },
+        ),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    final uid = ref.watch(currentUidProvider);
+    if (uid == null) return const RedirectTo('/onboarding/welcome');
+
+    Widget shell(Widget body) => Scaffold(
+          body: SafeArea(child: body),
+          bottomNavigationBar: EveBottomNav(
+            currentTab: EveNavTab.log,
+            onHomeTap: () => context.go('/home'),
+            onChatTap: () => context.go('/chat'),
+            onLogTap: () {},
+          ),
+        );
+
+    return ref.watch(logsProvider(uid)).when(
+          data: (logs) => LogScreen(
+            month: _month,
+            days: calendarDaysFor(logs, month: _month),
+            onPreviousMonth: () => _shiftMonth(-1),
+            onNextMonth: () => _shiftMonth(1),
+            onNavigateHome: () => context.go('/home'),
+            onNavigateChat: () => context.go('/chat'),
+            onNewEntry: () => _openQuickLog(uid),
+          ),
+          loading: () => shell(const EveStatusView.loading(message: 'Loading your calendar…')),
+          error: (_, __) => shell(EveStatusView(
+            key: const Key('log-error'),
+            title: 'We could not load your logs',
+            message: 'Please check your connection and try again.',
+            actionLabel: 'Retry',
+            onAction: () => ref.invalidate(logsProvider(uid)),
+          )),
         );
   }
 }
