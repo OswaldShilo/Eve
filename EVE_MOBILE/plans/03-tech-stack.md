@@ -201,7 +201,7 @@ iOS uses `ASWebAuthenticationSession` and needs no URL scheme. Set the minimum t
 
 - [ ] **Step 5: Register the app platforms in Appwrite**
 
-Console → Overview → Platforms → Add platform → **Flutter**: Android with package `com.thinkroot.eve.eve_app`, iOS with bundle ID from `ios/Runner.xcodeproj` (`com.thinkroot.eve.eveApp`). Without a registered platform Appwrite rejects client requests with `general_unknown_origin`.
+Console → Overview → Platforms → Add platform → **Flutter**: Android with package `com.shilo.eve.eve_app`, iOS with bundle ID from `ios/Runner.xcodeproj` (`com.shilo.eve.eveApp`). Without a registered platform Appwrite rejects client requests with `general_unknown_origin`.
 
 - [ ] **Step 6: Commit**
 

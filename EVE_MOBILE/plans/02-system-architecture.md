@@ -43,7 +43,7 @@
 
 ```bash
 cd "D:/Projects/favourites/eve/EVE_MOBILE"
-flutter create --org com.thinkroot.eve --project-name eve_app --platforms android,ios app
+flutter create --org com.shilo.eve --project-name eve_app --platforms android,ios app
 ```
 
 Expected: command completes and prints "All done!" with `app/` containing `lib/`, `test/`, `android/`, `ios/`, `pubspec.yaml`.
