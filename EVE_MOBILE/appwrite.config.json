@@ -1,7 +1,7 @@
 {
-  "projectId": "eve-local",
-  "projectName": "EVE (local)",
-  "endpoint": "http://localhost/v1",
+  "projectId": "6ae966a5002293c1e5c3",
+  "projectName": "eve-dev",
+  "endpoint": "https://sgp.cloud.appwrite.io/v1",
   "tablesDB": [
     {
       "$id": "eve",

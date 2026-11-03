@@ -41,6 +41,11 @@ Backend:
     cd functions && npm test                        # all function unit tests (no Appwrite needed)
     cd .. && appwrite push functions --all --force  # deploy to the logged-in project
 
+`appwrite.config.json` targets Cloud eve-dev. To push to local Docker instead, temporarily set its
+`projectId` to `eve-local` and `endpoint` to `http://localhost/v1` (do not commit that).
+Google sign-in returns to the app via the `appwrite-callback-<projectId>` scheme registered in
+`android/app/src/main/AndroidManifest.xml`; add one there for any new project.
+
 Notes from the local setup (2026-11-01):
 
 - Deploy one function per command (`--function-id <id>`); passing several `--function-id` flags deploys only the last.
