@@ -858,7 +858,7 @@
         "messages.write",
         "targets.read"
       ],
-      "schedule": "*/30 * * * *",
+      "schedule": "",
       "timeout": 120,
       "enabled": true,
       "logging": true,
