@@ -53,6 +53,7 @@ void main() {
     expect(find.byKey(const Key('quick-log-error')), findsOneWidget);
     expect(find.text('Keep this note'), findsOneWidget);
     expect(find.byKey(const Key('eve-button-busy')), findsNothing);
+    expect(find.text('Try again'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('quick-log-save')));
     await tester.pump();
@@ -82,6 +83,45 @@ void main() {
     await tester.pump();
     expect(calls, 1);
   });
+
+  for (final scale in [1.0, 1.5]) {
+    testWidgets('Save stays visible above the keyboard without scrolling (360x640, x$scale)', (tester) async {
+      tester.view.physicalSize = const Size(360, 640);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(MaterialApp(
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(scale),
+            viewInsets: const EdgeInsets.only(bottom: 300),
+          ),
+          child: child!,
+        ),
+        home: Scaffold(
+          resizeToAvoidBottomInset: false,
+          body: Align(
+            alignment: Alignment.bottomCenter,
+            child: QuickLogSheet(onSave: (_) async => throw Exception('offline')),
+          ),
+        ),
+      ));
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+
+      final save = find.byKey(const Key('quick-log-save'));
+      expect(tester.getBottomLeft(save).dy, lessThanOrEqualTo(640 - 300 + 1));
+      expect(tester.getTopLeft(save).dy, greaterThanOrEqualTo(0));
+
+      // After a failed save, the message and the retry button are both visible.
+      await tester.tap(save);
+      await tester.pump();
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+      expect(tester.getTopLeft(find.byKey(const Key('quick-log-error'))).dy, greaterThanOrEqualTo(0));
+      expect(tester.getBottomLeft(save).dy, lessThanOrEqualTo(640 - 300 + 1));
+    });
+  }
 
   testWidgets('sits above the keyboard on a 360x640 phone at 1.3x text', (tester) async {
     tester.view.physicalSize = const Size(360, 640);

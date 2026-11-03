@@ -11,6 +11,10 @@ import 'package:eve_app/shared/widgets/eve_components.dart';
 /// `.legend-row` card, a full-month `.calendar-grid` (weekday headers,
 /// leading blanks, every day of the month), the selected day's
 /// `.log-mascot-toast`, and the `.fab-btn` for a new entry.
+///
+/// Unlike the mock, where the + button floats over the page, the toast and
+/// the button share a row pinned above the bottom nav: the button can never
+/// cover the selected day's details, and the calendar scrolls above them.
 class LogScreen extends StatefulWidget {
   LogScreen({
     super.key,
@@ -98,159 +102,176 @@ class _LogScreenState extends State<LogScreen> {
 
     return Scaffold(
       body: SafeArea(
-        child: ListView(
-          // Bottom padding keeps the toast clear of the floating + button.
-          padding: const EdgeInsets.fromLTRB(18, 12, 18, 96),
+        child: Column(
           children: [
-            // `.log-header`
-            Row(
-              children: [
-                Expanded(child: Text(label, style: text.headlineSmall)),
-                EveIconSquareButton(
-                  key: const Key('log-prev-month'),
-                  icon: Icons.chevron_left_rounded,
-                  semanticLabel: 'Previous month',
-                  onPressed: widget.onPreviousMonth,
-                ),
-                const SizedBox(width: 8),
-                EveIconSquareButton(
-                  key: const Key('log-next-month'),
-                  icon: Icons.chevron_right_rounded,
-                  semanticLabel: 'Next month',
-                  onPressed: widget.onNextMonth,
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            // `.legend-row`
-            EveCard(
-              radius: 18,
-              shadow: 4,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              child: Wrap(
-                spacing: 12,
-                runSpacing: 6,
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(18, 12, 18, 12),
                 children: [
-                  for (final entry in _legend)
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
+                  // `.log-header`
+                  Row(
+                    children: [
+                      Expanded(child: Text(label, style: text.headlineSmall)),
+                      EveIconSquareButton(
+                        key: const Key('log-prev-month'),
+                        icon: Icons.chevron_left_rounded,
+                        semanticLabel: 'Previous month',
+                        onPressed: widget.onPreviousMonth,
+                      ),
+                      const SizedBox(width: 8),
+                      EveIconSquareButton(
+                        key: const Key('log-next-month'),
+                        icon: Icons.chevron_right_rounded,
+                        semanticLabel: 'Next month',
+                        onPressed: widget.onNextMonth,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  // `.legend-row`
+                  EveCard(
+                    key: const Key('log-legend'),
+                    radius: 18,
+                    shadow: 4,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    child: Wrap(
+                      spacing: 12,
+                      runSpacing: 6,
                       children: [
-                        Container(
-                          width: 10,
-                          height: 10,
-                          decoration: BoxDecoration(
-                            color: entry.$2,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: EveColors.outline, width: 2),
+                        for (final entry in _legend)
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 10,
+                                height: 10,
+                                decoration: BoxDecoration(
+                                  color: entry.$2,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: EveColors.outline, width: 2),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              // `.legend-item`: 0.74rem, weight 800, ruby-dark.
+                              Text(
+                                entry.$1,
+                                style: text.labelSmall!.copyWith(color: tokens.ink, fontWeight: FontWeight.w800),
+                              ),
+                            ],
                           ),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(entry.$1, style: text.labelSmall!.copyWith(color: tokens.ink)),
                       ],
                     ),
+                  ),
+                  const SizedBox(height: 12),
+                  // `.calendar-grid`
+                  EveCard(
+                    key: const Key('log-calendar'),
+                    radius: 22,
+                    shadow: 6,
+                    padding: const EdgeInsets.all(12),
+                    child: GridView.count(
+                      crossAxisCount: 7,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      mainAxisSpacing: 6,
+                      crossAxisSpacing: 6,
+                      children: [
+                        for (final d in _weekdays)
+                          Center(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(d, style: text.labelMedium!.copyWith(color: EveColors.rubyMain)),
+                            ),
+                          ),
+                        for (var i = 0; i < leadingBlanks; i++) const SizedBox.shrink(),
+                        for (var day = 1; day <= daysInMonth; day++)
+                          CalendarDayCell(
+                            data: byDay[day] ?? CalendarDayData(dayNumber: day),
+                            hasData: byDay.containsKey(day),
+                            selected: day == selectedDay,
+                            onTap: () => setState(() => _selectedDay = day),
+                          ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
-            const SizedBox(height: 12),
-            // `.calendar-grid`
-            EveCard(
-              key: const Key('log-calendar'),
-              radius: 22,
-              shadow: 6,
-              padding: const EdgeInsets.all(12),
-              child: GridView.count(
-                crossAxisCount: 7,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: 6,
-                crossAxisSpacing: 6,
-                children: [
-                  for (final d in _weekdays)
-                    Center(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          d,
-                          style: text.labelMedium!.copyWith(color: EveColors.rubyMain),
-                        ),
-                      ),
-                    ),
-                  for (var i = 0; i < leadingBlanks; i++) const SizedBox.shrink(),
-                  for (var day = 1; day <= daysInMonth; day++)
-                    CalendarDayCell(
-                      data: byDay[day] ?? CalendarDayData(dayNumber: day),
-                      hasData: byDay.containsKey(day),
-                      selected: day == selectedDay,
-                      onTap: () => setState(() => _selectedDay = day),
-                    ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            // `.log-mascot-toast`
-            EveCard(
-              key: const Key('log-day-toast'),
-              color: tokens.soft,
-              radius: 20,
-              shadow: 5,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            // The selected day's toast and the + button share a row pinned
+            // above the nav, so the button never covers the day's details.
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 4, 18, 14),
               child: Row(
                 children: [
-                  SizedBox(
-                    width: 48,
-                    height: 48,
-                    child: RepaintBoundary(
-                      child: EveMascot(
-                        emotion: selected?.emotion ?? EveEmotion.neutral,
-                        size: 46,
+                  // `.log-mascot-toast`
+                  Expanded(
+                    child: EveCard(
+                      key: const Key('log-day-toast'),
+                      color: tokens.soft,
+                      radius: 20,
+                      shadow: 5,
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: 48,
+                            height: 48,
+                            child: RepaintBoundary(
+                              child: EveMascot(emotion: selected?.emotion ?? EveEmotion.neutral, size: 46),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  selected?.dateTitle ??
+                                      DateFormat('MMMM d').format(DateTime(year, month, selectedDay)),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: text.titleSmall!.copyWith(color: tokens.ink),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  selected?.detail ??
+                                      (widget.days.isEmpty
+                                          ? 'No logs this month yet. Tap + to add how you feel.'
+                                          : 'No logs recorded.'),
+                                  maxLines: 3,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: text.bodySmall,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          selected?.dateTitle ?? DateFormat('MMMM d').format(DateTime(year, month, selectedDay)),
-                          style: text.titleSmall!.copyWith(color: tokens.ink),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          selected?.detail ??
-                              (widget.days.isEmpty
-                                  ? 'No logs this month yet. Tap + to add how you feel.'
-                                  : 'No logs recorded.'),
-                          style: text.bodySmall,
-                        ),
-                      ],
+                  // `.fab-btn` (52px, outlined ruby circle)
+                  Semantics(
+                    button: true,
+                    label: 'New entry',
+                    child: GestureDetector(
+                      key: const Key('log-fab-new-entry'),
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => widget.onNewEntry?.call(),
+                      child: Container(
+                        width: 52,
+                        height: 52,
+                        margin: const EdgeInsets.only(bottom: 6),
+                        alignment: Alignment.center,
+                        decoration: eveOutlined(color: EveColors.rubyMain, shape: BoxShape.circle, shadow: 6),
+                        child: const Icon(Icons.add_rounded, color: Colors.white, size: 30),
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
           ],
-        ),
-      ),
-      // `.fab-btn`
-      floatingActionButton: Semantics(
-        button: true,
-        label: 'New entry',
-        child: GestureDetector(
-          key: const Key('log-fab-new-entry'),
-          onTap: () => widget.onNewEntry?.call(),
-          child: Container(
-            width: 56,
-            height: 56,
-            margin: const EdgeInsets.only(bottom: 6),
-            alignment: Alignment.center,
-            decoration: eveOutlined(
-              color: EveColors.rubyMain,
-              shape: BoxShape.circle,
-              shadow: 6,
-            ),
-            child: const Icon(Icons.add_rounded, color: Colors.white, size: 30),
-          ),
         ),
       ),
       bottomNavigationBar: EveBottomNav(

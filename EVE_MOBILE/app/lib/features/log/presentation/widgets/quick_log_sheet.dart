@@ -48,12 +48,14 @@ class _QuickLogSheetState extends State<QuickLogSheet> {
       _failed = false;
     });
     try {
-      await widget.onSave(QuickLogResult(
-        mood: _mood,
-        symptoms: _symptoms.where(_selectedSymptoms.contains).toList(),
-        painLevel: _pain.round(),
-        notes: _notes.text.trim(),
-      ));
+      await widget.onSave(
+        QuickLogResult(
+          mood: _mood,
+          symptoms: _symptoms.where(_selectedSymptoms.contains).toList(),
+          painLevel: _pain.round(),
+          notes: _notes.text.trim(),
+        ),
+      );
     } catch (_) {
       if (mounted) setState(() => _failed = true);
     } finally {
@@ -67,76 +69,100 @@ class _QuickLogSheetState extends State<QuickLogSheet> {
     return Padding(
       // Lift the whole sheet above the soft keyboard.
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('How are you feeling today?', style: text.headlineSmall),
-            const SizedBox(height: 12),
-            Wrap(spacing: 8, runSpacing: 8, children: [
-              for (final entry in _moods.entries)
-                EveChip(
-                  label: entry.key,
-                  size: EveChipSize.regular,
-                  selected: _mood == entry.value,
-                  onTap: () => setState(() => _mood = entry.value),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // The fields scroll; the error and Save below stay pinned, so Save
+          // is always reachable above the keyboard.
+          Flexible(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('How are you feeling today?', style: text.headlineSmall),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final entry in _moods.entries)
+                        EveChip(
+                          label: entry.key,
+                          size: EveChipSize.regular,
+                          selected: _mood == entry.value,
+                          onTap: () => setState(() => _mood = entry.value),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  const EveFormLabel('Symptoms'),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final symptom in _symptoms)
+                        EveChip(
+                          label: symptom,
+                          size: EveChipSize.regular,
+                          selected: _selectedSymptoms.contains(symptom),
+                          onTap: () => setState(
+                            () => _selectedSymptoms.contains(symptom)
+                                ? _selectedSymptoms.remove(symptom)
+                                : _selectedSymptoms.add(symptom),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  EveFormLabel('Pain level: ${_pain.round()} of 10'),
+                  SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      activeTrackColor: EveColors.rubyMain,
+                      inactiveTrackColor: EveColors.progressTrack,
+                      thumbColor: EveColors.rubyMain,
+                      overlayColor: EveColors.rubyMain.withValues(alpha: 0.12),
+                    ),
+                    child: Slider(
+                      value: _pain,
+                      min: 0,
+                      max: 10,
+                      divisions: 10,
+                      label: '${_pain.round()}',
+                      onChanged: (v) => setState(() => _pain = v),
+                    ),
+                  ),
+                  EveTextField(label: 'Notes (optional)', controller: _notes, maxLines: 2),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_failed) ...[
+                  Text(
+                    'Your entry was not saved. Check your connection, then tap Try again.',
+                    key: const Key('quick-log-error'),
+                    style: text.labelMedium!.copyWith(color: EveColors.rubyMain),
+                  ),
+                  const SizedBox(height: 10),
+                ],
+                EveButton(
+                  key: const Key('quick-log-save'),
+                  label: _failed ? 'Try again' : 'Save',
+                  busy: _saving,
+                  onPressed: _save,
                 ),
-            ]),
-            const SizedBox(height: 16),
-            const EveFormLabel('Symptoms'),
-            Wrap(spacing: 8, runSpacing: 8, children: [
-              for (final symptom in _symptoms)
-                EveChip(
-                  label: symptom,
-                  size: EveChipSize.regular,
-                  selected: _selectedSymptoms.contains(symptom),
-                  onTap: () => setState(() => _selectedSymptoms.contains(symptom)
-                      ? _selectedSymptoms.remove(symptom)
-                      : _selectedSymptoms.add(symptom)),
-                ),
-            ]),
-            const SizedBox(height: 16),
-            EveFormLabel('Pain level: ${_pain.round()} of 10'),
-            SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                activeTrackColor: EveColors.rubyMain,
-                inactiveTrackColor: EveColors.progressTrack,
-                thumbColor: EveColors.rubyMain,
-                overlayColor: EveColors.rubyMain.withValues(alpha: 0.12),
-              ),
-              child: Slider(
-                value: _pain,
-                min: 0,
-                max: 10,
-                divisions: 10,
-                label: '${_pain.round()}',
-                onChanged: (v) => setState(() => _pain = v),
-              ),
+              ],
             ),
-            EveTextField(
-              label: 'Notes (optional)',
-              controller: _notes,
-              maxLines: 2,
-            ),
-            if (_failed) ...[
-              const SizedBox(height: 10),
-              Text(
-                'Your entry was not saved. Please check your connection and try again.',
-                key: const Key('quick-log-error'),
-                style: text.labelMedium!.copyWith(color: EveColors.rubyMain),
-              ),
-            ],
-            const SizedBox(height: 16),
-            EveButton(
-              key: const Key('quick-log-save'),
-              label: 'Save',
-              busy: _saving,
-              onPressed: _save,
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

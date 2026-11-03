@@ -119,6 +119,16 @@ void main() {
     expect(find.text('No logs this month yet. Tap + to add how you feel.'), findsOneWidget);
   });
 
+  testWidgets('the legend is one outlined card with all four categories', (tester) async {
+    await tester.pumpWidget(MaterialApp(theme: EveTheme.defaultTheme(), home: LogScreen(month: DateTime(2026, 3))));
+
+    final legend = find.byKey(const Key('log-legend'));
+    expect(legend, findsOneWidget);
+    for (final label in ['Period', 'Fertile Window', 'Symptom', 'Appointment']) {
+      expect(find.descendant(of: legend, matching: find.text(label)), findsOneWidget);
+    }
+  });
+
   testWidgets('the + button opens a new entry', (tester) async {
     var opened = 0;
     await tester.pumpWidget(MaterialApp(home: LogScreen(onNewEntry: () => opened++)));
@@ -153,6 +163,14 @@ void main() {
       ));
       await tester.pump(const Duration(milliseconds: 300));
       expect(tester.takeException(), isNull);
+
+      // The + button sits beside the selected-day toast, never on top of it,
+      // and both stay on screen above the bottom nav.
+      final fab = tester.getRect(find.byKey(const Key('log-fab-new-entry')));
+      final toast = tester.getRect(find.byKey(const Key('log-day-toast')));
+      expect(fab.overlaps(toast), isFalse);
+      expect(fab.bottom, lessThanOrEqualTo(640));
+      expect(toast.bottom, lessThanOrEqualTo(640));
 
       await tester.drag(find.byType(ListView), const Offset(0, -2000));
       await tester.pump();
