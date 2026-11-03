@@ -60,7 +60,7 @@ void main() {
     expect(await service.currentUserId(), isNull);
   });
 
-  test('executeJson sends a synchronous JSON execution and decodes the response', () async {
+  test('executeJson sends the route and body to eveApi synchronously and decodes the response', () async {
     final execution = MockExecution();
     when(() => execution.responseStatusCode).thenReturn(200);
     when(() => execution.responseBody).thenReturn('{"inviteCode":"ABC234"}');
@@ -74,8 +74,8 @@ void main() {
 
     expect(result, {'inviteCode': 'ABC234'});
     verify(() => functions.createExecution(
-          functionId: 'partnerInvites',
-          body: '{"action":"createInvite"}',
+          functionId: 'eveApi',
+          body: '{"route":"partnerInvites","action":"createInvite"}',
           xasync: false,
         )).called(1);
   });

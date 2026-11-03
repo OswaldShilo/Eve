@@ -15,6 +15,10 @@ class AppwriteIds {
   static const String partnerLookups = 'partner_lookups';
   static const String chatMessages = 'chat_messages';
 
+  /// The one function the app executes (the free Cloud plan allows two
+  /// functions); the constants below are its `route` values.
+  static const String fnApi = 'eveApi';
+
   static const String fnPartnerInvites = 'partnerInvites';
   static const String fnSendChatMessage = 'sendChatMessage';
   static const String fnAiProxy = 'aiProxy';

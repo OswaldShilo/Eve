@@ -838,34 +838,13 @@
   ],
   "functions": [
     {
-      "$id": "onUserCreate",
-      "name": "onUserCreate",
+      "$id": "eveEvents",
+      "name": "eveEvents",
       "runtime": "node-22",
       "specification": "s-0.5vcpu-512mb",
       "execute": [],
       "events": [
-        "users.*.create"
-      ],
-      "scopes": [
-        "users.read",
-        "rows.read",
-        "rows.write"
-      ],
-      "schedule": "",
-      "timeout": 30,
-      "enabled": true,
-      "logging": true,
-      "entrypoint": "dist/onUserCreate/src/main.js",
-      "commands": "npm ci && npm run build",
-      "path": "functions"
-    },
-    {
-      "$id": "partnerView",
-      "name": "partnerView",
-      "runtime": "node-22",
-      "specification": "s-0.5vcpu-512mb",
-      "execute": [],
-      "events": [
+        "users.*.create",
         "tablesdb.eve.tables.symptom_logs.rows.*.create",
         "tablesdb.eve.tables.symptom_logs.rows.*.update",
         "tablesdb.eve.tables.symptom_logs.rows.*.delete",
@@ -873,68 +852,9 @@
         "tablesdb.eve.tables.partner_permissions.rows.*.update"
       ],
       "scopes": [
+        "users.read",
         "rows.read",
-        "rows.write"
-      ],
-      "schedule": "",
-      "timeout": 30,
-      "enabled": true,
-      "logging": true,
-      "entrypoint": "dist/partnerView/src/main.js",
-      "commands": "npm ci && npm run build",
-      "path": "functions"
-    },
-    {
-      "$id": "partnerInvites",
-      "name": "partnerInvites",
-      "runtime": "node-22",
-      "specification": "s-0.5vcpu-512mb",
-      "execute": [
-        "users"
-      ],
-      "events": [],
-      "scopes": [
-        "rows.read",
-        "rows.write"
-      ],
-      "schedule": "",
-      "timeout": 30,
-      "enabled": true,
-      "logging": true,
-      "entrypoint": "dist/partnerInvites/src/main.js",
-      "commands": "npm ci && npm run build",
-      "path": "functions"
-    },
-    {
-      "$id": "sendChatMessage",
-      "name": "sendChatMessage",
-      "runtime": "node-22",
-      "specification": "s-0.5vcpu-512mb",
-      "execute": [
-        "users"
-      ],
-      "events": [],
-      "scopes": [
-        "rows.read",
-        "rows.write"
-      ],
-      "schedule": "",
-      "timeout": 15,
-      "enabled": true,
-      "logging": true,
-      "entrypoint": "dist/sendChatMessage/src/main.js",
-      "commands": "npm ci && npm run build",
-      "path": "functions"
-    },
-    {
-      "$id": "notifications",
-      "name": "notifications",
-      "runtime": "node-22",
-      "specification": "s-0.5vcpu-512mb",
-      "execute": [],
-      "events": [],
-      "scopes": [
-        "rows.read",
+        "rows.write",
         "messages.write",
         "targets.read"
       ],
@@ -942,36 +862,13 @@
       "timeout": 120,
       "enabled": true,
       "logging": true,
-      "entrypoint": "dist/notifications/src/main.js",
+      "entrypoint": "dist/eveEvents/src/main.js",
       "commands": "npm ci && npm run build",
       "path": "functions"
     },
     {
-      "$id": "chatSystemMessages",
-      "name": "chatSystemMessages",
-      "runtime": "node-22",
-      "specification": "s-0.5vcpu-512mb",
-      "execute": [],
-      "events": [
-        "tablesdb.eve.tables.symptom_logs.rows.*.create"
-      ],
-      "scopes": [
-        "rows.read",
-        "rows.write",
-        "messages.write",
-        "targets.read"
-      ],
-      "schedule": "",
-      "timeout": 30,
-      "enabled": true,
-      "logging": true,
-      "entrypoint": "dist/chatSystemMessages/src/main.js",
-      "commands": "npm ci && npm run build",
-      "path": "functions"
-    },
-    {
-      "$id": "aiProxy",
-      "name": "aiProxy",
+      "$id": "eveApi",
+      "name": "eveApi",
       "runtime": "node-22",
       "specification": "s-0.5vcpu-512mb",
       "execute": [
@@ -979,13 +876,14 @@
       ],
       "events": [],
       "scopes": [
-        "rows.read"
+        "rows.read",
+        "rows.write"
       ],
       "schedule": "",
       "timeout": 30,
       "enabled": true,
       "logging": true,
-      "entrypoint": "dist/aiProxy/src/main.js",
+      "entrypoint": "dist/eveApi/src/main.js",
       "commands": "npm ci && npm run build",
       "path": "functions"
     }

@@ -14,12 +14,20 @@ export const TABLES = {
 
 export type TableId = (typeof TABLES)[keyof typeof TABLES];
 
+/**
+ * Deployed functions. The free Cloud plan allows two, so the original seven
+ * run as jobs inside these (eveEvents/src/dispatch.ts, eveApi/src/dispatch.ts).
+ */
 export const FUNCTION_IDS = {
-  onUserCreate: 'onUserCreate',
-  partnerView: 'partnerView',
+  events: 'eveEvents',
+  api: 'eveApi',
+} as const;
+
+/** Values of the `route` field the app sends to eveApi. */
+export const API_ROUTES = {
   partnerInvites: 'partnerInvites',
   sendChatMessage: 'sendChatMessage',
-  chatSystemMessages: 'chatSystemMessages',
   aiProxy: 'aiProxy',
-  notifications: 'notifications',
 } as const;
+
+export type ApiRoute = (typeof API_ROUTES)[keyof typeof API_ROUTES];

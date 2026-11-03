@@ -4,6 +4,7 @@ import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/enums.dart' as enums;
 
 import '../config/app_env.dart';
+import '../constants/appwrite_ids.dart';
 
 /// Thrown when an Appwrite Function execution returns a 4xx/5xx status.
 class FunctionCallException implements Exception {
@@ -68,12 +69,13 @@ class AppwriteService {
   /// server's reply ("Pong"). Throws [AppwriteException] when it cannot.
   Future<String> ping() => client.ping();
 
-  /// Runs a function synchronously with a JSON body and returns its JSON
-  /// response. Caller identity reaches the function as x-appwrite-user-id.
-  Future<Map<String, dynamic>> executeJson(String functionId, Map<String, dynamic> body) async {
+  /// Runs [route] (an `AppwriteIds.fn*` route) on the `eveApi` function
+  /// synchronously with a JSON body and returns its JSON response. Caller
+  /// identity reaches the function as x-appwrite-user-id.
+  Future<Map<String, dynamic>> executeJson(String route, Map<String, dynamic> body) async {
     final execution = await functions.createExecution(
-      functionId: functionId,
-      body: jsonEncode(body),
+      functionId: AppwriteIds.fnApi,
+      body: jsonEncode({'route': route, ...body}),
       xasync: false,
     );
     final decoded = execution.responseBody.isEmpty

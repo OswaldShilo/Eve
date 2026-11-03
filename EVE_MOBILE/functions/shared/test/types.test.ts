@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DATABASE_ID, FUNCTION_IDS, TABLES } from '../src/ids.js';
+import { API_ROUTES, DATABASE_ID, FUNCTION_IDS, TABLES } from '../src/ids.js';
 import { MOODS, NOTIFICATION_TYPES, PERMISSION_CATEGORIES, LIFE_STAGES } from '../src/types.js';
 
 describe('ids', () => {
@@ -18,16 +18,9 @@ describe('ids', () => {
     ]);
   });
 
-  it('lists every function ID', () => {
-    expect(Object.values(FUNCTION_IDS).sort()).toEqual([
-      'aiProxy',
-      'chatSystemMessages',
-      'notifications',
-      'onUserCreate',
-      'partnerInvites',
-      'partnerView',
-      'sendChatMessage',
-    ]);
+  it('lists every function ID and API route', () => {
+    expect(Object.values(FUNCTION_IDS).sort()).toEqual(['eveApi', 'eveEvents']);
+    expect(Object.values(API_ROUTES).sort()).toEqual(['aiProxy', 'partnerInvites', 'sendChatMessage']);
   });
 });
 
