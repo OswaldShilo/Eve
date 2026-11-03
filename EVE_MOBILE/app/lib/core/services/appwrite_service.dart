@@ -64,6 +64,10 @@ class AppwriteService {
 
   Future<void> signOut() => account.deleteSession(sessionId: 'current');
 
+  /// Checks the app can reach the configured Appwrite project; returns the
+  /// server's reply ("Pong"). Throws [AppwriteException] when it cannot.
+  Future<String> ping() => client.ping();
+
   /// Runs a function synchronously with a JSON body and returns its JSON
   /// response. Caller identity reaches the function as x-appwrite-user-id.
   Future<Map<String, dynamic>> executeJson(String functionId, Map<String, dynamic> body) async {

@@ -17,14 +17,24 @@ samples, guidance on mobile development, and a full API reference.
 
 ## Running against Appwrite
 
+Default (Appwrite Cloud project `eve-dev`, `https://sgp.cloud.appwrite.io/v1`,
+project ID `6ae966a5002293c1e5c3` — set as defaults in `lib/core/config/app_env.dart`):
+
+    flutter run
+
+In debug builds the Welcome screen shows a **Ping Appwrite** chip (top right)
+that calls `client.ping()` and reports success or the error. The Cloud
+project needs an Android platform with package `com.shilo.eve.eve_app`
+(Console → Overview → Add platform → Flutter → Android).
+
 Local (Docker Appwrite from plans/03-tech-stack.md Task 1):
 
-    # Android emulator reaches the host at 10.0.2.2
+    # Android emulator reaches the host at 10.0.2.2; a physical phone uses the PC's LAN IP
     flutter run --dart-define=APPWRITE_ENDPOINT=http://10.0.2.2/v1 --dart-define=APPWRITE_PROJECT_ID=eve-local
 
-Production (Appwrite Cloud):
+Another Cloud project:
 
-    flutter run --release --dart-define=APPWRITE_ENDPOINT=https://<REGION>.cloud.appwrite.io/v1 --dart-define=APPWRITE_PROJECT_ID=eve-prod
+    flutter run --release --dart-define=APPWRITE_ENDPOINT=https://<REGION>.cloud.appwrite.io/v1 --dart-define=APPWRITE_PROJECT_ID=<PROJECT_ID>
 
 Backend:
 

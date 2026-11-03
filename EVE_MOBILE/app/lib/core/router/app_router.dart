@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -41,6 +42,7 @@ import 'package:eve_app/shared/models/symptom_log.dart';
 import 'package:eve_app/features/home/presentation/screens/doctor_summary_screen.dart';
 import 'package:eve_app/features/home/presentation/home_modules.dart';
 import 'package:eve_app/features/home/presentation/screens/home_screen.dart';
+import 'package:eve_app/shared/widgets/appwrite_ping_button.dart';
 import 'package:eve_app/shared/widgets/eve_bottom_nav.dart';
 import 'package:eve_app/shared/widgets/eve_status_view.dart';
 import 'package:eve_app/features/log/presentation/screens/log_screen.dart';
@@ -156,10 +158,34 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/onboarding/welcome',
       name: 'onboarding-welcome',
-      builder: (context, state) => WelcomeScreen(
-        onContinue: () => context.go('/onboarding/auth'),
-        onJoinPartner: () => context.go('/partner/join'),
-      ),
+      builder: (context, state) {
+        final welcome = WelcomeScreen(
+          onContinue: () => context.go('/onboarding/auth'),
+          onJoinPartner: () => context.go('/partner/join'),
+        );
+        if (!kDebugMode) return welcome;
+        // Debug builds only: verify the app reaches the configured Appwrite.
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            welcome,
+            Positioned(
+              top: 0,
+              right: 0,
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Consumer(
+                    builder: (context, ref, _) => AppwritePingButton(
+                      ping: () => ref.read(appwriteServiceProvider).ping(),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     ),
     ..._middleScreenBuilders.keys.map(_onboardingRoute),
     GoRoute(

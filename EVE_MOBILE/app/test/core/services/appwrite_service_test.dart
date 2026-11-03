@@ -19,20 +19,33 @@ class MockUser extends Mock implements models.User {}
 class MockExecution extends Mock implements models.Execution {}
 
 void main() {
+  late MockClient client;
   late MockAccount account;
   late MockFunctions functions;
   late AppwriteService service;
 
   setUp(() {
+    client = MockClient();
     account = MockAccount();
     functions = MockFunctions();
     service = AppwriteService(
-      client: MockClient(),
+      client: client,
       account: account,
       tablesDb: MockTablesDB(),
       functions: functions,
       realtime: MockRealtime(),
     );
+  });
+
+  test('ping returns the server reply from client.ping()', () async {
+    when(() => client.ping()).thenAnswer((_) async => 'Pong');
+    expect(await service.ping(), 'Pong');
+    verify(() => client.ping()).called(1);
+  });
+
+  test('ping surfaces connection errors', () async {
+    when(() => client.ping()).thenAnswer((_) async => throw AppwriteException('Invalid Origin', 403));
+    expect(service.ping(), throwsA(isA<AppwriteException>()));
   });
 
   test('currentUserId returns the signed-in user id', () async {
