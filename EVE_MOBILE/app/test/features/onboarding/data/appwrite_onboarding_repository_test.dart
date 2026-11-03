@@ -77,4 +77,21 @@ void main() {
     expect(permissionsData['approvedCategories'], ['moodUpdates']);
     verify(() => appwrite.executeJson('partnerInvites', {'action': 'createInvite', 'relationshipType': 'husband'})).called(1);
   });
+
+  test('a missing database (404 database_not_found) propagates and stops before later tables', () async {
+    when(() => tables.updateRow(
+          databaseId: any(named: 'databaseId'),
+          tableId: any(named: 'tableId'),
+          rowId: any(named: 'rowId'),
+          data: any(named: 'data'),
+        )).thenAnswer((_) async =>
+        throw AppwriteException("Database with the requested ID 'eve' could not be found.", 404, 'database_not_found'));
+
+    await expectLater(
+      AppwriteOnboardingRepository(appwrite).saveOnboarding('u1', const OnboardingState(name: 'Asha', partnerInvite: true)),
+      throwsA(isA<AppwriteException>().having((e) => e.type, 'type', 'database_not_found')),
+    );
+    expect(updatedTables(), ['profiles']);
+    verifyNever(() => appwrite.executeJson(any(), any()));
+  });
 }

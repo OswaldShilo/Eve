@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/foundation.dart' show debugPrint, kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +10,7 @@ import 'package:eve_app/core/providers/repository_providers.dart';
 import 'package:eve_app/features/onboarding/presentation/widgets/partner_invite_code_dialog.dart';
 import 'package:eve_app/core/services/ai_proxy_service.dart';
 import 'package:eve_app/core/services/appwrite_service.dart';
+import 'package:eve_app/core/services/save_failure_message.dart';
 import 'package:eve_app/features/onboarding/domain/onboarding_progress.dart';
 import 'package:eve_app/features/partner/presentation/partner_join_screen.dart';
 import 'package:eve_app/features/onboarding/domain/onboarding_sequence.dart';
@@ -271,11 +272,13 @@ class _CompletionRouteState extends ConsumerState<_CompletionRoute> {
       try {
         inviteCode = await ref.read(onboardingRepositoryProvider).saveOnboarding(uid, ref.read(onboardingStateProvider));
         ref.invalidate(homeDashboardProvider(uid));
-      } catch (_) {
+      } catch (e) {
+        if (kDebugMode) debugPrint('saveOnboarding failed: $e');
         if (mounted) {
           setState(() => _saving = false);
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('We could not save your answers. Please check your connection and try again.'),
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            key: const Key('completion-save-error'),
+            content: Text(saveFailureMessage(e, debug: kDebugMode)),
           ));
         }
         return;

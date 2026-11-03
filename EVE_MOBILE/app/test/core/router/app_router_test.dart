@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:appwrite/appwrite.dart';
+
 import 'package:eve_app/core/providers/appwrite_providers.dart';
 import 'package:eve_app/core/providers/repository_providers.dart';
 import 'package:eve_app/core/router/app_router.dart';
@@ -198,6 +200,61 @@ void main() {
     expect(appRouter.routerDelegate.currentConfiguration.uri.path, '/home');
   });
 
+  testWidgets('Completion save failure shows the server-not-set-up error, stays put, and a retry goes Home',
+      (tester) async {
+    final repo = _FailingOnceOnboardingRepository(
+      AppwriteException("Database with the requested ID 'eve' could not be found.", 404, 'database_not_found'),
+    );
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        onboardingRepositoryProvider.overrideWithValue(repo),
+        homeRepositoryProvider.overrideWithValue(FakeHomeRepository(const HomeDashboardDataFixture().data)),
+        logRepositoryProvider.overrideWithValue(FakeLogRepository()),
+        currentUidProvider.overrideWith((ref) => 'u1'),
+      ],
+      child: MaterialApp.router(routerConfig: appRouter),
+    ));
+    appRouter.go('/onboarding/completion');
+    await _settle(tester);
+
+    await tester.tap(find.text('Enter EVE'));
+    await _settle(tester);
+
+    expect(find.byKey(const Key('completion-save-error')), findsOneWidget);
+    expect(find.textContaining('server is not set up'), findsOneWidget);
+    expect(find.textContaining('[404 database_not_found]'), findsOneWidget); // tests run in debug mode
+    expect(appRouter.routerDelegate.currentConfiguration.uri.path, '/onboarding/completion');
+    expect(find.byKey(const Key('eve-button-busy')), findsNothing);
+
+    // The snack bar overlaps the button in the 800x600 test view; on a phone it times out after 4 s.
+    tester.state<ScaffoldMessengerState>(find.byType(ScaffoldMessenger)).hideCurrentSnackBar();
+    await _settle(tester);
+    await tester.tap(find.text('Enter EVE'));
+    await _settle(tester);
+
+    expect(repo.calls, 2);
+    expect(appRouter.routerDelegate.currentConfiguration.uri.path, '/home');
+  });
+
+  testWidgets('Completion network failure keeps the connection message', (tester) async {
+    final repo = _FailingOnceOnboardingRepository(Exception('offline'));
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        onboardingRepositoryProvider.overrideWithValue(repo),
+        currentUidProvider.overrideWith((ref) => 'u1'),
+      ],
+      child: MaterialApp.router(routerConfig: appRouter),
+    ));
+    appRouter.go('/onboarding/completion');
+    await _settle(tester);
+
+    await tester.tap(find.text('Enter EVE'));
+    await _settle(tester);
+
+    expect(find.textContaining('Please check your connection and try again.'), findsOneWidget);
+    expect(appRouter.routerDelegate.currentConfiguration.uri.path, '/onboarding/completion');
+  });
+
   testWidgets('Home shows the signed-in user name from the repository', (tester) async {
     await tester.pumpWidget(ProviderScope(
       overrides: [
@@ -392,6 +449,20 @@ void main() {
     expect(find.text('Ryan'), findsNothing);
     expect(find.text('Your partner'), findsOneWidget);
   });
+}
+
+class _FailingOnceOnboardingRepository implements OnboardingRepository {
+  _FailingOnceOnboardingRepository(this.error);
+
+  final Object error;
+  int calls = 0;
+
+  @override
+  Future<String?> saveOnboarding(String uid, OnboardingState state) async {
+    calls++;
+    if (calls == 1) throw error;
+    return null;
+  }
 }
 
 class _SlowOnboardingRepository implements OnboardingRepository {
